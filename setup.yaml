@@ -1,0 +1,26 @@
+use_practice: True
+branch: False
+users:
+  - username: tvumcc
+    password: globbler
+  - username: piigle
+    password: jello
+  - username: acemavrick
+    password: lol
+problem_sets:
+  - name: 2025 UIL Districts
+    problems:
+      - name: Thomas
+        input_data_file: thomas.dat
+        output_data_file: thomas.out
+      - name: Shubh
+        input_data_file: shubh.dat
+        output_data_file: shubh.out
+      - name: Tyler
+        input_data_file: tyler.dat
+        output_data_file: tyler.out
+contests:
+  - name: 2025 UIL Districts
+    problem_set: 2025 UIL Districts
+    start_time: 2025-08-04T00:06:00
+    end_time: 2025-08-13T00:06:00
