@@ -102,12 +102,10 @@ class Submission(Base):
     problem_id         = mapped_column(ForeignKey("problem.id"))
     user_id            = mapped_column(ForeignKey("user.id"))
     contest_profile_id = mapped_column(ForeignKey("contest_profile.id"))
-    contest_id         = mapped_column(ForeignKey("contest.id"))
 
     problem:         Mapped["Problem"]                  = relationship(back_populates="submissions")
     user:            Mapped["User"]                     = relationship(back_populates="submissions")
     contest_profile: Mapped[Optional["ContestProfile"]] = relationship(back_populates="submissions")
-    contest:         Mapped[Optional["Contest"]]        = relationship(back_populates="submissions")
 
     def serialize(self):
         return {}
@@ -119,7 +117,7 @@ class Submission(Base):
             "submit_time": self.submit_time,
             "user": self.user.shallow_serialize(),
             "problem": self.problem.shallow_serialize(),
-            "contest": self.contest.shallow_serialize()
+            "contest_profile": self.contest_profile.shallow_serialize()
         }
 
 
@@ -136,7 +134,6 @@ class Contest(Base):
 
     problem_set:      Mapped["ProblemSet"]           = relationship(back_populates="contests")
     contest_profiles: Mapped[List["ContestProfile"]] = relationship(back_populates="contest")
-    submissions:      Mapped[List["Submission"]]     = relationship(back_populates="contest")
 
     def past(self):
         return datetime.datetime.now() > self.end_time
@@ -155,7 +152,9 @@ class Contest(Base):
     def shallow_serialize(self):
         return {
             "id": self.id,
-            "name": self.name
+            "name": self.name,
+            "start_time": self.start_time,
+            "end_time": self.end_time
         }
 
 class ContestProfile(Base):
@@ -171,3 +170,16 @@ class ContestProfile(Base):
     contest:     Mapped["Contest"]          = relationship(back_populates="contest_profiles")
     user:        Mapped["User"]             = relationship(back_populates="contest_profiles")
     submissions: Mapped[List["Submission"]] = relationship(back_populates="contest_profile")
+
+    def serialize(self):
+        return self.shallow_serialize() | {
+            "submission": [submission.shallow_serialize() for submission in self.submissions]
+        }
+
+    def shallow_serialize(self):
+        return {
+            "id": self.id,
+            "score": self.score,
+            "user": self.user.shallow_serialize(),
+            "contest": self.contest.shallow_serialize(),
+        }

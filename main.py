@@ -106,27 +106,29 @@ def contests():
 @flask_login.login_required
 def contest(id):
     contest = session.get(Contest, id)
+    contest_profile = session.query(ContestProfile).filter_by(user=flask_login.current_user, contest=contest).first()
+    if not contest_profile:
+        contest_profile = ContestProfile(user=flask_login.current_user, contest=contest)
+        session.add(contest_profile)
+        session.commit()
+
     submissions = []
     if contest.past(): 
         submissions = contest.submissions
     else: 
-        submissions = session.query(Submission).filter_by(user=flask_login.current_user, contest=contest).all()
+        submissions = session.query(Submission).filter_by(contest_profile=contest_profile).all()
 
-    return {
-        "name": contest.name,
-        "id": contest.id,
-        "problem_set": contest.problem_set.name,
-        "start_time": contest.start_time,
-        "end_time": contest.end_time,
+    return contest.serialize() | {
         "submissions": [submission.shallow_serialize() for submission in submissions]
     }
 
-@app.route("/api/contest/submissions/<id>")
+@app.route("/api/contest/submit", methods=["POST"])
 @flask_login.login_required
-def contest_submissions(id):
-    contest: Contest = session.get(Contest, id)
-
-
+def submit_contest_problem():
+    response = flask.request.get_json()
+    print(response)
+    
+    return {}
 
 if __name__ == "__main__":
     app.run(debug=True, port=5173)
