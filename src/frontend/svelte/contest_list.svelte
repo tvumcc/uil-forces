@@ -2,12 +2,14 @@
     import { onMount } from "svelte"
     import Logout from "./logout.svelte";
 
-    let ongoing_contests = $state([])    
+    let past_contests = $state([])
+    let ongoing_contests = $state([])
     let upcoming_contests = $state([])
 
     async function getData() {
         let response: Response = await fetch("/api/contests")
         let json = await response.json()
+        past_contests = json["past"]
         ongoing_contests = json["ongoing"]
         upcoming_contests = json["upcoming"]
     }
@@ -15,10 +17,9 @@
     onMount(getData)
 </script>
 
-<h1>Home Page</h1>
+<h1>Contests</h1>
 
 <Logout/><br>
-<a href="/contests">All Contests</a><br>
 
 {#if ongoing_contests.length > 0}
     <h2>Ongoing Contests</h2>
@@ -30,6 +31,13 @@
 {#if upcoming_contests.length > 0}
     <h2>Upcoming Contests</h2>
     {#each upcoming_contests as contest}
+        <a href="/contest?id={contest["id"]}">{contest["name"]}</a>
+    {/each}
+{/if}
+
+{#if past_contests.length > 0}
+    <h2>Past Contests</h2>
+    {#each past_contests as contest}
         <a href="/contest?id={contest["id"]}">{contest["name"]}</a>
     {/each}
 {/if}

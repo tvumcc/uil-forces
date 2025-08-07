@@ -13,9 +13,13 @@ problem_sets:
       - name: Thomas
         input_data_file: thomas.dat
         output_data_file: thomas.out
+  - name: 2025 UIL Region 
+    problems:
       - name: Shubh
         input_data_file: shubh.dat
         output_data_file: shubh.out
+  - name: 2025 UIL State 
+    problems:
       - name: Tyler
         input_data_file: tyler.dat
         output_data_file: tyler.out
@@ -24,3 +28,11 @@ contests:
     problem_set: 2025 UIL Districts
     start_time: 2025-08-04T00:06:00
     end_time: 2025-08-13T00:06:00
+  - name: 2025 UIL Region 
+    problem_set: 2025 UIL Region 
+    start_time: 2025-08-04T00:06:00
+    end_time: 2025-08-06T00:06:00
+  - name: 2025 UIL State 
+    problem_set: 2025 UIL State
+    start_time: 2025-09-30T00:06:00
+    end_time: 2025-10-13T00:06:00

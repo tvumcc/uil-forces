@@ -9,7 +9,9 @@ export default defineConfig({
     rollupOptions: {
       input: {
         home: "./src/frontend/html/home.html",
-        login: "./src/frontend/html/login.html"
+        login: "./src/frontend/html/login.html",
+        contest: "./src/frontend/html/contest.html",
+        contest_list: "./src/frontend/html/contest_list.html"
       },
     },
   },
