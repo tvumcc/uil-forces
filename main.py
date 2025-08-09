@@ -42,6 +42,11 @@ def contest_page():
 def contest_list_page():
     return flask.send_from_directory(app.static_folder, "src/frontend/html/contest_list.html")
 
+@app.route("/submission")
+@flask_login.login_required
+def submission_page():
+    return flask.send_from_directory(app.static_folder, "src/frontend/html/submission.html")
+
 @app.route("/practice")
 @flask_login.login_required
 def practice_page():
@@ -77,7 +82,6 @@ def logout():
 @flask_login.login_required
 def contests():
     contests = session.query(Contest).all()
-    print(contests)
     out = {
         "upcoming": [],
         "ongoing": [],
@@ -100,7 +104,6 @@ def contests():
         elif contest.upcoming():
             out["upcoming"].append(contest_json)
 
-    print(out)
 
     return out
 
@@ -116,7 +119,8 @@ def contest(id):
 
     submissions = []
     if contest.past(): 
-        submissions = contest.submissions
+        for profile in contest.contest_profiles:
+            submissions += profile.submissions
     else: 
         submissions = session.query(Submission).filter_by(contest_profile=contest_profile).all()
 
@@ -140,8 +144,6 @@ def submit_contest_problem():
         session.add(contest_profile)
         session.commit()
 
-    print(response)
-
     submission = Submission(
         problem=problem,
         contest_profile=contest_profile,
@@ -161,6 +163,19 @@ def submit_contest_problem():
 
     session.commit()
     return {}
+
+@app.route("/api/submission/<id>")
+@flask_login.login_required
+def submission(id):
+    submission = session.get(Submission, id)
+    user = submission.user
+    
+    contest_profile = submission.contest_profile
+    if contest_profile and not contest_profile.contest.past() and not user.is_admin and not user.id == flask_login.current_user.id:
+        return {"message": "Submission cannot be viewed at this time"}
+
+    return submission.serialize()
+
 
 if __name__ == "__main__":
     # scheduler = APScheduler()

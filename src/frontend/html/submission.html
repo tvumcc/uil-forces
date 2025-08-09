@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  </head>
+  <body>
+    <div id="submission"></div>
+    <script type="module">
+      import { mount } from "svelte"
+      import Submission from "../svelte/submission.svelte"
+      export const submission = mount(Submission, { target: document.getElementById("submission") })
+    </script>
+  </body>
+</html>

@@ -111,7 +111,10 @@ class Submission(Base):
     contest_profile: Mapped[Optional["ContestProfile"]] = relationship(back_populates="submissions")
 
     def serialize(self):
-        return {}
+        return self.shallow_serialize() | {
+            "code": self.code,
+            "output": self.output
+        }
 
     def shallow_serialize(self):
         return {

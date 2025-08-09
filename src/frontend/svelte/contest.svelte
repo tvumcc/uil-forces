@@ -2,13 +2,15 @@
     import { onMount } from "svelte"
 
     let params = new URLSearchParams(document.location.search)
-
     let id = params.get("id")
+
+    let status_str = ["Pending", "Accepted", "Wrong Answer", "Compile Error", "Runtime Error", "Time Limit Exceeded"]
 
     let contest_name = $state("")
     let problems = $state([])
+    let submissions = $state([])
 
-    let selected_problem_id = $state()
+    let selected_problem_id = $state(-1)
     let files: FileList = $state()!
     let file_text = $state()
     let file_name = $state()
@@ -19,6 +21,7 @@
         console.log(json)
         contest_name = json["name"]
         problems = json["problem_set"]["problems"]
+        submissions = json["submissions"]
     }
 
     async function submit_problem(event: Event) {
@@ -68,3 +71,26 @@
     <pre style="tab-size:4;">{file_text}</pre>
 {/if}
 
+<h2>Submissions</h2>
+<table>
+    <thead>
+        <tr>
+            <th>Time</th>
+            <th>User</th>
+            <th>Problem</th>
+            <th>Status</th>
+            <th>Code</th>
+        </tr>
+    </thead>
+    <tbody>
+        {#each submissions as submission}
+            <tr>
+                <th>{submission["submit_time"]}</th>
+                <th>{submission["user"]["username"]}</th>
+                <th>{submission["problem"]["name"]}</th>
+                <th>{status_str[submission["status"]]}</th>
+                <th><a href="/submission?id={submission["id"]}">View Code</a></th>
+            </tr>
+        {/each}
+    </tbody>
+</table>
