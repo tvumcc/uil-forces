@@ -1,11 +1,13 @@
 import flask
 import flask_login
+from flask_apscheduler import APScheduler
 import sqlalchemy
 from sqlalchemy.orm import Session
 from sqlalchemy import create_engine, select
 from src.backend.orm import *
 
 import datetime
+from src.backend.judge import *
 
 app = flask.Flask(__name__, static_folder="./dist", static_url_path="")
 app.secret_key = "dklsjsfkbjsfgfsgjlk"
@@ -126,9 +128,42 @@ def contest(id):
 @flask_login.login_required
 def submit_contest_problem():
     response = flask.request.get_json()
+    problem = session.get(Problem, response["problem_id"])
+    contest = session.get(Contest, response["contest_id"])
+    if not problem:
+        return {"message": "invalid problem id"}
+    if not contest:
+        return {"message": "invalid contest id"}
+    contest_profile = session.query(ContestProfile).filter_by(user=flask_login.current_user, contest=contest).first()
+    if not contest_profile:
+        contest_profile = ContestProfile(user=flask_login.current_user, contest=contest)
+        session.add(contest_profile)
+        session.commit()
+
     print(response)
-    
+
+    submission = Submission(
+        problem=problem,
+        contest_profile=contest_profile,
+        user=flask_login.current_user,
+
+        status=Status.Pending.value,
+        filename=response["filename"],
+        code=response["code"],
+        submit_time=datetime.datetime.now()
+    )
+    session.add(submission)
+    session.commit()
+
+    status, output = grade_java_submission_jdk(submission)
+    submission.status = status.value
+    submission.output = output
+
+    session.commit()
     return {}
 
 if __name__ == "__main__":
-    app.run(debug=True, port=5173)
+    # scheduler = APScheduler()
+    # scheduler.add_job(func=grade_pending_submissions, args=[session], id="grader", trigger="interval", seconds=3)
+    # scheduler.start()
+    app.run(debug=False, port=5173)

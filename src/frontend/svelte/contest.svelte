@@ -11,6 +11,7 @@
     let selected_problem_id = $state()
     let files: FileList = $state()!
     let file_text = $state()
+    let file_name = $state()
 
     async function getData() {
         let response: Response = await fetch("/api/contest/" + id)
@@ -27,13 +28,13 @@
             body: JSON.stringify({
                 contest_id: id,
                 problem_id: selected_problem_id,
-                code: file_text
+                code: file_text,
+                filename: file_name
             }),
             headers: {
                 "Content-Type": "application/json; charset=UTF-8"
             }
         })
-        console.log("sup lol")
     }
 
     $effect(() => {
@@ -41,6 +42,7 @@
             if (files) {
                 for (let file of files) {
                     file_text = await file.text()
+                    file_name = file.name
                     console.log(file_text)
                 }
             }

@@ -63,6 +63,7 @@ class Problem(Base):
     input_file_name: Mapped[Optional[str]]
     judge_input:     Mapped[str]  = mapped_column(default="")
     judge_output:    Mapped[str]  = mapped_column(default="")
+    output:          Mapped[str]  = mapped_column(default="")
 
     is_precontest:   Mapped[bool] = mapped_column(default=False)
     correct_score:   Mapped[int]  = mapped_column(default=60)
@@ -87,9 +88,11 @@ class Submission(Base):
     # 0 = Pending
     # 1 = Accepted
     # 2 = Wrong Answer
-    # 3 = Time Limit Exceeded
-    # 4 = Memory Limit Exceeded
-    # 5 = Server Error
+    # 3 = Compilation Error
+    # 4 = Runtime Error
+    # 5 = Time Limit Exceeded
+    # 6 = Memory Limit Exceeded
+    # 7 = Server Error
 
     id: Mapped[int] = mapped_column(primary_key=True)
 
@@ -97,7 +100,7 @@ class Submission(Base):
     submit_time: Mapped[datetime.datetime]
     filename:    Mapped[str]
     code:        Mapped[str]
-    output:      Mapped[str]
+    output:      Mapped[str] = mapped_column(default="")
 
     problem_id         = mapped_column(ForeignKey("problem.id"))
     user_id            = mapped_column(ForeignKey("user.id"))
