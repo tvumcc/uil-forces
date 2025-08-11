@@ -8,7 +8,9 @@ import datetime
 class Base(DeclarativeBase):
     pass
 
-class User(UserMixin, Base):
+db = SQLAlchemy(model_class=Base)
+
+class User(UserMixin, db.Model):
     __tablename__ = "user"
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -31,7 +33,7 @@ class User(UserMixin, Base):
             "username": self.username
         }
 
-class ProblemSet(Base):
+class ProblemSet(db.Model):
     __tablename__ = "problem_set"
     
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -52,7 +54,7 @@ class ProblemSet(Base):
             "name": self.name
         }
 
-class Problem(Base):
+class Problem(db.Model):
     __tablename__ = "problem"
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -82,7 +84,7 @@ class Problem(Base):
             "is_precontest": self.is_precontest,
         }
 
-class Submission(Base):
+class Submission(db.Model):
     __tablename__ = "submission"
 
     # Submission Status Legend:
@@ -128,7 +130,7 @@ class Submission(Base):
         }
 
 
-class Contest(Base):
+class Contest(db.Model):
     __tablename__ = "contest"
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -164,7 +166,7 @@ class Contest(Base):
             "end_time": self.end_time
         }
 
-class ContestProfile(Base):
+class ContestProfile(db.Model):
     __tablename__ = "contest_profile"
 
     id: Mapped[int] = mapped_column(primary_key=True)
