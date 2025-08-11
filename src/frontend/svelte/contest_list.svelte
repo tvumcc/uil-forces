@@ -1,6 +1,6 @@
 <script lang="ts">
     import { onMount } from "svelte"
-    import Logout from "./logout.svelte";
+    import MenuBar from "./components/menubar.svelte"
 
     let past_contests = $state([])
     let ongoing_contests = $state([])
@@ -17,27 +17,32 @@
     onMount(getData)
 </script>
 
-<h1>Contests</h1>
+<style>
+    @import "../style.css";
+</style>
 
-<Logout/><br>
+<MenuBar />
+<div class="main-container">
+    <h1>Contests</h1>
 
-{#if ongoing_contests.length > 0}
-    <h2>Ongoing Contests</h2>
-    {#each ongoing_contests as contest}
-        <a href="/contest?id={contest["id"]}">{contest["name"]}</a>
-    {/each}
-{/if}
+    {#if ongoing_contests.length > 0}
+        <h2>Ongoing Contests</h2>
+        {#each ongoing_contests as contest}
+            <a href="/contest?id={contest["id"]}">{contest["name"]}</a>
+        {/each}
+    {/if}
 
-{#if upcoming_contests.length > 0}
-    <h2>Upcoming Contests</h2>
-    {#each upcoming_contests as contest}
-        <a href="/contest?id={contest["id"]}">{contest["name"]}</a>
-    {/each}
-{/if}
+    {#if upcoming_contests.length > 0}
+        <h2>Upcoming Contests</h2>
+        {#each upcoming_contests as contest}
+            <a href="/contest?id={contest["id"]}">{contest["name"]}</a>
+        {/each}
+    {/if}
 
-{#if past_contests.length > 0}
-    <h2>Past Contests</h2>
-    {#each past_contests as contest}
-        <a href="/contest?id={contest["id"]}">{contest["name"]}</a>
-    {/each}
-{/if}
+    {#if past_contests.length > 0}
+        <h2>Past Contests</h2>
+        {#each past_contests as contest}
+            <a href="/contest?id={contest["id"]}">{contest["name"]}</a>
+        {/each}
+    {/if}
+</div>

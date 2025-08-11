@@ -1,3 +1,4 @@
+from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import DateTime, ForeignKey
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from flask_login import UserMixin
@@ -22,7 +23,7 @@ class User(UserMixin, Base):
     submissions:      Mapped[List["Submission"]]     = relationship(back_populates="user")
 
     def serialize(self):
-        return {}
+        return self.shallow_serialize()
 
     def shallow_serialize(self):
         return {

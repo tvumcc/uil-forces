@@ -21,7 +21,7 @@ login_manager.login_view = "login_page"
 
 @login_manager.user_loader
 def load_user(id):
-    return session.get(User, id)
+    return session.query(User).filter_by(id=id).one()
 
 @app.route("/")
 @flask_login.login_required
@@ -175,6 +175,11 @@ def submission(id):
         return {"message": "Submission cannot be viewed at this time"}
 
     return submission.serialize()
+
+@app.route("/api/user")
+@flask_login.login_required
+def user():
+    return flask_login.current_user.shallow_serialize()
 
 
 if __name__ == "__main__":

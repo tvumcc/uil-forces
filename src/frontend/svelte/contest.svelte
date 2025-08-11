@@ -1,10 +1,10 @@
 <script lang="ts">
     import { onMount } from "svelte"
+    import Status from "./components/status.svelte"
+    import MenuBar from "./components/menubar.svelte"
 
     let params = new URLSearchParams(document.location.search)
     let id = params.get("id")
-
-    let status_str = ["Pending", "Accepted", "Wrong Answer", "Compile Error", "Runtime Error", "Time Limit Exceeded"]
 
     let contest_name = $state("")
     let problems = $state([])
@@ -55,42 +55,70 @@
     onMount(getData)
 </script>
 
-<h1>{contest_name}</h1>
-<form onsubmit={submit_problem}>
-    <select bind:value={selected_problem_id}>
-        {#each problems as problem}
-            <option value="{problem["id"]}">{problem["name"]}</option>
-        {/each}
-    </select>
-    <input type="file" bind:files>
-    <input type="submit" value="Submit">
-</form>
+<MenuBar />
+<style>
+    @import "../style.css";
 
-<br>
-{#if files}
-    <pre style="tab-size:4;">{file_text}</pre>
-{/if}
+    table {
+        width: 100%;
+        margin: 0;
+        border-collapse: collapse;
+    }
 
-<h2>Submissions</h2>
-<table>
-    <thead>
-        <tr>
-            <th>Time</th>
-            <th>User</th>
-            <th>Problem</th>
-            <th>Status</th>
-            <th>Code</th>
-        </tr>
-    </thead>
-    <tbody>
-        {#each submissions as submission}
+    td {
+        border: 1px gray solid;
+        margin: 0;
+        padding: 8px;
+        text-align: center;
+    }
+</style>
+
+<div class="main-container">
+    <h1>{contest_name}</h1>
+    <h2>Submit Code</h2>
+    <form onsubmit={submit_problem}>
+        <div>
+            <select bind:value={selected_problem_id}>
+                {#each problems as problem}
+                    <option value="{problem["id"]}">{problem["name"]}</option>
+                {/each}
+            </select>
+        </div>
+        <div>
+            <input type="file" bind:files>
+        </div>
+        <div>
+            <input type="submit" value="Submit">
+        </div>
+    </form>
+
+    <br>
+    {#if files}
+        <pre style="tab-size:4;">{file_text}</pre>
+    {/if}
+
+    <h2>Leaderboard</h2>
+
+
+    <h2>Submissions</h2>
+    <table>
+        <thead>
             <tr>
-                <th>{submission["submit_time"]}</th>
-                <th>{submission["user"]["username"]}</th>
-                <th>{submission["problem"]["name"]}</th>
-                <th>{status_str[submission["status"]]}</th>
-                <th><a href="/submission?id={submission["id"]}">View Code</a></th>
+                <th>Time</th>
+                <th>Problem</th>
+                <th>Status</th>
+                <th>Code</th>
             </tr>
-        {/each}
-    </tbody>
-</table>
+        </thead>
+        <tbody>
+            {#each submissions as submission}
+                <tr>
+                    <td>{submission["submit_time"]}</td>
+                    <td>{submission["problem"]["name"]}</td>
+                    <td style="width: 175px;"><Status status_code={submission["status"]} fit_text={false}/></td>
+                    <td style="width: 100px;"><a href="/submission?id={submission["id"]}">View Code</a></td>
+                </tr>
+            {/each}
+        </tbody>
+    </table>
+</div>

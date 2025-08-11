@@ -1,0 +1,29 @@
+h1 {
+    margin: 0;
+}
+
+a {
+    color: #00d492;
+}
+
+:global(body) {
+    background-color: #314158;
+    color: white;
+    font-family: monospace;
+    height: 100%;
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+
+.main-container {
+    background-color: #101828;
+    padding: 25px;
+    border-radius: 10px;
+    margin: 10px 0px;
+    width: 1000px;
+    min-height: 30vh;
+    overflow: auto;
+}
