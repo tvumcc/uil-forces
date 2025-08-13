@@ -38,6 +38,9 @@
                 "Content-Type": "application/json; charset=UTF-8"
             }
         })
+        let json = await response.json()
+
+        submissions = json["submissions"]
     }
 
     $effect(() => {
@@ -46,7 +49,6 @@
                 for (let file of files) {
                     file_text = await file.text()
                     file_name = file.name
-                    console.log(file_text)
                 }
             }
         })()

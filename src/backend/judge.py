@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
 
 from .orm import *
+from main import app
 
 import os
 import shutil
@@ -48,6 +49,17 @@ def grade_pending_submissions(session: Session):
         submission.status = status
         submission.output = output
         session.commit()
+
+def assign_status(submission_id):
+    with app.app_context():
+        submission = db.session.get(Submission, submission_id)
+        if submission.status == Status.Pending.value:
+            status, output = grade_java_submission_jdk(submission)
+            submission.status = status.value
+            submission.output = output
+            print(submission.status)
+            db.session.commit()
+            print("Changes committed")
 
 def grade_java_submission_jdk(submission: Submission):
     id = submission.id

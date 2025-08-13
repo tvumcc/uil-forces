@@ -8,6 +8,7 @@ from src.backend.orm import *
 
 import datetime
 import os
+import threading
 from src.backend.judge import *
 
 app = flask.Flask(__name__, static_folder="./dist", static_url_path="")
@@ -160,12 +161,12 @@ def submit_contest_problem():
     db.session.add(submission)
     db.session.commit()
 
-    status, output = grade_java_submission_jdk(submission)
-    submission.status = status.value
-    submission.output = output
+    thread = threading.Thread(target=assign_status, args=[submission.id])
+    thread.daemon = True
+    thread.start()
 
-    db.session.commit()
-    return {}
+    submissions = db.session.query(Submission).filter_by(contest_profile=contest_profile).all()
+    return {"submissions": [submission.shallow_serialize() for submission in submissions]}
 
 @app.route("/api/submission/<id>")
 @flask_login.login_required

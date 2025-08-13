@@ -7,36 +7,21 @@
 <style>
     /* Pending */
     .Status0 {
-        background-color: rgb(114, 107, 112);
+        background-color: #737373;
     }
 
     /* Accepted */
     .Status1 {
-        background-color: green;
+        background-color: #009966;
     }
 
-    /* Wrong Answer */
-    .Status2 {
-        background-color: red;        
-    }
-
-    /* Compile Error */
-    .Status3 {
-        background-color: red;        
-    }
-    
-    /* Runtime Error */
-    .Status4 {
-        background-color: red;        
-    }
-
-    /* Time Limit Exceeded */
-    .Status5 {
-        background-color: red;        
+    /* Wrong Answer, Compile Error, Runtime Error, Time Limit Exceeded */
+    .Status2, .Status3, .Status4, .Status5 {
+        background-color: #fb2c36;        
     }
 
     div {
-        padding: 5px;
+        padding: 5px 10px;
         border-radius: 13px;
     }
 </style>
