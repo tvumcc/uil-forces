@@ -39,8 +39,24 @@
             }
         })
         let json = await response.json()
-
         submissions = json["submissions"]
+
+        let count = json["estimated_wait"]
+        let interval_id = setInterval(async () => {
+            if (count > 0) {
+                let response: Response = await fetch("/api/contest/" + id)
+                let json = await response.json()
+                submissions = json["submissions"]
+                count--;
+            } else {
+                clearInterval(interval_id)
+            }
+        }, 1000)
+    }
+
+    async function poll_submissions() {
+        for (let i = 0; i < 5; i++) {
+        }
     }
 
     $effect(() => {

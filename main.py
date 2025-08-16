@@ -3,7 +3,7 @@ import flask_login
 from flask_apscheduler import APScheduler
 import sqlalchemy
 from sqlalchemy.orm import Session
-from sqlalchemy import create_engine, select
+from sqlalchemy import create_engine, select, desc
 from src.backend.orm import *
 
 import datetime
@@ -126,7 +126,7 @@ def contest(id):
         for profile in contest.contest_profiles:
             submissions += profile.submissions
     else: 
-        submissions = db.session.query(Submission).filter_by(contest_profile=contest_profile).all()
+        submissions = db.session.query(Submission).filter_by(contest_profile=contest_profile).order_by(desc(Submission.submit_time)).all()
 
     return contest.serialize() | {
         "submissions": [submission.shallow_serialize() for submission in submissions]
@@ -165,8 +165,11 @@ def submit_contest_problem():
     thread.daemon = True
     thread.start()
 
-    submissions = db.session.query(Submission).filter_by(contest_profile=contest_profile).all()
-    return {"submissions": [submission.shallow_serialize() for submission in submissions]}
+    submissions = db.session.query(Submission).filter_by(contest_profile=contest_profile).order_by(desc(Submission.submit_time)).all()
+    return {
+        "estimated_wait" : 10,
+        "submissions": [submission.shallow_serialize() for submission in submissions]
+    }
 
 @app.route("/api/submission/<id>")
 @flask_login.login_required
