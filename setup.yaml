@@ -8,31 +8,97 @@ users:
   - username: acemavrick
     password: lol
 problem_sets:
-  - name: 2025 UIL Districts
+  - name: 2024A
+    pdf_path: pdfs/2024A.pdf
     problems:
-      - name: Thomas
-        input_data_file: thomas.dat
-        output_data_file: thomas.out
-  - name: 2025 UIL Region 
+      - name: Akansha
+        pages: 2
+      - name: Andrew
+        pages: 3
+      - name: Bautista
+        pages: 4
+      - name: Chuanli
+        pages: 5
+      - name: Dominika
+        pages: 6 7
+      - name: Gerald
+        pages: 8
+      - name: Hiro
+        pages: 9
+      - name: Joan
+        pages: 10
+      - name: Manisha
+        pages: 11
+      - name: Patryk
+        pages: 12
+      - name: Rodrigo
+        pages: 13
+      - name: Svetlana
+        pages: 14 15
+  - name: 2024B
+    pdf_path: pdfs/2024B.pdf
     problems:
-      - name: Shubh
-        input_data_file: shubh.dat
-        output_data_file: shubh.out
-  - name: 2025 UIL State 
-    problems:
+      - name: Ajeet
+        pages: 2
+      - name: Billy
+        pages: 3
+      - name: Daniella
+        pages: 4
+      - name: Donghai
+        pages: 5
+      - name: Hiromi
+        pages: 6 7
+      - name: Jana
+        pages: 8
+      - name: Ksenia
+        pages: 9
+      - name: Marta
+        pages: 10
+      - name: Prateek
+        pages: 11
+      - name: Sofia
+        pages: 12
       - name: Tyler
-        input_data_file: tyler.dat
-        output_data_file: tyler.out
+        pages: 13
+      - name: Vika
+        pages: 14
+  - name: 2024D
+    pdf_path: pdfs/2024D.pdf
+    problems:
+      - name: Ada
+        pages: 2
+      - name: Ariel
+        pages: 3
+      - name: Bodhi
+        pages: 4
+      - name: Caroline
+        pages: 5
+      - name: Christie
+        pages: 6
+      - name: Claudius
+        pages: 7
+      - name: Garold
+        pages: 8
+      - name: Hannah
+        pages: 9 10 11
+      - name: Jennifer
+        pages: 12
+      - name: Leah
+        pages: 13
+      - name: Lucas
+        pages: 14
+      - name: Veda
+        pages: 15
 contests:
-  - name: 2025 UIL Districts
-    problem_set: 2025 UIL Districts
+  - name: 2024 UIL Invitational A
+    problem_set: 2024A
     start_time: 2025-08-04T00:06:00
     end_time: 2025-09-30T00:06:00
-  - name: 2025 UIL Region 
-    problem_set: 2025 UIL Region 
+  - name: 2024 UIL Invitational B
+    problem_set: 2024B
     start_time: 2025-08-04T00:06:00
     end_time: 2025-08-06T00:06:00
-  - name: 2025 UIL State 
-    problem_set: 2025 UIL State
+  - name: 2024 UIL Districts
+    problem_set: 2024D
     start_time: 2025-09-30T00:06:00
     end_time: 2025-10-13T00:06:00

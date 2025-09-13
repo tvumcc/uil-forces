@@ -35,19 +35,35 @@ def setup():
 
         for problem_set in setup_config["problem_sets"]:
             pset_name = problem_set["name"]
-            pset = ProblemSet(name=pset_name)
+            pdf_path = problem_set.get("pdf_path", "")
+            dataout_path = os.path.join(problem_set_path, pset_name)
+            pset = ProblemSet(name=pset_name, pdf_path=pdf_path)
 
             for problem in problem_set["problems"]:
                 prob_name = problem["name"]
+                note = problem.get("note", "")
+                pages = problem.get("pages", "")
 
-                input_data_file = problem["input_data_file"]
-                output_data_file = problem["output_data_file"]
+                input_data_file = problem.get("input_data_file", str(prob_name).lower() + ".dat")
+                output_data_file = problem.get("output_data_file", str(prob_name).lower() + ".out")
 
-                judge_input = open(os.path.join(problem_set_path, pset_name, input_data_file), "r").read()
-                judge_output = open(os.path.join(problem_set_path, pset_name, output_data_file), "r").read()
+                judge_input = ""
+                judge_output = ""
+
+                try:
+                    judge_input = open(os.path.join(dataout_path, input_data_file), "r").read()
+                except FileNotFoundError:
+                    print(f"WARNING: problem {prob_name} input file '{input_data_file}' does not exist in {dataout_path}; Input data will be blank")
+
+                try:
+                    judge_output = open(os.path.join(dataout_path, output_data_file), "r").read()
+                except FileNotFoundError:
+                    print(f"ERROR: problem {prob_name} output file '{input_data_file}' does not exist in {dataout_path}; Aborting")
 
                 session.add(Problem(
                     name=prob_name,
+                    note=note,
+                    pages=pages,
                     input_file_name=input_data_file,
                     judge_input=judge_input,
                     judge_output=judge_output,

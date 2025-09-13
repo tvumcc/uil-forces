@@ -39,6 +39,7 @@ class ProblemSet(db.Model):
     id: Mapped[int] = mapped_column(primary_key=True)
 
     name: Mapped[str] = mapped_column(unique=True)
+    pdf_path: Mapped[str] = mapped_column(default="")
 
     problems: Mapped[List["Problem"]] = relationship(back_populates="problem_set")
     contests: Mapped[List["Contest"]] = relationship(back_populates="problem_set")
@@ -61,6 +62,7 @@ class Problem(db.Model):
 
     name: Mapped[str]
     note: Mapped[str] = mapped_column(default="")
+    pages: Mapped[str] = mapped_column(default="")
 
     use_stdin:       Mapped[bool] = mapped_column(default=False)
     input_file_name: Mapped[Optional[str]]

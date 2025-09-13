@@ -114,7 +114,11 @@
 
 <div class="horizontal-split">
     <div id="pdf-viewer">
-        <embed type="application/pdf" src="spmv.pdf#toolbar=0&navpanes=0" width="100%" height="100%">
+        {#if selected_problem_id != -1}
+            <embed type="application/pdf" src={`/api/problem/${selected_problem_id}/pdf#toolbar=0&navpanes=0`} width="100%" height="100%">
+        {:else}
+            <p>No Problem Selected</p>
+        {/if}
     </div>
     <div class="submit-panel">
         <MenuBar />
@@ -143,26 +147,30 @@
             {/if}
 
             <h2>Submissions</h2>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Time</th>
-                        <th>Problem</th>
-                        <th>Status</th>
-                        <th>Code</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {#each submissions as submission}
+            {#if submissions.length > 0}
+                <table>
+                    <thead>
                         <tr>
-                            <td>{submission["submit_time"]}</td>
-                            <td>{submission["problem"]["name"]}</td>
-                            <td style="width: 175px;"><Status status_code={submission["status"]} fit_text={false}/></td>
-                            <td style="width: 100px;"><a href="/submission?id={submission["id"]}">View Code</a></td>
+                            <th>Time</th>
+                            <th>Problem</th>
+                            <th>Status</th>
+                            <th>Code</th>
                         </tr>
-                    {/each}
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        {#each submissions as submission}
+                            <tr>
+                                <td>{submission["submit_time"]}</td>
+                                <td>{submission["problem"]["name"]}</td>
+                                <td style="width: 175px;"><Status status_code={submission["status"]} fit_text={false}/></td>
+                                <td style="width: 100px;"><a href="/submission?id={submission["id"]}">View Code</a></td>
+                            </tr>
+                        {/each}
+                    </tbody>
+                </table>
+            {:else}
+                <p>No submissions at this time</p>
+            {/if}
         </div>
 
     </div>
