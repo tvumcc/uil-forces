@@ -19,11 +19,13 @@ a {
 }
 
 .main-container {
+    box-sizing: border-box;
     background-color: #101828;
     padding: 25px;
     border-radius: 10px;
     margin: 10px 0px;
-    width: 1000px;
+    width: 95%;
+    max-width: 1000px;
     min-height: 30vh;
     overflow: auto;
 }

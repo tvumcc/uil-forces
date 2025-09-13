@@ -2,6 +2,7 @@
     import { onMount } from "svelte"
     import Status from "./components/status.svelte"
     import MenuBar from "./components/menubar.svelte"
+    import { get } from "svelte/store";
 
     let params = new URLSearchParams(document.location.search)
     let id = params.get("id")
@@ -70,10 +71,11 @@
         })()
     })
 
-    onMount(getData)
+    onMount(() => {
+        getData()
+    })
 </script>
 
-<MenuBar />
 <style>
     @import "../style.css";
 
@@ -89,54 +91,79 @@
         padding: 8px;
         text-align: center;
     }
+
+    .horizontal-split {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        width: 100%;
+        height: 100%;
+    }
+
+    .submit-panel {
+        margin: 0;
+        display: flex;
+        align-items: center;
+        flex-direction: column;
+    }    
+    
+    #pdf-viewer {
+        background-color: black;
+        height: 100vh;
+    }
 </style>
 
-<div class="main-container">
-    <h1>{contest_name}</h1>
-    <h2>Submit Code</h2>
-    <form onsubmit={submit_problem}>
-        <div>
-            <select bind:value={selected_problem_id}>
-                {#each problems as problem}
-                    <option value="{problem["id"]}">{problem["name"]}</option>
-                {/each}
-            </select>
+<div class="horizontal-split">
+    <div id="pdf-viewer">
+        <embed type="application/pdf" src="spmv.pdf#toolbar=0&navpanes=0" width="100%" height="100%">
+    </div>
+    <div class="submit-panel">
+        <MenuBar />
+        <div class="main-container">
+            <h1>{contest_name}</h1>
+            <h2>Submit Code</h2>
+            <form onsubmit={submit_problem}>
+                <div>
+                    <select bind:value={selected_problem_id}>
+                        {#each problems as problem}
+                            <option value="{problem["id"]}">{problem["name"]}</option>
+                        {/each}
+                    </select>
+                </div>
+                <div>
+                    <input type="file" bind:files>
+                </div>
+                <div>
+                    <input type="submit" value="Submit">
+                </div>
+            </form>
+
+            <br>
+            {#if files}
+                <pre style="tab-size:4;">{file_text}</pre>
+            {/if}
+
+            <h2>Submissions</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Time</th>
+                        <th>Problem</th>
+                        <th>Status</th>
+                        <th>Code</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {#each submissions as submission}
+                        <tr>
+                            <td>{submission["submit_time"]}</td>
+                            <td>{submission["problem"]["name"]}</td>
+                            <td style="width: 175px;"><Status status_code={submission["status"]} fit_text={false}/></td>
+                            <td style="width: 100px;"><a href="/submission?id={submission["id"]}">View Code</a></td>
+                        </tr>
+                    {/each}
+                </tbody>
+            </table>
         </div>
-        <div>
-            <input type="file" bind:files>
-        </div>
-        <div>
-            <input type="submit" value="Submit">
-        </div>
-    </form>
 
-    <br>
-    {#if files}
-        <pre style="tab-size:4;">{file_text}</pre>
-    {/if}
-
-    <h2>Leaderboard</h2>
-
-
-    <h2>Submissions</h2>
-    <table>
-        <thead>
-            <tr>
-                <th>Time</th>
-                <th>Problem</th>
-                <th>Status</th>
-                <th>Code</th>
-            </tr>
-        </thead>
-        <tbody>
-            {#each submissions as submission}
-                <tr>
-                    <td>{submission["submit_time"]}</td>
-                    <td>{submission["problem"]["name"]}</td>
-                    <td style="width: 175px;"><Status status_code={submission["status"]} fit_text={false}/></td>
-                    <td style="width: 100px;"><a href="/submission?id={submission["id"]}">View Code</a></td>
-                </tr>
-            {/each}
-        </tbody>
-    </table>
+    </div>
 </div>

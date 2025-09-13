@@ -19,11 +19,13 @@
     @import "../../style.css";
 
     .menu-bar {
+        box-sizing: border-box;
         background-color: #101828;
         padding: 20px 25px;
         border-radius: 10px;
-        margin: 10px 0px 0px 0px;
-        width: 1000px;
+        margin: 10px 0px;
+        width: 95%;
+        max-width: 1000px;
         min-height: 1vh;
 
         display: grid;
