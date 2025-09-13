@@ -5,17 +5,19 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build && cp -r node_modules/ace-builds dist",
     "preview": "vite preview",
     "check": "svelte-check --tsconfig ./tsconfig.app.json && tsc -p tsconfig.node.json"
   },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "^6.0.0",
     "@tsconfig/svelte": "^5.0.4",
-    "@types/pdfjs-dist": "^2.10.377",
     "svelte": "^5.35.5",
     "svelte-check": "^4.2.2",
     "typescript": "~5.8.3",
     "vite": "^7.0.4"
+  },
+  "dependencies": {
+    "ace-builds": "^1.43.3"
   }
 }

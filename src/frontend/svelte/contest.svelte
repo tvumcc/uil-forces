@@ -2,7 +2,7 @@
     import { onMount } from "svelte"
     import Status from "./components/status.svelte"
     import MenuBar from "./components/menubar.svelte"
-    import { get } from "svelte/store";
+    import * as ace from "ace-builds"
 
     let params = new URLSearchParams(document.location.search)
     let id = params.get("id")
@@ -15,6 +15,28 @@
     let files: FileList = $state()!
     let file_text = $state()
     let file_name = $state()
+
+    let submit_type = $state("upload_file")
+    let upload_file = true
+    let code_text = $state()
+    let code_file_name = $state()
+
+    ace.config.set('basePath', 'ace-builds/src-noconflict')
+    let editor: ace.Editor
+
+    async function loadEditor() {
+        editor = ace.edit("editor")
+        editor.setOption("minLines", 5)
+        editor.setOption("maxLines", 30)
+        editor.setTheme("ace/theme/monokai")
+        editor.session.setMode("ace/mode/java")
+        editor.setKeyboardHandler("ace/keyboard/vim")
+
+        editor.on("change", () => {
+            localStorage.setItem(`problem_code_${selected_problem_id}`, editor.getValue())
+            code_text = editor.getValue()
+        })
+    }
 
     async function getData() {
         let response: Response = await fetch("/api/contest/" + id)
@@ -32,8 +54,8 @@
             body: JSON.stringify({
                 contest_id: id,
                 problem_id: selected_problem_id,
-                code: file_text,
-                filename: file_name
+                code: submit_type === "upload_file" ? file_text : code_text,
+                filename: submit_type === "upload_file" ? file_name : code_file_name + ".java"
             }),
             headers: {
                 "Content-Type": "application/json; charset=UTF-8"
@@ -71,8 +93,24 @@
         })()
     })
 
+    $effect(() => {
+        const storedCode = localStorage.getItem(`problem_code_${selected_problem_id}`) || ""
+        if (selected_problem_id !== -1 && submit_type === "write_code") {
+            document.getElementById("editor")!.style.display = "block"
+            editor.setValue(storedCode)
+            editor.clearSelection();
+            editor.gotoLine(1);
+            editor.getSession().setScrollTop(1);
+            editor.blur();
+            editor.focus();
+        } else {
+            document.getElementById("editor")!.style.display = "none"
+        }
+    })
+    
     onMount(() => {
         getData()
+        loadEditor()
     })
 </script>
 
@@ -110,6 +148,13 @@
         background-color: black;
         height: 100vh;
     }
+
+    #editor {
+        position: relative;
+        display: none;
+        width: 100%;
+        min-height: 100px;
+    }
 </style>
 
 <div class="horizontal-split">
@@ -127,24 +172,44 @@
             <h2>Submit Code</h2>
             <form onsubmit={submit_problem}>
                 <div>
-                    <select bind:value={selected_problem_id}>
+                    <label for="problem-select">Select a problem:</label>
+                    <select id="problem-select" bind:value={selected_problem_id}>
                         {#each problems as problem}
                             <option value="{problem["id"]}">{problem["name"]}</option>
                         {/each}
                     </select>
+                    {#if selected_problem_id !== -1} 
+                        <input type="submit" value="Submit">
+                    {/if}
                 </div>
-                <div>
-                    <input type="file" bind:files>
-                </div>
-                <div>
-                    <input type="submit" value="Submit">
-                </div>
+
+                {#if selected_problem_id !== -1}
+                    <label for="file">
+                        <input type="radio" id="upload_file" name="submitType" value="upload_file" bind:group={submit_type}>
+                        Upload File
+                    </label>
+                    <label for="code">
+                        <input type="radio" id="write_code" name="submitType" value="write_code" bind:group={submit_type}>
+                        Write Code
+                    </label>
+
+                    {#if submit_type === "upload_file"}
+                        <div>
+                            <input type="file" bind:files>
+                        </div>
+                    {/if}
+                    {#if submit_type === "write_code"}
+                        <br>
+                        <div>
+                            <label for="code-file-name">File Name:</label>
+                            <input id="code-file-name" type="text" bind:value={code_file_name}>.java
+                        </div>
+                    {/if}
+                {/if}
+                <div id="editor"></div>
             </form>
 
             <br>
-            {#if files}
-                <pre style="tab-size:4;">{file_text}</pre>
-            {/if}
 
             <h2>Submissions</h2>
             {#if submissions.length > 0}
