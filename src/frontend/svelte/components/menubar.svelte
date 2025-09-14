@@ -30,6 +30,7 @@
 
         display: grid;
         grid-template-columns: 1fr 1fr; 
+        flex: 0 0 auto;
     }
 
     #links {

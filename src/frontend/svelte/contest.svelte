@@ -135,6 +135,8 @@
         grid-template-columns: 1fr 1fr;
         width: 100%;
         height: 100%;
+
+        overflow: hidden;
     }
 
     .submit-panel {
@@ -142,11 +144,21 @@
         display: flex;
         align-items: center;
         flex-direction: column;
-    }    
+        height: 100vh;
+        overflow-y: auto;
+
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+    }
+    .submit-panel::-webkit-scrollbar {display: none;}
     
     #pdf-viewer {
-        background-color: black;
+        background-color: #101828;
         height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
     }
 
     #editor {
@@ -167,7 +179,7 @@
     </div>
     <div class="submit-panel">
         <MenuBar />
-        <div class="main-container">
+        <div class="main-container" style="flex: 0 0 auto;">
             <h1>{contest_name}</h1>
             <h2>Submit Code</h2>
             <form onsubmit={submit_problem}>
