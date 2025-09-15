@@ -139,6 +139,7 @@ def submit_contest_problem():
     response = flask.request.get_json()
     problem = db.session.get(Problem, response["problem_id"])
     contest = db.session.get(Contest, response["contest_id"])
+    language = response["language"]
     if not problem:
         return {"message": "invalid problem id"}
     if not contest:
@@ -157,7 +158,8 @@ def submit_contest_problem():
         status=Status.Pending.value,
         filename=response["filename"],
         code=response["code"],
-        submit_time=datetime.datetime.now()
+        submit_time=datetime.datetime.now(),
+        language=language
     )
     db.session.add(submission)
     db.session.commit()

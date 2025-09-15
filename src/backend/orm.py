@@ -106,6 +106,7 @@ class Submission(db.Model):
     filename:    Mapped[str]
     code:        Mapped[str]
     output:      Mapped[str] = mapped_column(default="")
+    language:    Mapped[str]
 
     problem_id         = mapped_column(ForeignKey("problem.id"))
     user_id            = mapped_column(ForeignKey("user.id"))
@@ -128,7 +129,8 @@ class Submission(db.Model):
             "submit_time": self.submit_time,
             "user": self.user.shallow_serialize(),
             "problem": self.problem.shallow_serialize(),
-            "contest_profile": self.contest_profile.shallow_serialize()
+            "contest_profile": self.contest_profile.shallow_serialize(),
+            "language": self.language
         }
 
 

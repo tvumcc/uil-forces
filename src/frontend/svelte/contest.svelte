@@ -16,10 +16,17 @@
     let file_text = $state()
     let file_name = $state()
 
+    const languages = new Map([
+        ["Java", "java"],
+        ["Python", "py"],
+        ["C++", "cpp"]
+    ])
+
+    let selected_language = $state("")
     let submit_type = $state("upload_file")
     let upload_file = true
     let code_text = $state()
-    let code_file_name = $state()
+    let code_file_name = $state("")
 
     ace.config.set('basePath', 'ace-builds/src-noconflict')
     let editor: ace.Editor
@@ -33,7 +40,7 @@
         editor.setKeyboardHandler("ace/keyboard/vim")
 
         editor.on("change", () => {
-            localStorage.setItem(`problem_code_${selected_problem_id}`, editor.getValue())
+            localStorage.setItem(`problem_code_${selected_language}_${selected_problem_id}`, editor.getValue())
             code_text = editor.getValue()
         })
     }
@@ -55,7 +62,8 @@
                 contest_id: id,
                 problem_id: selected_problem_id,
                 code: submit_type === "upload_file" ? file_text : code_text,
-                filename: submit_type === "upload_file" ? file_name : code_file_name + ".java"
+                filename: submit_type === "upload_file" ? file_name : code_file_name + `.${languages.get(selected_language)}`,
+                language: selected_language
             }),
             headers: {
                 "Content-Type": "application/json; charset=UTF-8"
@@ -94,9 +102,34 @@
     })
 
     $effect(() => {
-        const storedCode = localStorage.getItem(`problem_code_${selected_problem_id}`) || ""
+        if (selected_problem_id !== -1 && submit_type === "write_code") {
+            const storedCodeFileName = localStorage.getItem(`problem_code_file_name_${selected_problem_id}`) || ""
+
+            const code_file_name_input = document.getElementById("code-file-name") as HTMLInputElement
+            code_file_name_input!.value= storedCodeFileName
+            code_file_name = storedCodeFileName
+
+            code_file_name_input?.addEventListener("change", () => {
+                localStorage.setItem(`problem_code_file_name_${selected_problem_id}`, code_file_name)
+            })
+        }
+    })
+
+    $effect(() => {
+        const storedCode = localStorage.getItem(`problem_code_${selected_language}_${selected_problem_id}`) || ""
         if (selected_problem_id !== -1 && submit_type === "write_code") {
             document.getElementById("editor")!.style.display = "block"
+            switch (selected_language) {
+                case "Java":
+                    editor.session.setMode("ace/mode/java")
+                    break
+                case "Python":
+                    editor.session.setMode("ace/mode/python")
+                    break
+                case "C++":
+                    editor.session.setMode("ace/mode/c_cpp")
+                    break
+            }
             editor.setValue(storedCode)
             editor.clearSelection();
             editor.gotoLine(1);
@@ -196,26 +229,35 @@
                 </div>
 
                 {#if selected_problem_id !== -1}
-                    <label for="file">
-                        <input type="radio" id="upload_file" name="submitType" value="upload_file" bind:group={submit_type}>
-                        Upload File
-                    </label>
-                    <label for="code">
-                        <input type="radio" id="write_code" name="submitType" value="write_code" bind:group={submit_type}>
-                        Write Code
-                    </label>
+                    <label for="language-select">Select a language:</label>
+                    <select id="language-select" bind:value={selected_language}>
+                        {#each languages.entries() as [lang, ext]}
+                            <option value="{lang}">{lang}</option>
+                        {/each}
+                    </select>
+                    <br>
+                    {#if selected_language !== ""}
+                        <label for="file">
+                            <input type="radio" id="upload_file" name="submitType" value="upload_file" bind:group={submit_type}>
+                            Upload File
+                        </label>
+                        <label for="code">
+                            <input type="radio" id="write_code" name="submitType" value="write_code" bind:group={submit_type}>
+                            Write Code
+                        </label>
 
-                    {#if submit_type === "upload_file"}
-                        <div>
-                            <input type="file" bind:files>
-                        </div>
-                    {/if}
-                    {#if submit_type === "write_code"}
-                        <br>
-                        <div>
-                            <label for="code-file-name">File Name:</label>
-                            <input id="code-file-name" type="text" bind:value={code_file_name}>.java
-                        </div>
+                        {#if submit_type === "upload_file"}
+                            <div>
+                                <input type="file" bind:files>
+                            </div>
+                        {/if}
+                        {#if submit_type === "write_code"}
+                            <br>
+                            <div>
+                                <label for="code-file-name">File Name:</label>
+                                <input id="code-file-name" type="text" bind:value={code_file_name}>.{languages.get(selected_language)}
+                            </div>
+                        {/if}
                     {/if}
                 {/if}
                 <div id="editor"></div>
@@ -230,6 +272,7 @@
                         <tr>
                             <th>Time</th>
                             <th>Problem</th>
+                            <th>Language</th>
                             <th>Status</th>
                             <th>Code</th>
                         </tr>
@@ -239,8 +282,9 @@
                             <tr>
                                 <td>{submission["submit_time"]}</td>
                                 <td>{submission["problem"]["name"]}</td>
+                                <td>{submission["language"]}</td>
                                 <td style="width: 175px;"><Status status_code={submission["status"]} fit_text={false}/></td>
-                                <td style="width: 100px;"><a href="/submission?id={submission["id"]}">View Code</a></td>
+                                <td style="width: 80px;"><a href="/submission?id={submission["id"]}">View Code</a></td>
                             </tr>
                         {/each}
                     </tbody>
