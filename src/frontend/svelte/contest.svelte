@@ -22,6 +22,7 @@
         ["C++", "cpp"]
     ])
 
+    let show_selected_problem_submissions = $state(false)
     let selected_language = $state("")
     let submit_type = $state("upload_file")
     let upload_file = true
@@ -266,6 +267,8 @@
             <br>
 
             <h2>Submissions</h2>
+            <label for="show-selected-problem-submissions">Only Show Submissions for the Selected Problem</label>
+            <input type="checkbox" id="show-selected-problem-submissions" bind:checked={show_selected_problem_submissions}>
             {#if submissions.length > 0}
                 <table>
                     <thead>
@@ -279,13 +282,15 @@
                     </thead>
                     <tbody>
                         {#each submissions as submission}
-                            <tr>
-                                <td>{submission["submit_time"]}</td>
-                                <td>{submission["problem"]["name"]}</td>
-                                <td>{submission["language"]}</td>
-                                <td style="width: 175px;"><Status status_code={submission["status"]} fit_text={false}/></td>
-                                <td style="width: 80px;"><a href="/submission?id={submission["id"]}">View Code</a></td>
-                            </tr>
+                            {#if !show_selected_problem_submissions || submission["problem"]["id"] === selected_problem_id}
+                                <tr>
+                                    <td>{submission["submit_time"]}</td>
+                                    <td>{submission["problem"]["name"]}</td>
+                                    <td>{submission["language"]}</td>
+                                    <td style="width: 175px;"><Status status_code={submission["status"]} fit_text={false}/></td>
+                                    <td style="width: 80px;"><a href="/submission?id={submission["id"]}">View Code</a></td>
+                                </tr>
+                            {/if}
                         {/each}
                     </tbody>
                 </table>
