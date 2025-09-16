@@ -1,0 +1,14 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  </head>
+  <body id="problem-set">
+    <script type="module">
+      import { mount } from "svelte"
+      import ProblemSet from "../svelte/problemSet.svelte"
+      export const problemSet = mount(ProblemSet, { target: document.getElementById("problem-set") })
+    </script>
+  </body>
+</html>

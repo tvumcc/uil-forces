@@ -52,10 +52,15 @@ def contest_list_page():
 def submission_page():
     return flask.send_from_directory(app.static_folder, "src/frontend/html/submission.html")
 
-@app.route("/practice")
+@app.route("/pset")
 @flask_login.login_required
-def practice_page():
-    return flask.send_from_directory(app.static_folder, "src/frontend/html/practice.html")
+def pset_page():
+    return flask.send_from_directory(app.static_folder, "src/frontend/html/problemSet.html")
+
+@app.route("/psets")
+@flask_login.login_required
+def pset_list_page():
+    return flask.send_from_directory(app.static_folder, "src/frontend/html/problemSetList.html")
 
 @app.route("/api/login", methods=["GET", "POST"])
 def login():
@@ -169,6 +174,63 @@ def submit_contest_problem():
     thread.start()
 
     submissions = db.session.query(Submission).filter_by(contest_profile=contest_profile).order_by(desc(Submission.submit_time)).all()
+    return {
+        "estimated_wait" : 10,
+        "submissions": [submission.shallow_serialize() for submission in submissions]
+    }
+
+@app.route("/api/pset/<id>")
+@flask_login.login_required
+def pset(id):
+    pset = db.session.get(ProblemSet, id)
+    submissions = []
+    for problem in pset.problems:
+        submissions += db.session.query(Submission).filter_by(user=flask_login.current_user, problem=problem).order_by(desc(Submission.submit_time)).all()
+    submissions.sort(key=lambda submission: submission.submit_time, reverse=True)
+
+    return pset.serialize() | {
+        "submissions": [submission.shallow_serialize() for submission in submissions]
+    }
+
+@app.route("/api/psets")
+@flask_login.login_required
+def psets():
+    psets = db.session.query(ProblemSet).all()
+    return {
+        "psets": [pset.shallow_serialize() for pset in psets]
+    }
+
+@app.route("/api/pset/submit", methods=["POST"])
+def submit_pset_problem():
+    response = flask.request.get_json()
+    problem = db.session.get(Problem, response["problem_id"])
+    language = response["language"]
+    if not problem:
+        return {"message": "invalid problem id"}
+
+    submission = Submission(
+        problem=problem,
+        user=flask_login.current_user,
+
+        status=Status.Pending.value,
+        filename=response["filename"],
+        code=response["code"],
+        submit_time=datetime.datetime.now(),
+        language=language
+    )
+    db.session.add(submission)
+    db.session.commit()
+
+    thread = threading.Thread(target=assign_status, args=[submission.id])
+    thread.daemon = True
+    thread.start()
+
+
+    submissions = []
+    for prob in problem.problem_set.problems:
+        submissions += db.session.query(Submission).filter_by(user=flask_login.current_user, problem=prob).order_by(desc(Submission.submit_time)).all()
+    submissions.sort(key=lambda submission: submission.submit_time, reverse=True)
+
     return {
         "estimated_wait" : 10,
         "submissions": [submission.shallow_serialize() for submission in submissions]

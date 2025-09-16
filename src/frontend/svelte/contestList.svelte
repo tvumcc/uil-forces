@@ -28,21 +28,21 @@
     {#if ongoing_contests.length > 0}
         <h2>Ongoing Contests</h2>
         {#each ongoing_contests as contest}
-            <a href="/contest?id={contest["id"]}">{contest["name"]}</a>
+            <a href="/contest?id={contest["id"]}">{contest["name"]}</a><br>
         {/each}
     {/if}
 
     {#if upcoming_contests.length > 0}
         <h2>Upcoming Contests</h2>
         {#each upcoming_contests as contest}
-            <a href="/contest?id={contest["id"]}">{contest["name"]}</a>
+            <a href="/contest?id={contest["id"]}">{contest["name"]}</a><br>
         {/each}
     {/if}
 
     {#if past_contests.length > 0}
         <h2>Past Contests</h2>
         {#each past_contests as contest}
-            <a href="/contest?id={contest["id"]}">{contest["name"]}</a>
+            <a href="/contest?id={contest["id"]}">{contest["name"]}</a><br>
         {/each}
     {/if}
 </div>

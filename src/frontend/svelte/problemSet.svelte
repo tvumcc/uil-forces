@@ -5,4 +5,4 @@
     let id = params.get("id")
 </script>
 
-<SubmitPage submissionType={"contest"} ID={id}/>
+<SubmitPage submissionType={"pset"} ID={id}/>

@@ -129,9 +129,8 @@ class Submission(db.Model):
             "submit_time": self.submit_time,
             "user": self.user.shallow_serialize(),
             "problem": self.problem.shallow_serialize(),
-            "contest_profile": self.contest_profile.shallow_serialize(),
             "language": self.language
-        }
+        } | ({} if self.contest_profile is None else {"contest_profile": self.contest_profile.shallow_serialize()})
 
 
 class Contest(db.Model):
