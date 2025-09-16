@@ -141,6 +141,14 @@
             document.getElementById("editor")!.style.display = "none"
         }
     })
+
+    $effect(() => {
+        if (selected_problem_id === -1) {
+            document.getElementById("pdf-viewer")!.style.display = "none"
+        } else {
+            document.getElementById("pdf-viewer")!.style.display = "flex"
+        }
+    })
     
     onMount(() => {
         getData()
@@ -165,8 +173,8 @@
     }
 
     .horizontal-split {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
+        display: flex;
+        /* grid-template-columns: 1fr 1fr; */
         width: 100%;
         height: 100%;
 
@@ -180,6 +188,7 @@
         flex-direction: column;
         height: 100vh;
         overflow-y: auto;
+        flex: 1;
 
         scrollbar-width: none;
         -ms-overflow-style: none;
@@ -190,6 +199,7 @@
         background-color: #101828;
         height: 100vh;
         display: flex;
+        flex: 1;
         justify-content: center;
         align-items: center;
         text-align: center;

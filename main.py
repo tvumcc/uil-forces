@@ -45,7 +45,7 @@ def contest_page():
 @app.route("/contests")
 @flask_login.login_required
 def contest_list_page():
-    return flask.send_from_directory(app.static_folder, "src/frontend/html/contest_list.html")
+    return flask.send_from_directory(app.static_folder, "src/frontend/html/contestList.html")
 
 @app.route("/submission")
 @flask_login.login_required
