@@ -15,11 +15,11 @@
                 "Content-Type": "application/json; charset=UTF-8"
             }
         })
-        let response_json = await response.json()
+        let json = await response.json()
 
         if (response.ok) {
-            if (response_json["login_success"]) {
-                window.location.href = response_json["redirect"]
+            if (json["login_success"]) {
+                window.location.href = json["redirect"]
             }
         }
     }

@@ -1,7 +1,7 @@
 <script lang="ts">
-    let { status_code, fit_text } = $props()
-    let display_selector = fit_text ? "inline-block" : "block"
-    let status_str = ["Pending", "Accepted", "Wrong Answer", "Compile Error", "Runtime Error", "Time Limit Exceeded"]
+    let { statusCode, fitText } = $props()
+    let displaySelector = fitText ? "inline-block" : "block"
+    let statusStr = ["Pending", "Accepted", "Wrong Answer", "Compile Error", "Runtime Error", "Time Limit Exceeded"]
 </script>
 
 <style>
@@ -26,6 +26,6 @@
     }
 </style>
 
-<div class="Status{status_code}" style="display: {display_selector};">
-    <b>{ status_str[status_code] }</b>
+<div class="Status{statusCode}" style="display: {displaySelector};">
+    <b>{ statusStr[statusCode] }</b>
 </div>

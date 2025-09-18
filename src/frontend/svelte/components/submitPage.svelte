@@ -300,7 +300,7 @@
                                     <td>{submission["submit_time"]}</td>
                                     <td>{submission["problem"]["name"]}</td>
                                     <td>{submission["language"]}</td>
-                                    <td style="width: 175px;"><Status status_code={submission["status"]} fit_text={false}/></td>
+                                    <td style="width: 175px;"><Status statusCode={submission["status"]} fitText={false}/></td>
                                     <td style="width: 80px;"><a href="/submission?id={submission["id"]}">View Code</a></td>
                                 </tr>
                             {/if}

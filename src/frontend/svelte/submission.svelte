@@ -3,19 +3,15 @@
     import MenuBar from "./components/menubar.svelte"
 
     let params = new URLSearchParams(document.location.search)
-    let id = params.get("id")
+    let ID = params.get("id")
 
     async function get_data() {
-        let response: Response = await fetch("/api/submission/" + id)
+        let response: Response = await fetch(`/api/submission/${ID}`)
         let json = await response.json()
-        if (json["message"]) {
-            console.log("invalid")
-        }
-
         return json
     }
 
-    let submission_promise = get_data()
+    let submissionPromise = get_data()
 </script>
 
 <style>
@@ -24,12 +20,12 @@
 
 <MenuBar />
 <div class="main-container">
-    {#await submission_promise then submission}
+    {#await submissionPromise then submission}
         <h1>Submission</h1>
 
         <p>User: {submission.user.username}</p>
         <p>Submit Time: {submission.submit_time}</p>
-        <p>Status: <Status status_code={submission.status} fit_text={true}/></p>
+        <p>Status: <Status statusCode={submission.status} fitText={true}/></p>
         {#if submission.contest_profile}
             <p>Contest: {submission.contest_profile.contest.name}</p>
         {/if}

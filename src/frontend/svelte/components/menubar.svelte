@@ -12,7 +12,7 @@
         window.location.href = json["redirect"]
     }
 
-    let user_promise = get_user()
+    let userPromise = get_user()
 </script>
 
 <style>
@@ -67,7 +67,7 @@
         <a class="link" href="/psets">Practice</a>
     </div>
     <div id="user-info">
-        {#await user_promise then user}
+        {#await userPromise then user}
             <p id="username">{user.username}</p>
         {/await}
         <p>|</p>

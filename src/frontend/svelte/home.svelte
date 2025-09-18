@@ -2,14 +2,14 @@
     import { onMount } from "svelte"
     import MenuBar from "./components/menubar.svelte"
 
-    let ongoing_contests = $state([])
-    let upcoming_contests = $state([])
+    let ongoingContests = $state([])
+    let upcomingContests = $state([])
 
     async function getData() {
         let response: Response = await fetch("/api/contests")
         let json = await response.json()
-        ongoing_contests = json["ongoing"]
-        upcoming_contests = json["upcoming"]
+        ongoingContests = json["ongoing"]
+        upcomingContests = json["upcoming"]
     }
 
     onMount(getData)
@@ -25,16 +25,16 @@
 
     <a href="/contests">All Contests</a><br>
 
-    {#if ongoing_contests.length > 0}
+    {#if ongoingContests.length > 0}
         <h2>Ongoing Contests</h2>
-        {#each ongoing_contests as contest}
+        {#each ongoingContests as contest}
             <a href="/contest?id={contest["id"]}">{contest["name"]}</a>
         {/each}
     {/if}
 
-    {#if upcoming_contests.length > 0}
+    {#if upcomingContests.length > 0}
         <h2>Upcoming Contests</h2>
-        {#each upcoming_contests as contest}
+        {#each upcomingContests as contest}
             <a href="/contest?id={contest["id"]}">{contest["name"]}</a>
         {/each}
     {/if}
