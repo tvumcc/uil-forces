@@ -99,14 +99,7 @@ def contests():
     }
 
     for contest in contests:
-        contest_json = {
-            "name": contest.name,
-            "id": contest.id,
-            "problem_set": contest.problem_set.name,
-            "start_time": contest.start_time,
-            "end_time": contest.end_time
-        }
-
+        contest_json = contest.shallow_serialize() 
         if contest.past():
             out["past"].append(contest_json)
         elif contest.ongoing():

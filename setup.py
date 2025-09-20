@@ -74,13 +74,28 @@ def setup():
         
         for contest in setup_config["contests"]:
             contest_name = contest["name"]
-            pset = contest["problem_set"]
+            pset = contest.get("problem_set")
+            problems = contest.get("problems")
             start_time = contest["start_time"]
             end_time = contest["end_time"]
 
+            contest_problems = []
+
+            if pset is not None:
+                contest_problems += session.query(ProblemSet).filter_by(name=pset).first().problems
+            if problems is not None:
+                for problem_path in problems:
+                    problem_set_name = problem_path.split("/")[0]
+                    problem_set = session.query(ProblemSet).filter_by(name=problem_set_name).first()
+                    problem_name = problem_path.split("/")[1]
+                    problem = session.query(Problem).filter_by(problem_set=problem_set, name=problem_name).first()
+
+                    if not problem in contest_problems:
+                        contest_problems.append(problem)
+
             session.add(Contest(
                 name=contest_name,
-                problem_set=session.query(ProblemSet).filter_by(name=pset).first(),
+                problems=contest_problems,
                 start_time=start_time,
                 end_time=end_time
             ))

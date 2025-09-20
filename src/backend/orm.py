@@ -1,5 +1,5 @@
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import DateTime, ForeignKey
+from sqlalchemy import DateTime, ForeignKey, Table, Column
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from flask_login import UserMixin
 from typing import List, Optional
@@ -9,6 +9,13 @@ class Base(DeclarativeBase):
     pass
 
 db = SQLAlchemy(model_class=Base)
+
+contest_problem_association_table = Table(
+    "contest_problem_association_table",
+    Base.metadata,
+    Column("contest_id", ForeignKey("contest.id"), primary_key=True),
+    Column("problem_id", ForeignKey("problem.id"), primary_key=True)
+)
 
 class User(UserMixin, db.Model):
     __tablename__ = "user"
@@ -42,7 +49,6 @@ class ProblemSet(db.Model):
     pdf_path: Mapped[str] = mapped_column(default="")
 
     problems: Mapped[List["Problem"]] = relationship(back_populates="problem_set")
-    contests: Mapped[List["Contest"]] = relationship(back_populates="problem_set")
 
     def serialize(self):
         return self.shallow_serialize() | {
@@ -142,9 +148,7 @@ class Contest(db.Model):
     start_time: Mapped[datetime.datetime]
     end_time:   Mapped[datetime.datetime]
 
-    problem_set_id = mapped_column(ForeignKey("problem_set.id"))
-
-    problem_set:      Mapped["ProblemSet"]           = relationship(back_populates="contests")
+    problems:         Mapped[List["Problem"]]        = relationship(secondary=contest_problem_association_table)
     contest_profiles: Mapped[List["ContestProfile"]] = relationship(back_populates="contest")
 
     def past(self):
@@ -158,7 +162,7 @@ class Contest(db.Model):
 
     def serialize(self):
         return self.shallow_serialize() | {
-            "problem_set": self.problem_set.serialize(),
+            "problems": [problem.shallow_serialize() for problem in self.problems]
         }
 
     def shallow_serialize(self):

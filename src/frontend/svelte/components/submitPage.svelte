@@ -58,7 +58,7 @@
         let json = await response.json()
         console.log(json)
         pageTitle = json["name"]
-        problems = contest ? json["problem_set"]["problems"] : json["problems"]
+        problems = json["problems"]
         submissions = json["submissions"]
     }
 

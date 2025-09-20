@@ -27,7 +27,7 @@
         <p>Submit Time: {submission.submit_time}</p>
         <p>Status: <Status statusCode={submission.status} fitText={true}/></p>
         {#if submission.contest_profile}
-            <p>Contest: {submission.contest_profile.contest.name}</p>
+            <p>Contest: <a href="/contest?id={submission.contest_profile.contest.id}">{submission.contest_profile.contest.name}</a></p>
         {/if}
 
         <h2>Submitted Code</h2>

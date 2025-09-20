@@ -102,3 +102,11 @@ contests:
     problem_set: 2024D
     start_time: 2025-09-30T00:06:00
     end_time: 2025-10-13T00:06:00
+  - name: Mashup Contest
+    problem_set: 2024A
+    problems: 
+      - 2024D/Ada
+      - 2024B/Tyler
+      - 2024A/Akansha
+    start_time: 2025-08-04T00:06:00
+    end_time: 2025-09-30T00:06:00

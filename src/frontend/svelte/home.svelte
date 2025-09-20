@@ -23,19 +23,17 @@
 <div class="main-container">
     <h1>Home</h1>
 
-    <a href="/contests">All Contests</a><br>
-
     {#if ongoingContests.length > 0}
         <h2>Ongoing Contests</h2>
         {#each ongoingContests as contest}
-            <a href="/contest?id={contest["id"]}">{contest["name"]}</a>
+            <a href="/contest?id={contest["id"]}">{contest["name"]}</a><br>
         {/each}
     {/if}
 
     {#if upcomingContests.length > 0}
         <h2>Upcoming Contests</h2>
         {#each upcomingContests as contest}
-            <a href="/contest?id={contest["id"]}">{contest["name"]}</a>
+            <a href="/contest?id={contest["id"]}">{contest["name"]}</a><br>
         {/each}
     {/if}
 </div>
