@@ -1,8 +1,7 @@
-use_practice: True
-branch: False
 users:
   - username: tvumcc
     password: globbler
+    admin: true
   - username: piigle
     password: jello
   - username: acemavrick

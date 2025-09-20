@@ -32,7 +32,10 @@ class User(UserMixin, db.Model):
     submissions:      Mapped[List["Submission"]]     = relationship(back_populates="user")
 
     def serialize(self):
-        return self.shallow_serialize()
+        return self.shallow_serialize() | {
+            "passphrase": self.passphrase,
+            "is_admin": self.is_admin
+        }
 
     def shallow_serialize(self):
         return {

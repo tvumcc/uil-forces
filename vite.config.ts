@@ -14,7 +14,8 @@ export default defineConfig({
         contestList: "./src/frontend/html/contestList.html",
         submission: "./src/frontend/html/submission.html",
         pset: "./src/frontend/html/problemSet.html",
-        psetList: "./src/frontend/html/problemSetList.html"
+        psetList: "./src/frontend/html/problemSetList.html",
+        adminUsers: "./src/frontend/html/adminUsers.html"
       },
     },
   },

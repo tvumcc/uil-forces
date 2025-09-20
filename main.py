@@ -62,6 +62,13 @@ def pset_page():
 def pset_list_page():
     return flask.send_from_directory(app.static_folder, "src/frontend/html/problemSetList.html")
 
+@app.route("/admin/users")
+@flask_login.login_required
+def admin_users_page():
+    if not flask_login.current_user.is_admin:
+        return flask.abort(400)
+    return flask.send_from_directory(app.static_folder, "src/frontend/html/adminUsers.html")
+
 @app.route("/api/login", methods=["GET", "POST"])
 def login():
     response = flask.request.get_json()
@@ -72,7 +79,7 @@ def login():
 
     login_success = False
 
-    if not user.is_admin and user.passphrase == passphrase:
+    if user.passphrase == passphrase:
         flask_login.login_user(db.session.get(User, user.id))
         login_success = True
 
@@ -270,6 +277,34 @@ def submission(id):
 def user():
     return flask_login.current_user.shallow_serialize()
 
+@app.route("/api/admin/users")
+@flask_login.login_required
+def admin_users():
+    if not flask_login.current_user.is_admin:
+        return flask.abort(400)
+
+    return {"users": [user.serialize() for user in db.session.query(User).all()]}
+
+@app.route("/api/admin/add/user", methods=["POST"])
+@flask_login.login_required
+def admin_add_user():
+    if not flask_login.current_user.is_admin:
+        return flask.abort(400)
+
+    request = flask.request.get_json()
+
+    username = request["username"]
+    password = request["password"] 
+    is_admin = request["is_admin"]
+
+    db.session.add(User(
+        username=username,
+        passphrase=password,
+        is_admin=is_admin
+    ))
+    db.session.commit()
+
+    return flask.Response(status=200)
 
 if __name__ == "__main__":
     # scheduler = APScheduler()

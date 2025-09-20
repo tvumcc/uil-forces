@@ -24,14 +24,12 @@ def setup():
         document = setup_file.read()
         setup_config = yaml.safe_load(document)
 
-        use_practice = setup_config["use_practice"]
-        branch = setup_config["branch"]
-
         for user in setup_config["users"]:
             username = user["username"]
             password = user["password"]
+            is_admin = user.get("admin", False)
 
-            session.add(User(username=username, passphrase=password))
+            session.add(User(username=username, passphrase=password, is_admin=is_admin))
 
         for problem_set in setup_config["problem_sets"]:
             pset_name = problem_set["name"]
