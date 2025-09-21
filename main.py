@@ -64,10 +64,25 @@ def pset_list_page():
 
 @app.route("/admin/users")
 @flask_login.login_required
-def admin_users_page():
+def admin_user_list_page():
     if not flask_login.current_user.is_admin:
         return flask.abort(400)
-    return flask.send_from_directory(app.static_folder, "src/frontend/html/adminUsers.html")
+    return flask.send_from_directory(app.static_folder, "src/frontend/html/adminUserList.html")
+
+@app.route("/admin/contests")
+@flask_login.login_required
+def admin_contest_list_page():
+    if not flask_login.current_user.is_admin:
+        return flask.abort(400)
+    return flask.send_from_directory(app.static_folder, "src/frontend/html/adminContestList.html")
+
+@app.route("/admin/contest")
+@flask_login.login_required
+def admin_contest_page():
+    if not flask_login.current_user.is_admin:
+        return flask.abort(400)
+    return flask.send_from_directory(app.static_folder, "src/frontend/html/adminContest.html")
+
 
 @app.route("/api/login", methods=["GET", "POST"])
 def login():
@@ -301,6 +316,117 @@ def admin_add_user():
         username=username,
         passphrase=password,
         is_admin=is_admin
+    ))
+    db.session.commit()
+
+    return flask.Response(status=200)
+
+@app.route("/api/admin/contests")
+@flask_login.login_required
+def admin_contests():
+    if not flask_login.current_user.is_admin:
+        return flask.abort(400)
+    return {"contests": [contest.shallow_serialize() for contest in db.session.query(Contest).all()]}
+
+@app.route("/api/admin/contest/<id>")
+@flask_login.login_required
+def admin_contest(id):
+    if not flask_login.current_user.is_admin:
+        return flask.abort(400)
+    contest = db.session.get(Contest, id)
+    return {"contest": contest.serialize()}
+
+@app.route("/api/admin/contest/<id>/add/problem", methods=["POST"])
+@flask_login.login_required
+def admin_contest_add_problem(id):
+    if not flask_login.current_user.is_admin:
+        return flask.abort(400)
+
+    request = flask.request.get_json()
+    pset_name = request["pset_name"]
+    problem_name = request["problem_name"]
+
+    contest = db.session.get(Contest, id)
+    problem_set = db.session.query(ProblemSet).filter_by(name=pset_name).first()
+    if problem_set is None:
+        return flask.abort(400)
+
+    problem = db.session.query(Problem).filter_by(problem_set=problem_set, name=problem_name).first()
+
+    if problem is None:
+        return flask.abort(400)
+
+    for p in contest.problems:
+        if p.id == problem.id:
+            return flask.abort(400)
+
+    contest.problems.append(problem)
+    db.session.add(contest)
+    db.session.commit()
+
+    return flask.Response(status=200)
+
+@app.route("/api/admin/contest/<id>/add/pset", methods=["POST"])
+@flask_login.login_required
+def admin_contest_add_pset(id):
+    if not flask_login.current_user.is_admin:
+        return flask.abort(400)
+
+    request = flask.request.get_json()
+    pset_name = request["pset_name"]
+
+    contest = db.session.get(Contest, id)
+    problem_set = db.session.query(ProblemSet).filter_by(name=pset_name).first()
+    if problem_set is None:
+        return flask.abort(400)
+
+    for problem in problem_set.problems:
+        if not problem in contest.problems:
+            contest.problems.append(problem) 
+
+    db.session.add(contest)
+    db.session.commit()
+
+    return flask.Response(status=200)
+
+@app.route("/api/admin/update/contest", methods=["POST"])
+@flask_login.login_required
+def admin_update_contest():
+    if not flask_login.current_user.is_admin:
+        return flask.abort(400)
+    
+    request = flask.request.get_json()
+    id = request["id"]
+    name = request["name"]
+    start_time = request["start_time"]
+    end_time = request["end_time"]
+
+    contest = db.session.get(Contest, id)
+    contest.name = name
+    contest.start_time = datetime.datetime.fromisoformat(start_time)
+    contest.end_time = datetime.datetime.fromisoformat(end_time)
+
+    db.session.add(contest)
+    db.session.commit()
+
+    return flask.Response(status=200)
+
+@app.route("/api/admin/add/contest", methods=["POST"])
+@flask_login.login_required
+def admin_add_contest():
+    if not flask_login.current_user.is_admin:
+        return flask.abort(400)
+    
+    request = flask.request.get_json()
+
+    name = request["name"]
+    start_time = datetime.datetime.fromisoformat(request["start_time"])
+    end_time = datetime.datetime.fromisoformat(request["end_time"])
+
+    db.session.add(Contest(
+        name=name,
+        start_time=start_time,
+        end_time=end_time
     ))
     db.session.commit()
 

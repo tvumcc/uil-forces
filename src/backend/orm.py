@@ -165,15 +165,15 @@ class Contest(db.Model):
 
     def serialize(self):
         return self.shallow_serialize() | {
-            "problems": [problem.shallow_serialize() for problem in self.problems]
+            "problems": [problem.shallow_serialize() for problem in sorted(self.problems, key=lambda x: x.name)]
         }
 
     def shallow_serialize(self):
         return {
             "id": self.id,
             "name": self.name,
-            "start_time": self.start_time,
-            "end_time": self.end_time
+            "start_time": self.start_time.isoformat(),
+            "end_time": self.end_time.isoformat()
         }
 
 class ContestProfile(db.Model):
