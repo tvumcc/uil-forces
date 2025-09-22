@@ -389,6 +389,33 @@ def admin_contest_add_pset(id):
 
     return flask.Response(status=200)
 
+@app.route("/api/admin/contest/unlinkproblem", methods=["POST"])
+@flask_login.login_required
+def admin_contest_unlink_problem():
+    if not flask_login.current_user.is_admin:
+        return flask.abort(400)
+
+    request = flask.request.get_json()
+    contest_id = request["contest_id"]
+    problem_id = request["problem_id"]
+
+    contest: Contest = db.session.get(Contest, contest_id)
+    problem = db.session.get(Problem, problem_id)
+
+    if contest is None:
+        return flask.abort(404)
+    if problem is None:
+        return flask.abort(404)
+
+    try:
+        contest.problems.remove(problem)
+        db.session.add(contest)
+        db.session.commit()
+    except ValueError:
+        return flask.abort(400)
+
+    return flask.Response(status=200)
+
 @app.route("/api/admin/update/contest", methods=["POST"])
 @flask_login.login_required
 def admin_update_contest():

@@ -81,6 +81,23 @@
         }
     }
 
+    async function unlinkProblem(problem_id: number) {
+        let response: Response = await fetch("/api/admin/contest/unlinkproblem", {
+            method: "POST",
+            body: JSON.stringify({
+                contest_id: ID,
+                problem_id: problem_id
+            }),
+            headers: {
+                "Content-Type": "application/json; charset=UTF-8"
+            }
+        })
+
+        if (response.ok)  {
+            await getData()
+        }
+    }
+
     onMount(getData)
 </script>
 
@@ -105,6 +122,7 @@
     <p>Problems:</p>
     {#each problems as problem}
         <a href="/admin/problem?id={problem["id"]}">{problem["name"]}</a>
+        <button onclick={async ()=>{await unlinkProblem(problem["id"])}}>Remove</button>
         <br>
     {/each}
 
