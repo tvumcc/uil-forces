@@ -59,7 +59,7 @@ def assign_status(submission_id):
             print(submission.filename)
             match submission.language:
                 case "Java":
-                    status, output = grade_java_submission(submission)
+                    status, output = grade_java_submission_docker(submission)
                 case "Python":
                     status, output = grade_python_submission(submission)
                 case "C++":
@@ -176,6 +176,37 @@ def grade_cpp_submission(submission: Submission):
         return (Status.TimeLimitExceeded, "")
     except subprocess.CalledProcessError as e:
         return (Status.ErrorRuntime, e.stderr.decode("utf-8")) 
+    finally:
+        try: shutil.rmtree(submission_dir)
+        except: pass
+
+def grade_java_submission_docker(submission: Submission):
+    id = submission.id
+    filename, _ = os.path.splitext(os.path.basename(submission.filename))
+    submission_folder_name = get_submission_folder_name(id)
+    submission_dir = setup_submission_for_grading(submission)
+
+    setup_container = f"docker run --rm --name submission{id} --memory=512m --mount type=bind,src={submission_dir},dst=/usr/src/app -w /usr/src/app"
+    compile_status = subprocess.run([x for x in (setup_container + f" openjdk:11 javac {filename}.java").split(" ")], capture_output=True)
+
+    if compile_status.returncode != 0:
+        try: shutil.rmtree(submission_dir)
+        except: pass
+        return (Status.ErrorCompile, compile_status.stderr.decode("utf-8"))
+
+    try:
+        run_status = subprocess.run([x for x in (setup_container + f" openjdk:11 timeout 2 java {filename}").split(" ")], capture_output=True)
+        if run_status.returncode == 124:
+            raise subprocess.TimeoutExpired("", "")
+
+        run_output = run_status.stdout.decode("utf-8")     
+        submission_output = "\n".join([x.rstrip() for x in run_output.strip().splitlines()])
+        judge_output = "\n".join([x.rstrip() for x in submission.problem.judge_output.strip().splitlines()])
+        return (Status.Accepted if submission_output == judge_output else Status.WrongAnswer, submission_output)
+    except subprocess.TimeoutExpired as e:
+        return (Status.TimeLimitExceeded, "")
+    except subprocess.CalledProcessError as e:
+        return (Status.ErrorRuntime, e.stderr.decode("utf-8"))
     finally:
         try: shutil.rmtree(submission_dir)
         except: pass
