@@ -13,7 +13,7 @@ import threading
 from src.backend.judge import *
 
 app = flask.Flask(__name__, static_folder="./dist", static_url_path="")
-app.secret_key = "dklsjsfkbjsfgfsgjlk"
+app.secret_key = open("secret.txt", "r").read().strip()
 app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{os.path.abspath("main.db")}"
 db.init_app(app)
 

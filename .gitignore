@@ -25,3 +25,4 @@ __pycache__
 main.db
 .venv
 run
+secret.txt

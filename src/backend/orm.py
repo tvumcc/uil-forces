@@ -126,10 +126,13 @@ class Submission(db.Model):
     contest_profile: Mapped[Optional["ContestProfile"]] = relationship(back_populates="submissions")
 
     def serialize(self):
+        output = {}
+        if not self.contest_profile is None and self.contest_profile.contest.past:
+            output = {"output": self.output}
+
         return self.shallow_serialize() | {
             "code": self.code,
-            "output": self.output
-        }
+        } | output
 
     def shallow_serialize(self):
         return {

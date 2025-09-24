@@ -1,7 +1,7 @@
 <script lang="ts">
     import { onMount } from "svelte"
-    import Status from "./status.svelte"
     import MenuBar from "./menubar.svelte"
+    import SubmissionTable from "./submissionTable.svelte"
     import * as ace from "ace-builds"
 
     // [Language Name, Language File Extension]
@@ -33,7 +33,7 @@
     let showSelectedProblemSubmissions = $state(false)
     let submissionProblemID = $state(-1)
     let submissionLanguage = $state("")
-    let submissionMethod = $state("upload_file") 
+    let submissionMethod = $state("write_code") 
 
     ace.config.set("basePath", "ace-builds/src-noconflict")
     let editor: ace.Editor
@@ -106,7 +106,7 @@
     })
 
     $effect(() => {
-        if (submissionProblemID !== -1 && submissionMethod === "write_code") {
+        if (submissionProblemID !== -1 && submissionMethod === "write_code" && submissionLanguage !== "") {
             const storedCodeFileName = localStorage.getItem(`problem_code_file_name_${submissionProblemID}`) || ""
 
             const codeFileNameInput = document.getElementById("code-file-name") as HTMLInputElement
@@ -121,7 +121,7 @@
 
     $effect(() => {
         const storedCode = localStorage.getItem(`problem_code_${submissionLanguage}_${submissionProblemID}`) || ""
-        if (submissionProblemID !== -1 && submissionMethod === "write_code") {
+        if (submissionProblemID !== -1 && submissionMethod === "write_code" && submissionLanguage !== "") {
             document.getElementById("editor")!.style.display = "block"
             switch (submissionLanguage) {
                 case "Java":
@@ -161,19 +161,6 @@
 
 <style>
     @import "../../style.css";
-
-    table {
-        width: 100%;
-        margin: 0;
-        border-collapse: collapse;
-    }
-
-    td {
-        border: 1px gray solid;
-        margin: 0;
-        padding: 8px;
-        text-align: center;
-    }
 
     .horizontal-split {
         display: flex;
@@ -251,13 +238,13 @@
                     </select>
                     <br>
                     {#if submissionLanguage !== ""}
-                        <label for="file">
-                            <input type="radio" id="upload_file" name="submitType" value="upload_file" bind:group={submissionMethod}>
-                            Upload File
-                        </label>
                         <label for="code">
                             <input type="radio" id="write_code" name="submitType" value="write_code" bind:group={submissionMethod}>
                             Write Code
+                        </label>
+                        <label for="file">
+                            <input type="radio" id="upload_file" name="submitType" value="upload_file" bind:group={submissionMethod}>
+                            Upload File
                         </label>
 
                         {#if submissionMethod === "upload_file"}
@@ -269,7 +256,7 @@
                             <br>
                             <div>
                                 <label for="code-file-name">File Name:</label>
-                                <input id="code-file-name" type="text" bind:value={codeFileName}>.{languages.get(submissionLanguage)}
+                                <input id="code-file-name" type="text" bind:value={codeFileName} required>.{languages.get(submissionLanguage)}
                             </div>
                         {/if}
                     {/if}
@@ -282,34 +269,7 @@
             <h2>Submissions</h2>
             <label for="show-selected-problem-submissions">Only Show Submissions for the Selected Problem</label>
             <input type="checkbox" id="show-selected-problem-submissions" bind:checked={showSelectedProblemSubmissions}>
-            {#if submissions.length > 0}
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Time</th>
-                            <th>Problem</th>
-                            <th>Language</th>
-                            <th>Status</th>
-                            <th>Code</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {#each submissions as submission}
-                            {#if !showSelectedProblemSubmissions || submission["problem"]["id"] === submissionProblemID}
-                                <tr>
-                                    <td>{submission["submit_time"]}</td>
-                                    <td>{submission["problem"]["name"]}</td>
-                                    <td>{submission["language"]}</td>
-                                    <td style="width: 175px;"><Status statusCode={submission["status"]} fitText={false}/></td>
-                                    <td style="width: 80px;"><a href="/submission?id={submission["id"]}">View Code</a></td>
-                                </tr>
-                            {/if}
-                        {/each}
-                    </tbody>
-                </table>
-            {:else}
-                <p>No submissions at this time</p>
-            {/if}
+            <SubmissionTable {submissions} {showSelectedProblemSubmissions} {submissionProblemID}/>
         </div>
     </div>
 </div>
