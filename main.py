@@ -26,7 +26,7 @@ login_manager.login_view = "login_page"
 
 @login_manager.user_loader
 def load_user(id):
-    return db.session.query(User).filter_by(id=id).one()
+    return db.session.get(User, id)
 
 @app.route("/")
 @flask_login.login_required
