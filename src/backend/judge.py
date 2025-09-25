@@ -7,6 +7,7 @@ import os
 import shutil
 import subprocess
 import enum
+import re
 
 class Status(enum.Enum):
     Pending = 0
@@ -20,9 +21,22 @@ class Status(enum.Enum):
 def get_submission_folder_name(id):
     return f"submission{id}"
 
+def get_submission_file_name(submission: Submission):
+    match submission.language:
+        case "Java":
+            regex = r"public\s+class\s+([A-Za-z$_][A-Za-z0-9$_]*)\s*\{"
+            match = re.search(regex, submission.code)
+            return match.group(1) + ".java" if match else "error"
+        case "Python":
+            return get_submission_folder_name(submission.id) + ".py"
+        case "C++":
+            return get_submission_folder_name(submission.id) + ".cpp"
+        case _:
+            return None
+
 def setup_submission_for_grading(submission: Submission) -> str:
     id = submission.id
-    filename = os.path.basename(submission.filename)
+    filename = get_submission_file_name(submission)
     submission_folder_name = get_submission_folder_name(id)
 
     # Create a source file for the submitted code in its own submission directory
@@ -48,7 +62,7 @@ def assign_status(submission_id, docker=True):
 
 def grade_submission(submission: Submission, timeout: int = 5):
     id = submission.id
-    filename, _ = os.path.splitext(os.path.basename(submission.filename))
+    filename = get_submission_file_name(submission)
     submission_folder_name = get_submission_folder_name(id)
     submission_dir = setup_submission_for_grading(submission)
 
@@ -65,9 +79,9 @@ def grade_submission(submission: Submission, timeout: int = 5):
 
         # Compilation
         language_compile_command = {
-            "Java":   f"javac {filename}.java".split(),
+            "Java":   f"javac {filename}".split(),
             "Python": "echo".split(),
-            "C++":    f"g++ {filename}.cpp -o {filename}".split()
+            "C++":    f"g++ {filename} -o {submission_folder_name}".split()
         }
 
         compile_status = subprocess.run(
@@ -81,9 +95,9 @@ def grade_submission(submission: Submission, timeout: int = 5):
         
         # Running
         language_run_command = {
-            "Java":   f"java -Djava.security.manager -Djava.security.policy=grading.policy {filename}".split(),
-            "Python": f"python {filename}.py".split(),
-            "C++":    f"./{filename}".split()
+            "Java":   f"java -Djava.security.manager -Djava.security.policy=grading.policy {os.path.splitext(filename)[0]}".split(),
+            "Python": f"python {filename}".split(),
+            "C++":    f"./{submission_folder_name}".split()
         }
 
         try:
@@ -110,7 +124,7 @@ def grade_submission(submission: Submission, timeout: int = 5):
 
 def grade_submission_docker(submission: Submission, timeout: int = 5):
     id = submission.id
-    filename, _ = os.path.splitext(os.path.basename(submission.filename))
+    filename = get_submission_file_name(submission)
     submission_folder_name = get_submission_folder_name(id)
     submission_dir = setup_submission_for_grading(submission)
     container_id = ""
@@ -125,9 +139,9 @@ def grade_submission_docker(submission: Submission, timeout: int = 5):
         container_id = subprocess.check_output(f"docker run -d --name {submission_folder_name} --memory=512m --mount type=bind,src={submission_dir},dst=/user/src/app -w /user/src/app {language_image[submission.language]} tail -f /dev/null".split()).decode("utf-8")
 
         language_compile_command = {
-            "Java":   f"docker exec {container_id} javac {filename}.java".split(),
+            "Java":   f'docker exec {container_id} javac'.split() + [f'{filename}'],
             "Python": f"docker exec {container_id} apk add python3".split(),
-            "C++":    f'docker exec {container_id} sh -c'.split() + [f'apk add g++ && g++ {filename}.cpp -o {filename}']
+            "C++":    f'docker exec {container_id} sh -c'.split() + [f'apk add g++ && g++ "{filename}" -o "{submission_folder_name}"']
         }
 
         compile_status = subprocess.run(
@@ -135,13 +149,17 @@ def grade_submission_docker(submission: Submission, timeout: int = 5):
             capture_output=True,
             cwd=submission_dir
         )
+
+        print(compile_status.stdout.decode("utf-8"))
+        print(compile_status.stderr.decode("utf-8"))
+
         if compile_status.returncode != 0:
             return (Status.ErrorCompile, compile_status.stderr.decode("utf-8"))
 
         language_run_command = {
-            "Java":   f"docker exec {container_id} timeout {timeout} java {filename}".split(),
-            "Python": f"docker exec {container_id} timeout {timeout} python3 {filename}.py".split(),
-            "C++":    f"docker exec {container_id} timeout {timeout} ./{filename}".split()
+            "Java":   f'docker exec {container_id} timeout {timeout} java'.split() + [f'{os.path.splitext(filename)[0]}'],
+            "Python": f'docker exec {container_id} timeout {timeout} python3'.split() + [f'{filename}'],
+            "C++":    f'docker exec {container_id} timeout {timeout} ./{submission_folder_name}'.split()
         }
 
         try:

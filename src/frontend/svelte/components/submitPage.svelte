@@ -27,12 +27,11 @@
 
     // Code Editor Vars
     let codeText = $state("")
-    let codeFileName = $state("")
 
     // Options
     let showSelectedProblemSubmissions = $state(false)
     let submissionProblemID = $state(-1)
-    let submissionLanguage = $state("")
+    let submissionLanguage = $state("Java")
     let submissionMethod = $state("write_code") 
 
     ace.config.set("basePath", "ace-builds/src-noconflict")
@@ -43,8 +42,8 @@
         editor.setOption("minLines", 5)
         editor.setOption("maxLines", 30)
         editor.setTheme("ace/theme/monokai")
-        editor.session.setMode("ace/mode/java")
-        editor.setKeyboardHandler("ace/keyboard/vim")
+        // editor.session.setMode("ace/mode/java")
+        // editor.setKeyboardHandler("ace/keyboard/vim")
 
         editor.on("change", () => {
             localStorage.setItem(`problem_code_${submissionLanguage}_${submissionProblemID}`, editor.getValue())
@@ -71,7 +70,6 @@
                 contest_id: ID,
                 problem_id: submissionProblemID,
                 code: submissionMethod === "upload_file" ? fileText : codeText,
-                filename: submissionMethod === "upload_file" ? fileName : codeFileName + `.${languages.get(submissionLanguage)}`,
                 language: submissionLanguage 
             }),
             headers: {
@@ -103,20 +101,6 @@
                 }
             }
         })()
-    })
-
-    $effect(() => {
-        if (submissionProblemID !== -1 && submissionMethod === "write_code" && submissionLanguage !== "") {
-            const storedCodeFileName = localStorage.getItem(`problem_code_file_name_${submissionProblemID}`) || ""
-
-            const codeFileNameInput = document.getElementById("code-file-name") as HTMLInputElement
-            codeFileNameInput!.value = storedCodeFileName
-            codeFileName = storedCodeFileName
-
-            codeFileNameInput?.addEventListener("change", () => {
-                localStorage.setItem(`problem_code_file_name_${submissionProblemID}`, codeFileName)
-            })
-        }
     })
 
     $effect(() => {
@@ -218,7 +202,7 @@
             <h2>Submit Code</h2>
             <form onsubmit={submitProblem}>
                 <div>
-                    <label for="problem-select">Select a problem:</label>
+                    <label for="problem-select">Problem:</label>
                     <select id="problem-select" bind:value={submissionProblemID}>
                         {#each problems as problem}
                             <option value="{problem["id"]}">{problem["name"]}</option>
@@ -230,7 +214,7 @@
                 </div>
 
                 {#if submissionProblemID !== -1}
-                    <label for="language-select">Select a language:</label>
+                    <label for="language-select">Language:</label>
                     <select id="language-select" bind:value={submissionLanguage}>
                         {#each languages.entries() as [lang, ext]}
                             <option value="{lang}">{lang}</option>
@@ -252,13 +236,6 @@
                                 <input type="file" bind:files>
                             </div>
                         {/if}
-                        {#if submissionMethod === "write_code"}
-                            <br>
-                            <div>
-                                <label for="code-file-name">File Name:</label>
-                                <input id="code-file-name" type="text" bind:value={codeFileName} required>.{languages.get(submissionLanguage)}
-                            </div>
-                        {/if}
                     {/if}
                 {/if}
                 <div id="editor"></div>
@@ -269,7 +246,7 @@
             <h2>Submissions</h2>
             <label for="show-selected-problem-submissions">Only Show Submissions for the Selected Problem</label>
             <input type="checkbox" id="show-selected-problem-submissions" bind:checked={showSelectedProblemSubmissions}>
-            <SubmissionTable {submissions} {showSelectedProblemSubmissions} {submissionProblemID}/>
+            <SubmissionTable {submissions} {showSelectedProblemSubmissions} {submissionProblemID} showUsers={false}/>
         </div>
     </div>
 </div>

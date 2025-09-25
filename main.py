@@ -176,7 +176,6 @@ def submit_contest_problem():
         user=flask_login.current_user,
 
         status=Status.Pending.value,
-        filename=response["filename"],
         code=response["code"],
         submit_time=datetime.datetime.now(),
         language=language
@@ -190,7 +189,7 @@ def submit_contest_problem():
 
     submissions = db.session.query(Submission).filter_by(contest_profile=contest_profile).order_by(desc(Submission.submit_time)).all()
     return {
-        "estimated_wait" : 10,
+        "estimated_wait" : 15,
         "submissions": [submission.shallow_serialize() for submission in submissions]
     }
 
@@ -228,7 +227,6 @@ def submit_pset_problem():
         user=flask_login.current_user,
 
         status=Status.Pending.value,
-        filename=response["filename"],
         code=response["code"],
         submit_time=datetime.datetime.now(),
         language=language
@@ -247,7 +245,7 @@ def submit_pset_problem():
     submissions.sort(key=lambda submission: submission.submit_time, reverse=True)
 
     return {
-        "estimated_wait" : 10,
+        "estimated_wait" : 15,
         "submissions": [submission.shallow_serialize() for submission in submissions]
     }
 
