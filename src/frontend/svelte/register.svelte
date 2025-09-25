@@ -2,10 +2,10 @@
     let username = $state()
     let password = $state()
 
-    async function login(event: Event) {
+    async function register(event: Event) {
         event.preventDefault()
 
-        let response = await fetch("/api/login", {
+        let response = await fetch("/api/register", {
             method: "POST",
             body: JSON.stringify({
                 username: username,
@@ -65,9 +65,12 @@
 </style>
 
 <div class="main-container">
-    <form onsubmit={login}>
+    <form onsubmit={register}>
         <div class="form-region">
             <h1>UIL Forces</h1>
+        </div>
+        <div class="form-region">
+            <h2>Account Creation</h2>
         </div>
         <div class="form-region">
             <label for="username">Username:</label>
@@ -78,10 +81,10 @@
             <input bind:value={password} name="password" type="password" class="entry-input" autocomplete="off">
         </div>
         <div class="form-region">
-            <input value="Log in" type="submit">
+            <input value="Create New Account" type="submit">
         </div>
         <div class="form-region">
-            <a href="/register">Create New Account</a>
+            <a href="/login">Log in to an existing account</a>
         </div>
     </form>
 </div>

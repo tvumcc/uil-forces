@@ -37,6 +37,10 @@ def index_page():
 def login_page():
     return flask.send_from_directory(app.static_folder, "src/frontend/html/login.html")
 
+@app.route("/register")
+def register_page():
+    return flask.send_from_directory(app.static_folder, "src/frontend/html/register.html")
+
 @app.route("/contest")
 @flask_login.login_required
 def contest_page():
@@ -108,6 +112,30 @@ def logout():
     flask_login.logout_user()
     return {
         "redirect": "/login"
+    }
+
+@app.route("/api/register", methods=["POST"])
+def register():
+    response = flask.request.get_json()
+    username = str(response["username"])
+    passphrase = str(response["password"])
+
+    if db.session.execute(select(User).filter_by(username=username)).first() is not None:
+        return flask.Response(status=400, response="Username already exists")
+
+    user = User(
+        username=username,
+        passphrase=passphrase,
+        is_admin=False
+    )
+    db.session.add(user)
+    db.session.commit()
+
+    flask_login.login_user(db.session.get(User, user.id))
+
+    return {
+        "redirect": flask.url_for("index_page"),
+        "login_success": True
     }
 
 @app.route("/api/contests")
