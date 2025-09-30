@@ -189,6 +189,14 @@
         width: 100%;
         min-height: 100px;
     }
+
+    .lb::-webkit-scrollbar {
+        display: none;
+    }
+    .lb {
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+    }
 </style>
 
 <div class="horizontal-split">
@@ -247,7 +255,9 @@
             <br>
 
             <h2>Leaderboard</h2>
-            <Leaderboard {ID} {problems} bind:this={leaderboard}/>            
+            <div class="lb" style="width: 100%; overflow-x: scroll;">
+                <Leaderboard {ID} {problems} bind:this={leaderboard}/>            
+            </div>
 
             <br>
 

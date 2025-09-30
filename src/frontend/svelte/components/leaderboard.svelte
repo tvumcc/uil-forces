@@ -31,9 +31,18 @@
         padding: 8px;
         text-align: center;
     }
+
+    .lb-row {
+        overflow-x: scroll;
+        width: 100%;
+    }
+
+    .answerbox {
+        min-width: 2em;
+    }
 </style>
 
-<table>
+<table style="width: 100%;">
     <thead>
         <tr>
             <th>User</th>
@@ -43,18 +52,18 @@
             {/each}
         </tr>
     </thead>
-    <tbody>
+    <tbody style="width: 100%; overflow-x: scroll;">
         {#each leaderboard as leaderboardEntry, i}
-            <tr>
+            <tr class="lb-row">
                 <td>{leaderboardEntry["user"]["username"]}</td>
                 <td>{leaderboardEntry["score"]}</td>
                 {#each (leaderboardEntry["problems_solved"] as Array<Number>) as problem_status}
                     {#if problem_status === 1}
-                        <td style="background:green;">AC</td>
+                        <td class="answerbox " style="background:green;">AC</td>
                     {:else if problem_status === 2}
-                        <td style="background:red;">WA</td>
+                        <td class="answerbox " style="background:red;">WA</td>
                     {:else}
-                        <td></td>
+                        <td class="answerbox " style="color: transparent;">--</td>
                     {/if}
                 {/each}
             </tr>
