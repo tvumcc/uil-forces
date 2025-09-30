@@ -164,7 +164,8 @@ class Contest(db.Model):
 
     def serialize(self):
         return self.shallow_serialize() | {
-            "problems": [problem.shallow_serialize() for problem in sorted(self.problems, key=lambda x: x.name)]
+            "problems": [problem.shallow_serialize() for problem in sorted(self.problems, key=lambda x: x.name)],
+            "contest_profiles": [contest_profile.shallow_serialize() for contest_profile in sorted(self.contest_profiles, key=lambda x: x.score)]
         }
 
     def shallow_serialize(self):
@@ -191,7 +192,7 @@ class ContestProfile(db.Model):
 
     def serialize(self):
         return self.shallow_serialize() | {
-            "submission": [submission.shallow_serialize() for submission in self.submissions]
+            "submissions": [submission.shallow_serialize() for submission in self.submissions]
         }
 
     def shallow_serialize(self):

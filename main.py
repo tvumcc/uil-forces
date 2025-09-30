@@ -221,6 +221,40 @@ def submit_contest_problem():
         "submissions": [submission.shallow_serialize() for submission in submissions]
     }
 
+@app.route("/api/contest/<id>/leaderboard")
+@flask_login.login_required
+def contest_leaderboard(id):
+    contest: Contest = db.session.get(Contest, id)
+    contest_profiles: List[ContestProfile] = sorted(contest.contest_profiles, key=lambda x: x.score)
+    problems: List[Problem] = contest.problems
+
+    leaderboard = []
+
+    for profile in contest_profiles:
+        profile_problem_status = [0] * len(problems)
+        if len(profile.submissions) == 0:
+            continue
+
+        for submission in profile.submissions:
+            problem_idx = problems.index(submission.problem)
+            if submission.status == 1:
+                profile_problem_status[problem_idx] = 1 
+            elif submission.status != 1 and profile_problem_status[problem_idx] != 1:
+                profile_problem_status[problem_idx] = 2
+
+        leaderboard_entry = {
+            "user": profile.user.shallow_serialize(),
+            "score": profile.score,
+            "problems_solved": profile_problem_status
+        }
+        leaderboard.append(leaderboard_entry)
+
+    return {
+        "leaderboard": leaderboard
+    }
+
+
+
 @app.route("/api/pset/<id>")
 @flask_login.login_required
 def pset(id):

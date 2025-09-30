@@ -2,6 +2,7 @@
     import { onMount } from "svelte"
     import MenuBar from "./menubar.svelte"
     import SubmissionTable from "./submissionTable.svelte"
+    import Leaderboard from "./leaderboard.svelte"
     import * as ace from "ace-builds"
 
     // [Language Name, Language File Extension]
@@ -33,6 +34,8 @@
     let submissionProblemID = $state(-1)
     let submissionLanguage = $state("Java")
     let submissionMethod = $state("write_code") 
+
+    let leaderboard: Leaderboard
 
     ace.config.set("basePath", "ace-builds/src-noconflict")
     let editor: ace.Editor
@@ -85,6 +88,7 @@
                 let response: Response = await fetch(`/api/${submissionType}/${ID}`)
                 let json = await response.json()
                 submissions = json["submissions"]
+                leaderboard.getData()
                 count--;
             } else {
                 clearInterval(interval_id)
@@ -240,6 +244,10 @@
                 {/if}
                 <div id="editor"></div>
             </form>
+            <br>
+
+            <h2>Leaderboard</h2>
+            <Leaderboard {ID} {problems} bind:this={leaderboard}/>            
 
             <br>
 
