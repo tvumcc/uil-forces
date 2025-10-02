@@ -1,5 +1,5 @@
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import DateTime, ForeignKey, Table, Column
+from sqlalchemy import DateTime, ForeignKey, Table, Column, Integer
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from flask_login import UserMixin
 from typing import List, Optional
@@ -10,12 +10,13 @@ class Base(DeclarativeBase):
 
 db = SQLAlchemy(model_class=Base)
 
-contest_problem_association_table = Table(
-    "contest_problem_association_table",
-    Base.metadata,
-    Column("contest_id", ForeignKey("contest.id"), primary_key=True),
-    Column("problem_id", ForeignKey("problem.id"), primary_key=True)
-)
+class ContestProblemAssociation(Base):
+    __tablename__ = "contest_problem_link"
+    contest_id: Mapped[int] = mapped_column(ForeignKey("contest.id"), primary_key=True)
+    problem_id: Mapped[int] = mapped_column(ForeignKey("problem.id"), primary_key=True)
+    correct_score: Mapped[int] = mapped_column(default=60)
+    incorrect_penalty: Mapped[int] = mapped_column(default=5)
+    problem: Mapped["Problem"] = relationship()
 
 class User(UserMixin, db.Model):
     __tablename__ = "user"
@@ -124,10 +125,11 @@ class Submission(db.Model):
     user:            Mapped["User"]                     = relationship(back_populates="submissions")
     contest_profile: Mapped[Optional["ContestProfile"]] = relationship(back_populates="submissions")
 
-    def serialize(self):
-        return self.shallow_serialize() | {
-            "code": self.code,
-            "output": self.output
+    def serialize(self, admin_view=False):
+        output = {} if not self.contest_profile.contest.past() and not admin_view else {"output": self.output}
+
+        return self.shallow_serialize() | output | {
+            "code": self.code
         }
 
     def shallow_serialize(self):
@@ -150,8 +152,11 @@ class Contest(db.Model):
     start_time: Mapped[datetime.datetime]
     end_time:   Mapped[datetime.datetime]
 
-    problems:         Mapped[List["Problem"]]        = relationship(secondary=contest_problem_association_table)
+    problem_links:         Mapped[List["ContestProblemAssociation"]] = relationship()
     contest_profiles: Mapped[List["ContestProfile"]] = relationship(back_populates="contest")
+
+    def problems(self):
+        return [problem_link.problem for problem_link in self.problem_links]
 
     def past(self):
         return datetime.datetime.now() > self.end_time
@@ -164,7 +169,7 @@ class Contest(db.Model):
 
     def serialize(self):
         return self.shallow_serialize() | {
-            "problems": [problem.shallow_serialize() for problem in sorted(self.problems, key=lambda x: x.name)],
+            "problems": [problem.shallow_serialize() for problem in sorted(self.problems(), key=lambda x: x.name)],
             "contest_profiles": [contest_profile.shallow_serialize() for contest_profile in sorted(self.contest_profiles, key=lambda x: x.score)]
         }
 
@@ -189,6 +194,41 @@ class ContestProfile(db.Model):
     contest:     Mapped["Contest"]          = relationship(back_populates="contest_profiles")
     user:        Mapped["User"]             = relationship(back_populates="contest_profiles")
     submissions: Mapped[List["Submission"]] = relationship(back_populates="contest_profile")
+
+    def problem_status_list(self):
+        problem_status_list = [[0, 0, 0, 0, 0] for _ in range(len(self.contest.problem_links))]
+
+        for idx, problem_link in enumerate(self.contest.problem_links):
+            problem_status_list[idx][0] = problem_link.problem.id
+            problem_status_list[idx][3] = problem_link.correct_score
+            problem_status_list[idx][4] = problem_link.incorrect_penalty
+
+        for submission in self.submissions:
+            problem_idx = None
+            for idx, problem_link in enumerate(self.contest.problem_links):
+                if problem_link.problem.id == submission.problem.id:
+                    problem_idx = idx
+                    break
+                    
+            if submission.status == 1:
+                problem_status_list[problem_idx][1] += 1
+            elif submission.status != 0:
+                problem_status_list[problem_idx][2] += 1
+
+        return problem_status_list
+
+    def calculate_score(self):
+        score = 0
+
+        for problem_status in self.problem_status_list():
+            problem_link = db.session.query(ContestProblemAssociation).filter_by(contest_id=self.contest_id, problem_id=problem_status[0]).first()
+
+            if problem_status[1] > 0:
+                score += problem_link.correct_score
+                score -= problem_status[2] * problem_link.incorrect_penalty
+
+        self.score = score
+        return score
 
     def serialize(self):
         return self.shallow_serialize() | {

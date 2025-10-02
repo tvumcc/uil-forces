@@ -211,7 +211,7 @@ def submit_contest_problem():
     db.session.add(submission)
     db.session.commit()
 
-    thread = threading.Thread(target=assign_status, args=[submission.id])
+    thread = threading.Thread(target=assign_status, args=[submission.id, contest_profile.id])
     thread.daemon = True
     thread.start()
 
@@ -225,35 +225,21 @@ def submit_contest_problem():
 @flask_login.login_required
 def contest_leaderboard(id):
     contest: Contest = db.session.get(Contest, id)
-    contest_profiles: List[ContestProfile] = sorted(contest.contest_profiles, key=lambda x: x.score)
-    problems: List[Problem] = contest.problems
+    contest_profiles: List[ContestProfile] = sorted(contest.contest_profiles, key=lambda x: x.score, reverse=True)
 
     leaderboard = []
-
     for profile in contest_profiles:
-        profile_problem_status = [0] * len(problems)
-        if len(profile.submissions) == 0:
-            continue
-
-        for submission in profile.submissions:
-            problem_idx = problems.index(submission.problem)
-            if submission.status == 1:
-                profile_problem_status[problem_idx] = 1 
-            elif submission.status != 1 and profile_problem_status[problem_idx] != 1:
-                profile_problem_status[problem_idx] = 2
-
-        leaderboard_entry = {
-            "user": profile.user.shallow_serialize(),
-            "score": profile.score,
-            "problems_solved": profile_problem_status
-        }
-        leaderboard.append(leaderboard_entry)
+        if len(profile.submissions) > 0:
+            leaderboard_entry = {
+                "user": profile.user.shallow_serialize(),
+                "score": profile.score,
+                "problems_solved": profile.problem_status_list()
+            }
+            leaderboard.append(leaderboard_entry)
 
     return {
         "leaderboard": leaderboard
     }
-
-
 
 @app.route("/api/pset/<id>")
 @flask_login.login_required
@@ -296,7 +282,7 @@ def submit_pset_problem():
     db.session.add(submission)
     db.session.commit()
 
-    thread = threading.Thread(target=assign_status, args=[submission.id])
+    thread = threading.Thread(target=assign_status, args=[submission.id, None])
     thread.daemon = True
     thread.start()
 
@@ -345,7 +331,7 @@ def submission(id):
     if contest_profile and not contest_profile.contest.past() and not user.is_admin and not user.id == flask_login.current_user.id:
         return {"message": "Submission cannot be viewed at this time"}
 
-    return submission.serialize()
+    return submission.serialize(admin_view=flask_login.current_user.is_admin)
 
 @app.route("/api/user")
 @flask_login.login_required
@@ -416,11 +402,14 @@ def admin_contest_add_problem(id):
     if problem is None:
         return flask.abort(400)
 
-    for p in contest.problems:
-        if p.id == problem.id:
+    for p in contest.problem_links:
+        if p.problem == problem.id:
             return flask.abort(400)
 
-    contest.problems.append(problem)
+    problem_link = ContestProblemAssociation(problem=problem)
+    db.session.add(problem_link)
+
+    contest.problem_links.append(problem_link)
     db.session.add(contest)
     db.session.commit()
 
@@ -441,8 +430,10 @@ def admin_contest_add_pset(id):
         return flask.abort(400)
 
     for problem in problem_set.problems:
-        if not problem in contest.problems:
-            contest.problems.append(problem) 
+        if not problem in contest.problems():
+            problem_link = ContestProblemAssociation(problem=problem)
+            db.session.add(problem_link)
+            contest.problem_links.append(problem_link)
 
     db.session.add(contest)
     db.session.commit()
@@ -468,7 +459,13 @@ def admin_contest_unlink_problem():
         return flask.abort(404)
 
     try:
-        contest.problems.remove(problem)
+        problem_link_to_remove = None
+        for problem_link in contest.problem_links:
+            if problem_link.problem == problem:
+                problem_link_to_remove = problem_link
+                break
+
+        contest.problem_links.remove(problem_link_to_remove)
         db.session.add(contest)
         db.session.commit()
     except ValueError:

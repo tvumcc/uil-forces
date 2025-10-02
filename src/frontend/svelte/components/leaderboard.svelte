@@ -8,7 +8,6 @@
         let response: Response = await fetch(`/api/contest/${ID}/leaderboard`)
         let json = await response.json()
         leaderboard = json["leaderboard"]
-        console.log("hello")
     }
 
     onMount(() => {
@@ -52,13 +51,13 @@
             <tr class="lb-row">
                 <td>{leaderboardEntry["user"]["username"]}</td>
                 <td>{leaderboardEntry["score"]}</td>
-                {#each (leaderboardEntry["problems_solved"] as Array<Number>) as problem_status}
-                    {#if problem_status === 1}
-                        <td class="answerbox " title="CA" style="background:green; color: transparent;">-</td>
-                    {:else if problem_status === 2}
-                        <td class="answerbox " title="WA" style="background:red; color: transparent;">-</td>
+                {#each (leaderboardEntry["problems_solved"] as Array<Array<number>>) as problem_status}
+                    {#if problem_status[1] > 0}
+                        <td class="answerbox " style="background:green;">{Math.min(1, problem_status[1]) * (problem_status[3] - problem_status[2] * problem_status[4])}</td>
+                    {:else if problem_status[2] > 0}
+                        <td class="answerbox " style="background:red;">-{problem_status[2]}</td>
                     {:else}
-                        <td class="answerbox " style="color: transparent;">-</td>
+                        <td class="answerbox " style="color: transparent;">--</td>
                     {/if}
                 {/each}
             </tr>

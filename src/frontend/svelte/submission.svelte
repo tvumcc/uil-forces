@@ -33,7 +33,9 @@
         <h2>Submitted Code</h2>
         <pre>{submission.code}</pre>
 
-        <h2>Output</h2>
-        <pre>{submission.output}</pre>
+        {#if submission.output !== undefined}
+            <h2>Output</h2>
+            <pre>{submission.output}</pre>
+        {/if}
     {/await}
 </div>

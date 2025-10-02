@@ -52,12 +52,15 @@ def setup_submission_for_grading(submission: Submission) -> str:
 
     return submission_dir
 
-def assign_status(submission_id, docker=True):
+def assign_status(submission_id, contest_profile_id, docker=True):
     with app.app_context():
         submission: Submission = db.session.get(Submission, submission_id)
+        contest_profile: ContestProfile = db.session.get(ContestProfile, contest_profile_id)
         if submission.status == Status.Pending.value:
             status, submission.output = grade_submission_docker(submission) if docker else grade_submission(submission)
             submission.status = status.value
+            if contest_profile is not None:
+                contest_profile.calculate_score()
             db.session.commit()
 
 def grade_submission(submission: Submission, timeout: int = 5):

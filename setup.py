@@ -91,12 +91,19 @@ def setup():
                     if not problem in contest_problems:
                         contest_problems.append(problem)
 
-            session.add(Contest(
+            contest = Contest(
                 name=contest_name,
-                problems=contest_problems,
+                problems=[],
                 start_time=start_time,
                 end_time=end_time
-            ))
+            )
+            session.add(contest)
+            session.flush()
+
+            for i in range(len(contest_problems)):
+                contest_problem_association = ContestProblemAssociation(problem=contest_problems[i], contest_id=contest.id)
+                session.add(contest_problem_association)
+                contest.problems.append(contest_problem_association)
             
     session.commit()
     session.close()

@@ -216,8 +216,8 @@
                 <div>
                     <label for="problem-select">Problem:</label>
                     <select id="problem-select" bind:value={submissionProblemID}>
-                        {#each problems as problem}
-                            <option value="{problem["id"]}">{problem["name"]}</option>
+                        {#each problems as problem, i}
+                            <option value="{problem["id"]}">{i+1}. {problem["name"]}</option>
                         {/each}
                     </select>
                     {#if submissionProblemID !== -1} 
@@ -254,12 +254,13 @@
             </form>
             <br>
 
-            <h2>Leaderboard</h2>
-            <div class="lb" style="width: 100%; overflow-x: scroll;">
-                <Leaderboard {ID} {problems} bind:this={leaderboard}/>            
-            </div>
-
-            <br>
+            {#if submissionType === "contest"}
+                <h2>Leaderboard</h2>
+                <div class="lb" style="width: 100%; overflow-x: scroll;">
+                    <Leaderboard {ID} {problems} bind:this={leaderboard}/>            
+                </div>
+                <br>
+            {/if}
 
             <h2>Submissions</h2>
             <label for="show-selected-problem-submissions">Only Show Submissions for the Selected Problem</label>
