@@ -4,10 +4,12 @@
 
     let params = new URLSearchParams(document.location.search)
     let ID = params.get("id")
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
 
     async function get_data() {
         let response: Response = await fetch(`/api/submission/${ID}`)
         let json = await response.json()
+        json["submit_time"] = new Date(json["submit_time"]).toLocaleString("en-US", {timeZone: tz})
         return json
     }
 

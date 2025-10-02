@@ -52,7 +52,7 @@ def setup_submission_for_grading(submission: Submission) -> str:
 
     return submission_dir
 
-def assign_status(submission_id, contest_profile_id, docker=True):
+def assign_status(submission_id, contest_profile_id, docker=False):
     with app.app_context():
         submission: Submission = db.session.get(Submission, submission_id)
         contest_profile: ContestProfile = db.session.get(ContestProfile, contest_profile_id)

@@ -9,7 +9,7 @@
     const languages = new Map([
         ["Java", "java"],
         ["Python", "py"],
-        ["C++", "cpp"]
+        // ["C++", "cpp"]
     ])
 
     // submissionType can either be "contest" or "pset", which determines whether id refers to a
@@ -19,12 +19,11 @@
     // Contest/ProblemSet Data
     let pageTitle = $state()
     let problems = $state([])
-    let submissions = $state([])
+    let submissions: any[] = $state([])
 
     // File Upload Vars
     let files: FileList = $state()!
     let fileText = $state("")
-    let fileName = $state("")
 
     // Code Editor Vars
     let codeText = $state("")
@@ -61,7 +60,16 @@
         console.log(json)
         pageTitle = json["name"]
         problems = json["problems"]
-        submissions = json["submissions"]
+        submissions = convert_submission_time(json["submissions"])
+    }
+
+    function convert_submission_time(submissions: any[]) {
+        const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
+        submissions = submissions.map((submission: any) => {
+            submission["submit_time"] = new Date(submission["submit_time"]).toLocaleString("en-US", {timeZone: tz})
+            return submission
+        })
+        return submissions
     }
 
     // Submits a problem as a Contest or ProblemSet submission, depending on the value of the submissionType property
@@ -80,14 +88,14 @@
             }
         })
         let json = await response.json()
-        submissions = json["submissions"]
+        submissions = convert_submission_time(json["submissions"])
 
         let count = json["estimated_wait"]
         let interval_id = setInterval(async () => {
             if (count > 0) {
                 let response: Response = await fetch(`/api/${submissionType}/${ID}`)
                 let json = await response.json()
-                submissions = json["submissions"]
+                submissions = convert_submission_time(json["submissions"])
                 leaderboard.getData()
                 count--;
             } else {
@@ -101,7 +109,6 @@
             if (files) {
                 for (let file of files) {
                     fileText = await file.text()
-                    fileName = file.name
                 }
             }
         })()
@@ -134,7 +141,7 @@
     })
 
     $effect(() => {
-        if (submissionProblemID === -1) {
+        if (submissionProblemID === -1 || submissionType === "contest") {
             document.getElementById("pdf-viewer")!.style.display = "none"
         } else {
             document.getElementById("pdf-viewer")!.style.display = "flex"
