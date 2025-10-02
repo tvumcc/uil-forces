@@ -103,6 +103,18 @@
 
 <style>
     @import "../style.css";
+
+    table {
+        border-collapse: collapse;
+    }
+
+    .pb-row td {
+        border: 1px gray solid;
+        margin: 0;
+        padding: 8px;
+        text-align: left;
+    }
+    
 </style>
 
 <MenuBar />
@@ -119,12 +131,17 @@
         <input type="submit" value="Update Contest">
     </form>
 
-    <p>Problems:</p>
+    <h2>Problems:</h2>
+    <table>
+    <tbody>
     {#each problems as problem}
-        <a href="/admin/problem?id={problem["id"]}">{problem["name"]}</a>
-        <button onclick={async ()=>{await unlinkProblem(problem["id"])}}>Remove</button>
-        <br>
+        <tr class="pb-row">
+            <td><a href="/admin/problem?id={problem["id"]}">{problem["name"]}</a></td>
+            <td><button onclick={async ()=>{await unlinkProblem(problem["id"])}}>Remove</button></td>
+        </tr>
     {/each}
+    </tbody>
+    </table>
 
     <h2>Add Problem Set</h2>
     <form onsubmit={addProblemSet}>

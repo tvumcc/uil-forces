@@ -32,13 +32,8 @@
         text-align: center;
     }
 
-    .lb-row {
-        overflow-x: scroll;
-        width: 100%;
-    }
-
     .answerbox {
-        min-width: 2em;
+        min-width: 0.5em;
     }
 </style>
 
@@ -59,11 +54,11 @@
                 <td>{leaderboardEntry["score"]}</td>
                 {#each (leaderboardEntry["problems_solved"] as Array<Number>) as problem_status}
                     {#if problem_status === 1}
-                        <td class="answerbox " style="background:green;">AC</td>
+                        <td class="answerbox " title="CA" style="background:green; color: transparent;">-</td>
                     {:else if problem_status === 2}
-                        <td class="answerbox " style="background:red;">WA</td>
+                        <td class="answerbox " title="WA" style="background:red; color: transparent;">-</td>
                     {:else}
-                        <td class="answerbox " style="color: transparent;">--</td>
+                        <td class="answerbox " style="color: transparent;">-</td>
                     {/if}
                 {/each}
             </tr>
