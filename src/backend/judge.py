@@ -1,13 +1,12 @@
 from sqlalchemy.orm import Session
 
-from .orm import *
-from main import app
-
 import os
 import shutil
 import subprocess
 import enum
 import re
+
+from src.backend.orm import *
 
 class Status(enum.Enum):
     Pending = 0
@@ -24,7 +23,7 @@ def get_submission_folder_name(id):
 def get_submission_file_name(submission: Submission):
     match submission.language:
         case "Java":
-            regex = r"public\s+class\s+([A-Za-z$_][A-Za-z0-9$_]*)\s*\{"
+            regex = r"public\s+class\s+([A-Za-z$_][A-Za-z0-9$_]*).*\{"
             match = re.search(regex, submission.code)
             return match.group(1) + ".java" if match else "error"
         case "Python":
@@ -53,6 +52,7 @@ def setup_submission_for_grading(submission: Submission) -> str:
     return submission_dir
 
 def assign_status(submission_id, contest_profile_id, docker=False):
+    from main import app
     with app.app_context():
         submission: Submission = db.session.get(Submission, submission_id)
         contest_profile: ContestProfile = db.session.get(ContestProfile, contest_profile_id)
@@ -80,21 +80,22 @@ def grade_submission(submission: Submission, timeout: int = 5):
             case "Python": pass
             case "C++": pass
 
+
         # Compilation
         language_compile_command = {
             "Java":   f"javac {filename}".split(),
-            "Python": "echo".split(),
             "C++":    f"g++ {filename} -o {submission_folder_name}".split()
         }
 
-        compile_status = subprocess.run(
-            language_compile_command[submission.language],
-            capture_output=True,
-            cwd=submission_dir
-        )
+        if submission.language in language_compile_command.keys():
+            compile_status = subprocess.run(
+                language_compile_command[submission.language],
+                capture_output=True,
+                cwd=submission_dir
+            )
 
-        if compile_status.returncode != 0:
-            return (Status.ErrorCompile, compile_status.stderr.decode("utf-8"))
+            if compile_status.returncode != 0:
+                return (Status.ErrorCompile, compile_status.stderr.decode("utf-8"))
         
         # Running
         language_run_command = {
