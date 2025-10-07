@@ -1,6 +1,7 @@
 <script lang="ts">
     import { onMount } from "svelte"
     import MenuBar from "./components/menubar.svelte"
+    import { toTzIsoString, getTzOffset } from "../utils"
 
     let params = new URLSearchParams(document.location.search)
     let ID = params.get("id")
@@ -18,8 +19,8 @@
         let response: Response = await fetch(`/api/admin/contest/${ID}`)
         let json = await response.json()
         name = json["contest"]["name"]
-        startTime = json["contest"]["start_time"]
-        endTime = json["contest"]["end_time"]
+        startTime = toTzIsoString(new Date(json["contest"]["start_time"]))
+        endTime = toTzIsoString(new Date(json["contest"]["end_time"]))
         problems = json["contest"]["problems"]
     }
 
@@ -31,8 +32,8 @@
             body: JSON.stringify({
                 id: ID,
                 name: name,
-                start_time: startTime,
-                end_time: endTime
+                start_time: new Date(startTime + getTzOffset()).toISOString(),
+                end_time: new Date(endTime + getTzOffset()).toISOString()
             }),
             headers: {
                 "Content-Type": "application/json; charset=UTF-8"

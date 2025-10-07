@@ -9,6 +9,7 @@
     async function get_data() {
         let response: Response = await fetch(`/api/submission/${ID}`)
         let json = await response.json()
+        console.log(json)
         json["submit_time"] = new Date(json["submit_time"]).toLocaleString("en-US", {timeZone: tz})
         return json
     }

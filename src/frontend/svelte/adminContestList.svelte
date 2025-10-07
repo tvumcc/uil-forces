@@ -1,6 +1,7 @@
 <script lang="ts">
     import { onMount } from "svelte"
     import MenuBar from "./components/menubar.svelte"
+    import {getTzOffset} from "../utils"
 
     let contests = $state([]) 
 
@@ -22,8 +23,8 @@
             method: "POST",
             body: JSON.stringify({
                 name: name,
-                start_time: startTime,
-                end_time: endTime
+                start_time: new Date(startTime + getTzOffset()).toISOString(),
+                end_time: new Date(endTime + getTzOffset()).toISOString() 
             }),
             headers: {
                 "Content-Type": "application/json; charset=UTF-8"

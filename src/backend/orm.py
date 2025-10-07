@@ -4,6 +4,7 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from flask_login import UserMixin
 from typing import List, Optional
 import datetime
+from datetime import timezone
 
 class Base(DeclarativeBase):
     pass
@@ -177,8 +178,8 @@ class Contest(db.Model):
         return {
             "id": self.id,
             "name": self.name,
-            "start_time": self.start_time.isoformat(),
-            "end_time": self.end_time.isoformat()
+            "start_time": self.start_time.replace(tzinfo=timezone.utc).isoformat(),
+            "end_time": self.end_time.replace(tzinfo=timezone.utc).isoformat()
         }
 
 class ContestProfile(db.Model):

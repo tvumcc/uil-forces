@@ -17,6 +17,7 @@ from src.backend.api.user import *
 from src.backend.api.problem import *
 from src.backend.api.contest import *
 from src.backend.api.pset import *
+from src.backend.api.submission import *
 
 with app.app_context():
     db.create_all()

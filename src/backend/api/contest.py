@@ -3,6 +3,7 @@ import flask_login
 
 import threading
 import datetime
+from datetime import timezone
 
 from main import app
 from src.backend.orm import *
@@ -75,7 +76,7 @@ def submit_contest_problem():
 
         status=Status.Pending.value,
         code=response["code"],
-        submit_time=datetime.datetime.now(),
+        submit_time=datetime.datetime.now(timezone.utc),
         language=language
     )
     db.session.add(submission)
