@@ -1,40 +1,39 @@
 <script lang="ts">
-    import Status from "./components/status.svelte"
-    import MenuBar from "./components/menubar.svelte"
+    import Status from "../components/status.svelte"
+    import MenuBar from "../components/menuBar.svelte"
 
     let params = new URLSearchParams(document.location.search)
     let ID = params.get("id")
-    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
 
-    async function get_data() {
+    async function getData() {
         let response: Response = await fetch(`/api/submission/${ID}`)
         let json = await response.json()
-        console.log(json)
-        json["submit_time"] = new Date(json["submit_time"]).toLocaleString("en-US", {timeZone: tz})
         return json
     }
-
-    let submissionPromise = get_data()
 </script>
 
 <style>
-    @import "../style.css";
+    @import "../../style.css";
 </style>
 
 <MenuBar />
 <div class="main-container">
-    {#await submissionPromise then submission}
+    {#await getData()}
+        <p>Loading...</p>
+    {:then submission}
         <h1>Submission</h1>
 
         <p>User: {submission.user.username}</p>
-        <p>Submit Time: {submission.submit_time}</p>
+        <p>Submit Time: {new Date(submission.submit_time).toLocaleString()}</p>
         <p>Status: <Status statusCode={submission.status} fitText={true}/></p>
         {#if submission.contest_profile}
             <p>Contest: <a href="/contest?id={submission.contest_profile.contest.id}">{submission.contest_profile.contest.name}</a></p>
         {/if}
 
-        <h2>Submitted Code</h2>
-        <pre>{submission.code}</pre>
+        {#if submission.code !== undefined}
+            <h2>Submitted Code</h2>
+            <pre>{submission.code}</pre>
+        {/if}
 
         {#if submission.output !== undefined}
             <h2>Output</h2>

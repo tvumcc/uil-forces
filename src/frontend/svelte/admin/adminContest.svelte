@@ -1,7 +1,7 @@
 <script lang="ts">
     import { onMount } from "svelte"
-    import MenuBar from "./components/menubar.svelte"
-    import { toTzIsoString, getTzOffset } from "../utils"
+    import MenuBar from "../components/menuBar.svelte"
+    import { toTzIsoString, getTzOffset } from "../../utils"
 
     let params = new URLSearchParams(document.location.search)
     let ID = params.get("id")
@@ -103,7 +103,7 @@
 </script>
 
 <style>
-    @import "../style.css";
+    @import "../../style.css";
 
     table {
         border-collapse: collapse;

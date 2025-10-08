@@ -8,7 +8,7 @@ from datetime import timezone
 from main import app
 from src.backend.orm import *
 from src.backend.judge import Status, assign_status
-from sqlalchemy import create_engine, select, desc
+from sqlalchemy import desc
 
 @app.route("/api/pset/<id>")
 @flask_login.login_required

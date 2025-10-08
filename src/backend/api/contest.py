@@ -45,8 +45,10 @@ def contest(id):
     if contest.past(): 
         for profile in contest.contest_profiles:
             submissions += profile.submissions
-    else: 
+    elif contest.ongoing():
         submissions = db.session.query(Submission).filter_by(contest_profile=contest_profile).order_by(desc(Submission.submit_time)).all()
+    else:
+        return contest.shallow_serialize()
 
     return contest.serialize() | {
         "submissions": [submission.shallow_serialize() for submission in submissions]
@@ -63,6 +65,9 @@ def submit_contest_problem():
         return {"message": "invalid problem id"}
     if not contest:
         return {"message": "invalid contest id"}
+    if not contest.ongoing():
+        return {"message": "contest is not ongoing, submissions are not allowed"}
+
     contest_profile = db.session.query(ContestProfile).filter_by(user=flask_login.current_user, contest=contest).first()
     if not contest_profile:
         contest_profile = ContestProfile(user=flask_login.current_user, contest=contest)

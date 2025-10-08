@@ -1,7 +1,7 @@
 <script lang="ts">
     import Status from "./status.svelte"
 
-    let {submissions, submissionProblemID, showSelectedProblemSubmissions, showUsers} = $props()
+    let {submissions, showUsers} = $props()
 </script>
 
 <style>
@@ -37,18 +37,16 @@
         </thead>
         <tbody>
             {#each submissions as submission}
-                {#if !showSelectedProblemSubmissions || submission["problem"]["id"] === submissionProblemID}
-                    <tr>
-                        <td>{submission["submit_time"]}</td>
-                        {#if showUsers}
-                            <td>{submission["user"]}</td>
-                        {/if}
-                        <td>{submission["problem"]["name"]}</td>
-                        <td>{submission["language"]}</td>
-                        <td style="width: 175px;"><Status statusCode={submission["status"]} fitText={false}/></td>
-                        <td style="width: 80px;"><a href="/submission?id={submission["id"]}">View Code</a></td>
-                    </tr>
-                {/if}
+                <tr>
+                    <td>{new Date(submission["submit_time"]).toLocaleString()}</td>
+                    {#if showUsers}
+                        <td>{submission["user"]["username"]}</td>
+                    {/if}
+                    <td>{submission["problem"]["name"]}</td>
+                    <td>{submission["language"]}</td>
+                    <td style="width: 175px;"><Status statusCode={submission["status"]} fitText={false}/></td>
+                    <td style="width: 80px;"><a href="/submission?id={submission["id"]}">View Code</a></td>
+                </tr>
             {/each}
         </tbody>
     </table>

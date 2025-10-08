@@ -127,7 +127,7 @@ class Submission(db.Model):
     contest_profile: Mapped[Optional["ContestProfile"]] = relationship(back_populates="submissions")
 
     def serialize(self, admin_view=False):
-        output = {} if not self.contest_profile.contest.past() and not admin_view else {"output": self.output}
+        output = {} if self.contest_profile and not self.contest_profile.contest.past() and not admin_view else {"output": self.output}
 
         return self.shallow_serialize() | output | {
             "code": self.code
@@ -179,7 +179,8 @@ class Contest(db.Model):
             "id": self.id,
             "name": self.name,
             "start_time": self.start_time.replace(tzinfo=timezone.utc).isoformat(),
-            "end_time": self.end_time.replace(tzinfo=timezone.utc).isoformat()
+            "end_time": self.end_time.replace(tzinfo=timezone.utc).isoformat(),
+            "status": self.past() and "past" or self.ongoing() and "ongoing" or "upcoming"
         }
 
 class ContestProfile(db.Model):

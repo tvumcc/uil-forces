@@ -1,7 +1,7 @@
 <script lang="ts">
     import { onMount } from "svelte"
-    import MenuBar from "./components/menubar.svelte"
-    import {getTzOffset} from "../utils"
+    import MenuBar from "../components/menuBar.svelte"
+    import {getTzOffset} from "../../utils"
 
     let contests = $state([]) 
 
@@ -40,7 +40,7 @@
 </script>
 
 <style>
-    @import "../style.css";
+    @import "../../style.css";
 </style>
 
 <MenuBar />

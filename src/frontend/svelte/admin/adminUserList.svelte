@@ -1,6 +1,6 @@
 <script lang="ts">
     import { onMount } from "svelte"
-    import MenuBar from "./components/menubar.svelte"
+    import MenuBar from "../components/menuBar.svelte"
 
     let users = $state([])
 
@@ -44,7 +44,7 @@
 </script>
 
 <style>
-    @import "../style.css";
+    @import "../../style.css";
 </style>
 
 <MenuBar />
