@@ -225,6 +225,7 @@ class ContestProfile(db.Model):
     submissions: Mapped[List["Submission"]] = relationship(back_populates="contest_profile")
 
     def problem_status_list(self):
+        # [Problem ID, # Correct, # Incorrect, Correct Score, Incorrect Penalty] 
         problem_status_list = [[0, 0, 0, 0, 0] for _ in range(len(self.contest.problem_links))]
 
         for idx, problem_link in enumerate(self.contest.problem_links):
@@ -232,7 +233,7 @@ class ContestProfile(db.Model):
             problem_status_list[idx][3] = problem_link.correct_score
             problem_status_list[idx][4] = problem_link.incorrect_penalty
 
-        for submission in self.submissions:
+        for submission in self.valid_submissions():
             problem_idx = None
             for idx, problem_link in enumerate(self.contest.problem_links):
                 if problem_link.problem.id == submission.problem.id:
@@ -259,9 +260,12 @@ class ContestProfile(db.Model):
         self.score = score
         return score
 
+    def valid_submissions(self):
+        return sorted([submission for submission in self.submissions if submission.problem in self.contest.problems()], key=lambda x: x.submit_time, reverse=True)
+
     def serialize(self):
         return self.shallow_serialize() | {
-            "submissions": [submission.shallow_serialize() for submission in self.submissions]
+            "submissions": [submission.shallow_serialize() for submission in self.valid_submissions()]
         }
 
     def shallow_serialize(self):

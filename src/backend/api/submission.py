@@ -40,6 +40,10 @@ def admin_submission_delete(id):
     if not submission:
         return flask.Response(status=404)
 
+    if submission.contest_profile:
+        submission.contest_profile.calculate_score()
+        db.session.add(submission.contest_profile)
+
     db.session.delete(submission)
     db.session.commit()
     return flask.Response(status=200)

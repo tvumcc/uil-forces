@@ -44,9 +44,9 @@ def contest(id):
     submissions = []
     if contest.past(): 
         for profile in contest.contest_profiles:
-            submissions += profile.submissions
+            submissions += profile.valid_submissions()
     elif contest.ongoing():
-        submissions = db.session.query(Submission).filter_by(contest_profile=contest_profile).order_by(desc(Submission.submit_time)).all()
+        submissions = contest_profile.valid_submissions()
     else:
         return contest.shallow_serialize()
 
@@ -106,7 +106,7 @@ def contest_leaderboard(id):
 
         leaderboard = []
         for profile in contest_profiles:
-            if len(profile.submissions) > 0:
+            if len(profile.valid_submissions()) > 0:
                 leaderboard_entry = {
                     "user": profile.user.shallow_serialize(),
                     "score": profile.score,
@@ -165,6 +165,11 @@ def admin_contest_add_problem(id):
 
     contest.problem_links.append(problem_link)
     db.session.add(contest)
+
+    for profile in contest.contest_profiles:
+        profile.calculate_score()
+        db.session.add(profile)
+
     db.session.commit()
 
     return flask.Response(status=200)
@@ -188,6 +193,10 @@ def admin_contest_add_pset(id):
             problem_link = ContestProblemAssociation(problem=problem)
             db.session.add(problem_link)
             contest.problem_links.append(problem_link)
+
+    for profile in contest.contest_profiles:
+        profile.calculate_score()
+        db.session.add(profile)
 
     db.session.add(contest)
     db.session.commit()
@@ -219,7 +228,7 @@ def admin_contest_unlink_problem():
                 problem_link_to_remove = problem_link
                 break
 
-        contest.problem_links.remove(problem_link_to_remove)
+        db.session.delete(problem_link_to_remove)
         db.session.add(contest)
         db.session.commit()
     except ValueError:
