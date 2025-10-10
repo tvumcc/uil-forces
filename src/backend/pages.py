@@ -78,3 +78,10 @@ def admin_settings_page():
     if not flask_login.current_user.is_admin:
         return flask.abort(400)
     return flask.send_from_directory(app.static_folder, "src/frontend/html/adminSettings.html")
+
+@app.route("/admin/submissions")
+@flask_login.login_required
+def admin_submission_list_page():
+    if not flask_login.current_user.is_admin:
+        return flask.abort(400)
+    return flask.send_from_directory(app.static_folder, "src/frontend/html/adminSubmissionList.html")

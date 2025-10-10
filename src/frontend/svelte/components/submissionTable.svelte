@@ -1,7 +1,22 @@
 <script lang="ts">
     import Status from "./status.svelte"
 
-    let {submissions, showUsers} = $props()
+    let {
+        submissions, 
+        showUsers,
+        showDelete = false
+    } = $props()
+
+    async function deleteSubmission(id: number) {
+        let response: Response = await fetch(`/api/admin/submission/${id}/delete`, {
+            method: "DELETE"
+        })
+        if (response.status === 200) {
+            submissions = submissions.filter((submission: any) => submission["id"] !== id)
+        } else {
+            alert("Error deleting submission")
+        }
+    }
 </script>
 
 <style>
@@ -33,6 +48,9 @@
                 <th>Language</th>
                 <th>Status</th>
                 <th>Code</th>
+                {#if showDelete}
+                    <th>Action</th>
+                {/if}
             </tr>
         </thead>
         <tbody>
@@ -46,6 +64,9 @@
                     <td>{submission["language"]}</td>
                     <td style="width: 175px;"><Status statusCode={submission["status"]} fitText={false}/></td>
                     <td style="width: 80px;"><a href="/submission?id={submission["id"]}">View Code</a></td>
+                    {#if showDelete}
+                        <td style="width: 80px;"><button onclick={() => deleteSubmission(submission["id"])}>Delete</button></td>
+                    {/if}
                 </tr>
             {/each}
         </tbody>
