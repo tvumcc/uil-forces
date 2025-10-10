@@ -16,7 +16,7 @@ def pset(id):
     settings = db.session.query(Settings).filter_by(key="practice_site").first()
     pset = db.session.get(ProblemSet, id)
 
-    if settings and settings.value == "true" and pset and not pset.hide:
+    if settings and settings.value.lower() == "true" and pset and not pset.hide:
         submissions = []
         for problem in pset.problems:
             submissions += db.session.query(Submission).filter_by(user=flask_login.current_user, problem=problem).order_by(desc(Submission.submit_time)).all()
@@ -32,7 +32,7 @@ def pset(id):
 @flask_login.login_required
 def psets():
     settings = db.session.query(Settings).filter_by(key="practice_site").first()
-    if settings and settings.value == "true":
+    if settings and settings.value.lower() == "true":
         psets = db.session.query(ProblemSet).all()
         return {
             "hide": False,
@@ -48,7 +48,7 @@ def submit_pset_problem():
     problem = db.session.get(Problem, response["problem_id"])
     pset = problem.problem_set if problem else None
 
-    if settings and settings.value == "true" and pset and not pset.hide:
+    if settings and settings.value.lower() == "true" and pset and not pset.hide:
         response = flask.request.get_json()
         language = response["language"]
         if not problem:

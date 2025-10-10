@@ -13,7 +13,7 @@ def submission(id):
     
     contest_profile = submission.contest_profile
 
-    if settings and settings.practice_site == "true" and pset and pset.hide or contest_profile and not contest_profile.contest.past() and not flask_login.current_user.is_admin and not user.id == flask_login.current_user.id:
+    if settings and settings.value.lower() == "true" and pset and pset.hide or contest_profile and not contest_profile.contest.past() and not flask_login.current_user.is_admin and not user.id == flask_login.current_user.id:
         return submission.shallow_serialize()
 
     return submission.serialize(admin_view=flask_login.current_user.is_admin)

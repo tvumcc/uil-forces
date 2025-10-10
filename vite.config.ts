@@ -19,7 +19,8 @@ export default defineConfig({
         adminContestList: "./src/frontend/html/adminContestList.html",
         adminContest: "./src/frontend/html/adminContest.html",
         register: "./src/frontend/html/register.html",
-        adminProblemSet: "./src/frontend/html/adminProblemSet.html"
+        adminProblemSet: "./src/frontend/html/adminProblemSet.html",
+        adminSettings: "./src/frontend/html/adminSettings.html"
       },
     },
   },
