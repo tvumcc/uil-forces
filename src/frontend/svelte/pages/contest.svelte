@@ -11,13 +11,16 @@
     let contestName = $state("")
     let problems = $state([])
     let submissions = $state([])
+    let allowed_languages = $state([])
+    let show_leaderboard = $state(false)
+    let show_pdf = $state(false)
 
     let leaderboard: Leaderboard
 
     let submissionProblemID = $state(-1)
 
     $effect(() => {
-        if (submissionProblemID !== -1) {
+        if (submissionProblemID !== -1 && show_pdf) {
             document.getElementById("pdf-viewer")!.style.display = "flex"
         } else {
             document.getElementById("pdf-viewer")!.style.display = "none"
@@ -42,6 +45,9 @@
         contestName = json.name
         problems = json.problems
         submissions = json.submissions
+        allowed_languages = json.allowed_languages.split(" ")
+        show_leaderboard = json.show_leaderboard
+        show_pdf = json.show_pdf
     }
 </script>
 
@@ -119,14 +125,16 @@
                         <p>The contest has ended. You can still view submissions and the leaderboard, but you cannot submit solutions.</p>
                     {:else}
                         <h2>Submit Code</h2>
-                        <SubmitForm submissionType={"contest"} {ID} {problems} {reloadSubmissions} {reloadLeaderboard} bind:submissionProblemID/>
+                        <SubmitForm submissionType={"contest"} {ID} {problems} {allowed_languages} {reloadSubmissions} {reloadLeaderboard} bind:submissionProblemID/>
                     {/if}
 
-                    <h2>Leaderboard</h2>
-                    <div class="lb" style="width: 100%; overflow-x: scroll;">
-                        <Leaderboard {ID} {problems} bind:this={leaderboard}/>            
-                    </div>
-                    <br>
+                    {#if show_leaderboard }
+                        <h2>Leaderboard</h2>
+                        <div class="lb" style="width: 100%; overflow-x: scroll;">
+                            <Leaderboard {ID} {problems} bind:this={leaderboard}/>            
+                        </div>
+                        <br>
+                    {/if}
 
                     {#if contestStatus === "past"}
                         <h2>All Submissions</h2>

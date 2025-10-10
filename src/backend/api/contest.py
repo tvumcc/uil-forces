@@ -101,21 +101,23 @@ def submit_contest_problem():
 @flask_login.login_required
 def contest_leaderboard(id):
     contest: Contest = db.session.get(Contest, id)
-    contest_profiles: List[ContestProfile] = sorted(contest.contest_profiles, key=lambda x: x.score, reverse=True)
+    if contest.show_leaderboard:
+        contest_profiles: List[ContestProfile] = sorted(contest.contest_profiles, key=lambda x: x.score, reverse=True)
 
-    leaderboard = []
-    for profile in contest_profiles:
-        if len(profile.submissions) > 0:
-            leaderboard_entry = {
-                "user": profile.user.shallow_serialize(),
-                "score": profile.score,
-                "problems_solved": profile.problem_status_list()
-            }
-            leaderboard.append(leaderboard_entry)
+        leaderboard = []
+        for profile in contest_profiles:
+            if len(profile.submissions) > 0:
+                leaderboard_entry = {
+                    "user": profile.user.shallow_serialize(),
+                    "score": profile.score,
+                    "problems_solved": profile.problem_status_list()
+                }
+                leaderboard.append(leaderboard_entry)
 
-    return {
-        "leaderboard": leaderboard
-    }
+        return {
+            "leaderboard": leaderboard
+        }
+    else: return {}
 
 # Admin APIs
 
@@ -236,11 +238,17 @@ def admin_update_contest():
     name = request["name"]
     start_time = request["start_time"]
     end_time = request["end_time"]
+    show_pdf = request["show_pdf"]
+    show_leaderboard = request["show_leaderboard"]
+    allowed_languages = " ".join(str(request["allowed_languages"]).split())
 
     contest = db.session.get(Contest, id)
     contest.name = name
     contest.start_time = datetime.datetime.fromisoformat(start_time)
     contest.end_time = datetime.datetime.fromisoformat(end_time)
+    contest.show_pdf = show_pdf
+    contest.show_leaderboard = show_leaderboard
+    contest.allowed_languages = allowed_languages
 
     db.session.add(contest)
     db.session.commit()

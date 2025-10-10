@@ -19,6 +19,21 @@ class ContestProblemAssociation(Base):
     incorrect_penalty: Mapped[int] = mapped_column(default=5)
     problem: Mapped["Problem"] = relationship()
 
+class Settings(db.Model):
+    __tablename__ = "settings"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+
+    key:   Mapped[str] = mapped_column(unique=True)
+    value: Mapped[str]
+
+    def serialize(self):
+        return {
+            "id": self.id,
+            "key": self.key,
+            "value": self.value
+        }
+
 class User(UserMixin, db.Model):
     __tablename__ = "user"
 
@@ -52,6 +67,7 @@ class ProblemSet(db.Model):
 
     name: Mapped[str] = mapped_column(unique=True)
     pdf_path: Mapped[str] = mapped_column(default="")
+    hide: Mapped[bool] = mapped_column(default=False)
 
     problems: Mapped[List["Problem"]] = relationship(back_populates="problem_set")
 
@@ -63,7 +79,8 @@ class ProblemSet(db.Model):
     def shallow_serialize(self):
         return {
             "id": self.id,
-            "name": self.name
+            "name": self.name,
+            "hide": self.hide
         }
 
 class Problem(db.Model):
@@ -153,6 +170,10 @@ class Contest(db.Model):
     start_time: Mapped[datetime.datetime]
     end_time:   Mapped[datetime.datetime]
 
+    allowed_languages: Mapped[str] = mapped_column(default="Java")
+    show_leaderboard:  Mapped[bool] = mapped_column(default=True)
+    show_pdf: Mapped[bool] = mapped_column(default=False)
+
     problem_links:         Mapped[List["ContestProblemAssociation"]] = relationship()
     contest_profiles: Mapped[List["ContestProfile"]] = relationship(back_populates="contest")
 
@@ -180,7 +201,10 @@ class Contest(db.Model):
             "name": self.name,
             "start_time": self.start_time.replace(tzinfo=timezone.utc).isoformat(),
             "end_time": self.end_time.replace(tzinfo=timezone.utc).isoformat(),
-            "status": self.past() and "past" or self.ongoing() and "ongoing" or "upcoming"
+            "status": self.past() and "past" or self.ongoing() and "ongoing" or "upcoming",
+            "allowed_languages": self.allowed_languages,
+            "show_leaderboard": self.show_leaderboard,
+            "show_pdf": self.show_pdf
         }
 
 class ContestProfile(db.Model):

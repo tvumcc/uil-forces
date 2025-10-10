@@ -64,3 +64,10 @@ def admin_contest_page():
     if not flask_login.current_user.is_admin:
         return flask.abort(400)
     return flask.send_from_directory(app.static_folder, "src/frontend/html/adminContest.html")
+
+@app.route("/admin/pset")
+@flask_login.login_required
+def admin_pset_page():
+    if not flask_login.current_user.is_admin:
+        return flask.abort(400)
+    return flask.send_from_directory(app.static_folder, "src/frontend/html/adminProblemSet.html")

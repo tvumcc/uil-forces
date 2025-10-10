@@ -7,6 +7,7 @@
         ID,
         problems,
         submissionProblemID = $bindable(-1),
+        allowed_languages = ["Java", "Python", "C++"],
         reloadSubmissions = () => {},
         reloadLeaderboard = () => {},
     } = $props()
@@ -15,7 +16,7 @@
     const languages = new Map([
         ["Java", "java"],
         ["Python", "py"],
-        // ["C++", "cpp"]
+        ["C++", "cpp"]
     ])
 
     let files: FileList = $state()!
@@ -130,7 +131,9 @@
         <label for="language-select">Language:</label>
         <select id="language-select" bind:value={submissionLanguage}>
             {#each languages.entries() as [lang, ext]}
-                <option value="{lang}">{lang}</option>
+                {#if allowed_languages.includes(lang)}
+                    <option value="{lang}">{lang}</option>
+                {/if}
             {/each}
         </select>
         <br>

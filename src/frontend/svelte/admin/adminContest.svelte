@@ -9,6 +9,9 @@
     let name = $state("")
     let startTime = $state("")
     let endTime = $state("")
+    let allowed_languages = $state([])
+    let show_leaderboard = $state(false)
+    let show_pdf = $state(false)
     let problems = $state([])
 
     let psetName = $state("")
@@ -21,19 +24,26 @@
         name = json["contest"]["name"]
         startTime = toTzIsoString(new Date(json["contest"]["start_time"]))
         endTime = toTzIsoString(new Date(json["contest"]["end_time"]))
+        allowed_languages = json["contest"]["allowed_languages"]
+        show_leaderboard = json["contest"]["show_leaderboard"]
+        show_pdf = json["contest"]["show_pdf"]
         problems = json["contest"]["problems"]
     }
 
     async function editContest(event: Event) {
         event.preventDefault()
 
+        console.log(allowed_languages)
         let response: Response = await fetch("/api/admin/update/contest", {
             method: "POST",
             body: JSON.stringify({
                 id: ID,
                 name: name,
                 start_time: new Date(startTime + getTzOffset()).toISOString(),
-                end_time: new Date(endTime + getTzOffset()).toISOString()
+                end_time: new Date(endTime + getTzOffset()).toISOString(),
+                show_pdf: show_pdf,
+                show_leaderboard: show_leaderboard,
+                allowed_languages: allowed_languages
             }),
             headers: {
                 "Content-Type": "application/json; charset=UTF-8"
@@ -129,6 +139,16 @@
         <input name="start-time" type="datetime-local" bind:value={startTime}>
         <label for="end-time">End Time</label>
         <input name="end-time" type="datetime-local" bind:value={endTime}>
+        <br>
+        <label for="show-pdf">Show PDF Problem Statement Viewer</label>
+        <input name="show-pdf" type="checkbox" bind:checked={show_pdf}>
+        <br>
+        <label for="show-leaderboard">Show Leaderboard</label>
+        <input name="show-leaderboard" type="checkbox" bind:checked={show_leaderboard}>
+        <br>
+        <label for="allowed-languages">Allowed Languages (space separated)</label>
+        <input name="allowed-languages" type="text" bind:value={allowed_languages}>
+        <br>
         <input type="submit" value="Update Contest">
     </form>
 

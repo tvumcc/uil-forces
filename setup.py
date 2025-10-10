@@ -24,6 +24,12 @@ def setup():
         document = setup_file.read()
         setup_config = yaml.safe_load(document)
 
+        practice_site = setup_config.get("practice_site", False)
+        docker_grading = setup_config.get("docker_grading", False)
+
+        session.add(Settings(key="practice_site", value="true" if practice_site else "false"))
+        session.add(Settings(key="docker_grading", value="true" if docker_grading else "false"))
+
         for user in setup_config["users"]:
             username = user["username"]
             password = user["password"]

@@ -6,6 +6,7 @@
     let params = new URLSearchParams(document.location.search)
     let ID = params.get("id")
 
+    let hide = $state()
     let psetName = $state("")
     let problems = $state([])
     let submissions: any[] = $state([])
@@ -23,25 +24,17 @@
     async function reloadSubmissions() {
         let response = await fetch(`/api/pset/${ID}`)
         let json = await response.json()
-        submissions = convert_submission_time(json.submissions)
-    }
-
-    function convert_submission_time(submissions: any[]) {
-        const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
-        submissions = submissions.map((submission: any) => {
-            submission["submit_time"] = new Date(submission["submit_time"]).toLocaleString("en-US", {timeZone: tz})
-            return submission
-        })
-        return submissions
+        submissions = json.submissions
     }
 
     async function getData() {
         let response = await fetch(`/api/pset/${ID}`)
         let json = await response.json()
 
+        hide = json.hide
         psetName = json.name
         problems = json.problems
-        submissions = convert_submission_time(json.submissions)
+        submissions = json.submissions
     }
 </script>
 
@@ -111,12 +104,16 @@
             {#await getData()}
                 <p>Loading...</p>
             {:then}
-                <h1>{psetName}</h1>
-                <h2>Submit Code</h2>
-                <SubmitForm submissionType={"pset"} {ID} {problems} {reloadSubmissions} bind:submissionProblemID/>
+                {#if hide !== undefined && !hide}
+                    <h1>{psetName}</h1>
+                    <h2>Submit Code</h2>
+                    <SubmitForm submissionType={"pset"} {ID} {problems} {reloadSubmissions} bind:submissionProblemID/>
 
-                <h2>Your Submissions</h2>
-                <SubmissionTable {submissions} showUsers={false}/>
+                    <h2>Your Submissions</h2>
+                    <SubmissionTable {submissions} showUsers={false}/>
+                {:else}
+                    <p>This problem set is not available for practice.</p>
+                {/if}
             {:catch error}
                 <p>Error loading contest data: {error.message}</p>
             {/await}
