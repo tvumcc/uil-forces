@@ -275,3 +275,31 @@ def admin_add_contest():
     db.session.commit()
 
     return flask.Response(status=200)
+
+@app.route("/api/admin/contest/updateproblems", methods=["POST"])
+@flask_login.login_required
+def admin_update_contest_problems():
+    if not flask_login.current_user.is_admin:
+        return flask.abort(400)
+    
+    request = flask.request.get_json()
+    contest_id = request["contest_id"]
+    problems = request["problems"]
+
+    contest: Contest = db.session.get(Contest, contest_id)
+    if not contest:
+        return flask.abort(404)
+
+    for problem in problems:
+        problem_link = db.session.query(ContestProblemAssociation).filter_by(contest_id=contest.id, problem_id=problem["id"]).one()
+        problem_link.correct_score = problem["correct_score"]
+        problem_link.incorrect_penalty = problem["incorrect_penalty"]
+        db.session.add(problem_link)
+
+    for contest_profile in contest.contest_profiles:
+        contest_profile.calculate_score()
+        db.session.add(contest_profile)
+
+    db.session.commit()
+
+    return flask.Response(status=200)

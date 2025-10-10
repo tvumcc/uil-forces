@@ -12,7 +12,7 @@
     let allowed_languages = $state([])
     let show_leaderboard = $state(false)
     let show_pdf = $state(false)
-    let problems = $state([])
+    let problems: any[] = $state([])
 
     let psetName = $state("")
     let problemPsetName = $state("")
@@ -109,6 +109,29 @@
         }
     }
 
+    async function updateProblemScores() {
+        let response: Response = await fetch("/api/admin/contest/updateproblems", {
+            method: "POST",
+            body: JSON.stringify({
+                contest_id: ID,
+                problems: problems.map((problem) => {
+                    return {
+                        id: problem["id"],
+                        correct_score: problem["correct_score"],
+                        incorrect_penalty: problem["incorrect_penalty"]
+                    }
+                })
+            }),
+            headers: {
+                "Content-Type": "application/json; charset=UTF-8"
+            }
+        })
+
+        if (response.ok)  {
+            await getData()
+        }
+    }
+
     onMount(getData)
 </script>
 
@@ -152,17 +175,28 @@
         <input type="submit" value="Update Contest">
     </form>
 
-    <h2>Problems:</h2>
+    <h2>Problems</h2>
     <table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Score</th>
+            <th>Penalty</th>
+            <th>Action</th>
+        </tr>
+    </thead>
     <tbody>
-    {#each problems as problem}
+    {#each problems as problem, i}
         <tr class="pb-row">
-            <td><a href="/admin/problem?id={problem["id"]}">{problem["name"]}</a></td>
-            <td><button onclick={async ()=>{await unlinkProblem(problem["id"])}}>Remove</button></td>
+            <td>{problem.name}</td>
+            <td><input type="text" bind:value={problem.correct_score}></td>
+            <td><input type="text" bind:value={problem.incorrect_penalty}></td>
+            <td><button onclick={async ()=>{await unlinkProblem(problem.id)}}>Remove</button></td>
         </tr>
     {/each}
     </tbody>
     </table>
+    <button onclick={updateProblemScores}>Update Problems and Recalculate Scores</button>
 
     <h2>Add Problem Set</h2>
     <form onsubmit={addProblemSet}>
