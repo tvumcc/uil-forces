@@ -109,6 +109,13 @@ def pset_data(id):
     else:
         return flask.Response(status=400)
 
+@app.route("/api/admin/psets")
+@flask_login.login_required
+def admin_psets():
+    if not flask_login.current_user.is_admin:
+        return flask.abort(400)
+    return {"psets": [pset.shallow_serialize() for pset in db.session.query(ProblemSet).all()]}
+
 @app.route("/api/admin/pset/<id>")
 @flask_login.login_required
 def admin_pset(id):
@@ -131,6 +138,45 @@ def admin_update_pset():
     pset = db.session.get(ProblemSet, id)
     pset.name = name
     pset.hide = hide
+
+    db.session.add(pset)
+    db.session.commit()
+
+    return flask.Response(status=200)
+
+@app.route("/api/admin/add/pset", methods=["POST"])
+@flask_login.login_required
+def admin_add_pset():
+    if not flask_login.current_user.is_admin:
+        return flask.abort(400)
+    
+    request = flask.request.get_json()
+
+    name = request["name"]
+
+    db.session.add(ProblemSet(
+        name=name,
+    ))
+    db.session.commit()
+
+    return flask.Response(status=200)
+
+@app.route("/api/admin/pset/add/problem", methods=["POST"])
+@flask_login.login_required
+def admin_pset_add_problem():
+    if not flask_login.current_user.is_admin:
+        return flask.abort(400)
+
+    request = flask.request.get_json()
+
+    pset_id = request["pset_id"]
+    problem_name = request["problem_name"]
+
+    problem = Problem(name=problem_name)
+    db.session.add(problem)
+    pset = db.session.get(ProblemSet, pset_id)
+
+    pset.problems.append(problem)
 
     db.session.add(pset)
     db.session.commit()

@@ -1,0 +1,14 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  </head>
+  <body id="admin-problem">
+    <script type="module">
+      import { mount } from "svelte"
+      import AdminProblem from "../svelte/admin/adminProblem.svelte"
+      export const adminProblem = mount(AdminProblem, { target: document.getElementById("admin-problem") })
+    </script>
+  </body>
+</html>

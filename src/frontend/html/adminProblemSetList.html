@@ -1,0 +1,14 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  </head>
+  <body id="admin-problem-set-list">
+    <script type="module">
+      import { mount } from "svelte"
+      import AdminProblemSetList from "../svelte/admin/adminProblemSetList.svelte"
+      export const adminProblemSetList = mount(AdminProblemSetList, { target: document.getElementById("admin-problem-set-list") })
+    </script>
+  </body>
+</html>

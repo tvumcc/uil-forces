@@ -106,6 +106,17 @@ class Problem(db.Model):
     problem_set: Mapped["ProblemSet"]       = relationship(back_populates="problems")
     submissions: Mapped[List["Submission"]] = relationship(back_populates="problem")
 
+    def serialize(self):
+        return self.shallow_serialize() | {
+            "pages": self.pages,
+            "use_stdin": self.use_stdin,
+            "input_file_name": self.input_file_name,
+            "student_input": self.student_input,
+            "judge_input": self.judge_input,
+            "judge_output": self.judge_output,
+            "problem_set_id": self.problem_set_id,
+        }
+
     def shallow_serialize(self):
         return {
             "id": self.id,

@@ -85,3 +85,17 @@ def admin_submission_list_page():
     if not flask_login.current_user.is_admin:
         return flask.abort(400)
     return flask.send_from_directory(app.static_folder, "src/frontend/html/adminSubmissionList.html")
+
+@app.route("/admin/psets")
+@flask_login.login_required
+def admin_pset_list_page():
+    if not flask_login.current_user.is_admin:
+        return flask.abort(400)
+    return flask.send_from_directory(app.static_folder, "src/frontend/html/adminProblemSetList.html")
+
+@app.route("/admin/problem")
+@flask_login.login_required
+def admin_problem_page():
+    if not flask_login.current_user.is_admin:
+        return flask.abort(400)
+    return flask.send_from_directory(app.static_folder, "src/frontend/html/adminProblem.html")

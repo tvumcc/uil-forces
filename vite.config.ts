@@ -21,7 +21,9 @@ export default defineConfig({
         register: "./src/frontend/html/register.html",
         adminProblemSet: "./src/frontend/html/adminProblemSet.html",
         adminSettings: "./src/frontend/html/adminSettings.html",
-        adminSubmissionList: "./src/frontend/html/adminSubmissionList.html"
+        adminSubmissionList: "./src/frontend/html/adminSubmissionList.html",
+        adminProblemSetList: "./src/frontend/html/adminProblemSetList.html",
+        adminProblem: "./src/frontend/html/adminProblem.html",
       },
     },
   },

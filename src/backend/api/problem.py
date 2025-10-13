@@ -41,7 +41,39 @@ def problem_pdf(id):
         with open(temp_pdf, "wb") as output_pdf:
             writer.write(output_pdf)
         response = flask.send_from_directory(app.root_path, temp_pdf)
-        os.remove(temp_pdf)
+        try:
+            os.remove(temp_pdf)
+        except: pass
         return response
     else:
         return flask.Response(status=403)
+
+@app.route("/api/admin/problem/<id>")
+@flask_login.login_required
+def admin_problem(id):
+    if not flask_login.current_user.is_admin:
+        return flask.abort(400)
+    problem = db.session.get(Problem, id) 
+    return {"problem": problem.serialize()}
+
+@app.route("/api/admin/update/problem", methods=["POST"])
+@flask_login.login_required
+def admin_update_problem():
+    if not flask_login.current_user.is_admin:
+        return flask.abort(400)
+
+    request = flask.request.get_json()
+    problem = db.session.get(Problem, request["id"]) 
+
+    problem.name = request["name"]
+    problem.pages = request["pages"]
+    problem.use_stdin = request["use_stdin"]
+    problem.input_file_name = request["input_file_name"]
+    problem.student_input = request["student_input"]
+    problem.judge_input = request["judge_input"]
+    problem.judge_output = request["judge_output"]
+
+    db.session.add(problem)
+    db.session.commit()
+
+    return flask.Response(status=200)
