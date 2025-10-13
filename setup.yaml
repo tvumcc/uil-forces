@@ -69,6 +69,7 @@ problem_sets:
       - name: Ada
         pages: 2
       - name: Ariel
+        use_stdin: true
         pages: 3
       - name: Bodhi
         pages: 4

@@ -44,13 +44,14 @@ def psets():
 @app.route("/api/pset/submit", methods=["POST"])
 @flask_login.login_required
 def submit_pset_problem():
-    settings = db.session.query(Settings).filter_by(key="practice_site").first()
+    response = flask.request.get_json()
     problem = db.session.get(Problem, response["problem_id"])
     pset = problem.problem_set if problem else None
+    language = response["language"]
+    practice_site = db.session.query(Settings).filter_by(key="practice_site").first()
+    docker_grading = db.session.query(Settings).filter_by(key="docker_grading").first()
 
-    if settings and settings.value.lower() == "true" and pset and not pset.hide:
-        response = flask.request.get_json()
-        language = response["language"]
+    if practice_site and practice_site.value.lower() == "true" and pset and not pset.hide:
         if not problem:
             return {"message": "invalid problem id"}
 
@@ -66,10 +67,9 @@ def submit_pset_problem():
         db.session.add(submission)
         db.session.commit()
 
-        thread = threading.Thread(target=assign_status, args=[submission.id, None])
+        thread = threading.Thread(target=assign_status, args=[submission.id, None], kwargs={"docker": True if docker_grading.value.lower() == "true" else False})
         thread.daemon = True
         thread.start()
-
 
         submissions = []
         for prob in problem.problem_set.problems:

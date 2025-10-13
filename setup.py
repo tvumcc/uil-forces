@@ -49,6 +49,7 @@ def setup():
                 prob_name = problem["name"]
                 note = problem.get("note", "")
                 pages = problem.get("pages", "")
+                use_stdin = problem.get("use_stdin", False)
 
                 student_data_file = problem.get("student_input_file", str(prob_name).lower() + ".dat")
                 input_data_file = problem.get("input_data_file", str(prob_name).lower() + ".dat")
@@ -77,6 +78,7 @@ def setup():
                     name=prob_name,
                     note=note,
                     pages=pages,
+                    use_stdin=use_stdin,
                     input_file_name=input_data_file,
                     student_input=student_input,
                     judge_input=judge_input,

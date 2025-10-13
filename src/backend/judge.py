@@ -53,11 +53,15 @@ def setup_submission_for_grading(submission: Submission) -> str:
 
 def assign_status(submission_id, contest_profile_id, docker=False):
     from main import app
+    print(docker)
     with app.app_context():
         submission: Submission = db.session.get(Submission, submission_id)
         contest_profile: ContestProfile = db.session.get(ContestProfile, contest_profile_id)
         if submission.status == Status.Pending.value:
-            status, submission.output = grade_submission_docker(submission) if docker else grade_submission(submission)
+            if docker:
+                status, submission.output = grade_submission_docker(submission)
+            else:
+                status, submission.output = grade_submission(submission)
             submission.status = status.value
             if contest_profile is not None:
                 contest_profile.calculate_score()
@@ -68,6 +72,7 @@ def grade_submission(submission: Submission, timeout: int = 5):
     filename = get_submission_file_name(submission)
     submission_folder_name = get_submission_folder_name(id)
     submission_dir = setup_submission_for_grading(submission)
+    use_stdin = submission.problem.use_stdin
 
     try:
         # Language specific setup
@@ -105,13 +110,24 @@ def grade_submission(submission: Submission, timeout: int = 5):
         }
 
         try:
-            run_status = subprocess.run(
-                language_run_command[submission.language], 
-                capture_output=True, 
-                timeout=timeout, 
-                cwd=submission_dir,
-                check=True
-            )
+            if use_stdin:
+                with open(os.path.join(submission_folder_name, submission.problem.input_file_name), "rb") as f:
+                    run_status = subprocess.run(
+                        language_run_command[submission.language], 
+                        capture_output=True, 
+                        timeout=timeout, 
+                        cwd=submission_dir,
+                        check=True,
+                        stdin=f
+                    )
+            else:
+                run_status = subprocess.run(
+                    language_run_command[submission.language], 
+                    capture_output=True, 
+                    timeout=timeout, 
+                    cwd=submission_dir,
+                    check=True,
+                )
             run_output = run_status.stdout.decode("utf-8")
             submission_output = "\n".join([x.rstrip() for x in run_output.strip().splitlines()])
             judge_output = "\n".join([x.rstrip() for x in submission.problem.judge_output.strip().splitlines()])
@@ -132,6 +148,7 @@ def grade_submission_docker(submission: Submission, timeout: int = 5):
     submission_folder_name = get_submission_folder_name(id)
     submission_dir = setup_submission_for_grading(submission)
     container_id = ""
+    use_stdin = submission.problem.use_stdin
 
     language_image = {
         "Java":   "openjdk:11",
@@ -161,13 +178,19 @@ def grade_submission_docker(submission: Submission, timeout: int = 5):
             return (Status.ErrorCompile, compile_status.stderr.decode("utf-8"))
 
         language_run_command = {
-            "Java":   f'docker exec {container_id} timeout {timeout} java'.split() + [f'{os.path.splitext(filename)[0]}'],
+            "Java":   f'docker exec -i {container_id} timeout {timeout} java'.split() + [f'{os.path.splitext(filename)[0]}'],
             "Python": f'docker exec {container_id} timeout {timeout} python3'.split() + [f'{filename}'],
             "C++":    f'docker exec {container_id} timeout {timeout} ./{submission_folder_name}'.split()
         }
 
+        print(language_run_command["Java"])
+
         try:
-            run_status = subprocess.run(language_run_command[submission.language], capture_output=True)
+            if use_stdin:
+                with open(os.path.join(submission_folder_name, submission.problem.input_file_name), "rb") as f:
+                    run_status = subprocess.run(language_run_command[submission.language], stdin=f, capture_output=True)
+            else:
+                run_status = subprocess.run(language_run_command[submission.language], capture_output=True)
 
             print(run_status.returncode)
             print(run_status.stdout.decode("utf-8"))
@@ -185,7 +208,8 @@ def grade_submission_docker(submission: Submission, timeout: int = 5):
             return (Status.TimeLimitExceeded, "")
         except subprocess.CalledProcessError as e:
             return (Status.ErrorRuntime, e.stderr.decode("utf-8"))
-        except:
+        except Exception as e:
+            print(e)
             return (Status.ErrorServer, "")
     finally:
         try: shutil.rmtree(submission_dir)

@@ -58,6 +58,7 @@ def contest(id):
 @flask_login.login_required
 def submit_contest_problem():
     response = flask.request.get_json()
+    settings = db.session.query(Settings).filter_by(key="docker_grading").first()
     problem = db.session.get(Problem, response["problem_id"])
     contest = db.session.get(Contest, response["contest_id"])
     language = response["language"]
@@ -87,7 +88,7 @@ def submit_contest_problem():
     db.session.add(submission)
     db.session.commit()
 
-    thread = threading.Thread(target=assign_status, args=[submission.id, contest_profile.id])
+    thread = threading.Thread(target=assign_status, args=[submission.id, contest_profile.id], kwargs={"docker": True if settings.value.lower() == "true" else False})
     thread.daemon = True
     thread.start()
 
