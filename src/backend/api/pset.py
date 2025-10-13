@@ -83,6 +83,32 @@ def submit_pset_problem():
     else:
         return flask.Response(status=400)
 
+@app.route("/api/pset/<id>/data")
+@flask_login.login_required
+def pset_data(id):
+    pset = db.session.get(ProblemSet, id)
+    settings = db.session.query(Settings).filter_by(key="practice_site").first()
+
+    if settings and settings.value.lower() == "true" and pset and not pset.hide:
+        try:
+            dirname = f"./{pset.name}"
+            os.mkdir(dirname)
+
+            for problem in pset.problems:
+                if len(problem.student_input) > 0:
+                    with open(os.path.join(dirname, problem.input_file_name), "w") as f:
+                        f.write(problem.student_input)
+
+            shutil.make_archive(f"./{pset.name}", "zip", dirname)
+            return flask.send_file(f"./{pset.name}.zip")
+        finally:
+            try:
+                shutil.rmtree(f"./{pset.name}")
+                os.remove(f"./{pset.name}.zip")
+            except: pass
+    else:
+        return flask.Response(status=400)
+
 @app.route("/api/admin/pset/<id>")
 @flask_login.login_required
 def admin_pset(id):

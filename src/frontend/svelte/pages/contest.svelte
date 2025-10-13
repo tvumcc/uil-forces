@@ -118,6 +118,7 @@
                 <p>Loading...</p>
             {:then}
                 <h1>{contestName}</h1>
+                <a href="/api/contest/{ID}/data" target="_blank">Download Student Data</a>
                 {#if contestStatus === "upcoming"}
                     <p>The contest has not started yet. You cannot submit solutions.</p>
                 {:else}

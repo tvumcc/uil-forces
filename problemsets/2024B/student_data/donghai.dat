@@ -1,0 +1,4 @@
+3
+Let's start with a short 1-line paragraph just to see a result!
+Now, this second paragraph will be much longer which results in the sample input displaying with all continuation lines indented.  However, it will be a single unbroken line in the data file that is provided for the contest...
+This is the third "paragraph" of sample data for this programming problem

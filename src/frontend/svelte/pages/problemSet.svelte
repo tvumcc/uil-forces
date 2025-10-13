@@ -106,6 +106,7 @@
             {:then}
                 {#if hide !== undefined && !hide}
                     <h1>{psetName}</h1>
+                    <a href="/api/pset/{ID}/data" target="_blank">Download Student Data</a>
                     <h2>Submit Code</h2>
                     <SubmitForm submissionType={"pset"} {ID} {problems} {reloadSubmissions} bind:submissionProblemID/>
 

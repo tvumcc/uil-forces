@@ -101,7 +101,7 @@ def submit_contest_problem():
 @flask_login.login_required
 def contest_leaderboard(id):
     contest: Contest = db.session.get(Contest, id)
-    if contest.show_leaderboard:
+    if contest.show_leaderboard and not contest.upcoming():
         contest_profiles: List[ContestProfile] = sorted(contest.contest_profiles, key=lambda x: x.score, reverse=True)
 
         leaderboard = []
@@ -118,6 +118,28 @@ def contest_leaderboard(id):
             "leaderboard": leaderboard
         }
     else: return {}
+
+@app.route("/api/contest/<id>/data")
+@flask_login.login_required
+def contest_data(id):
+    contest = db.session.get(Contest, id)
+
+    try:
+        dirname = f"./{contest.name}"
+        os.mkdir(dirname)
+
+        for problem in contest.problems():
+            if len(problem.student_input) > 0:
+                with open(os.path.join(dirname, problem.input_file_name), "w") as f:
+                    f.write(problem.student_input)
+
+        shutil.make_archive(f"./{contest.name}", "zip", dirname)
+        return flask.send_file(f"./{contest.name}.zip")
+    finally:
+        try:
+            shutil.rmtree(f"./{contest.name}")
+            os.remove(f"./{contest.name}.zip")
+        except: pass
 
 # Admin APIs
 

@@ -2,9 +2,12 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import DateTime, ForeignKey, Table, Column, Integer
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from flask_login import UserMixin
+
 from typing import List, Optional
 import datetime
 from datetime import timezone
+import os
+import shutil
 
 class Base(DeclarativeBase):
     pass
@@ -88,19 +91,15 @@ class Problem(db.Model):
 
     id: Mapped[int] = mapped_column(primary_key=True)
 
-    name: Mapped[str]
+    name: Mapped[str] = mapped_column(unique=True)
     note: Mapped[str] = mapped_column(default="")
     pages: Mapped[str] = mapped_column(default="")
 
     use_stdin:       Mapped[bool] = mapped_column(default=False)
     input_file_name: Mapped[Optional[str]]
+    student_input:   Mapped[str]  = mapped_column(default="")
     judge_input:     Mapped[str]  = mapped_column(default="")
     judge_output:    Mapped[str]  = mapped_column(default="")
-    output:          Mapped[str]  = mapped_column(default="")
-
-    is_precontest:   Mapped[bool] = mapped_column(default=False)
-    correct_score:   Mapped[int]  = mapped_column(default=60)
-    incorrect_score: Mapped[int]  = mapped_column(default=-5)
 
     problem_set_id = mapped_column(ForeignKey("problem_set.id"))
 
@@ -111,7 +110,6 @@ class Problem(db.Model):
         return {
             "id": self.id,
             "name": self.name,
-            "is_precontest": self.is_precontest,
         }
 
 class Submission(db.Model):

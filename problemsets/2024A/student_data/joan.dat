@@ -1,0 +1,16 @@
+Joan really enjoys her programming class but her true passion is the English language
+However programming has caused her to view English writings somewhat differently
+and she realizes that words are simply pieces of data put together carefully to
+create a desired meaning For now she has decided to practice her programming skills
+by creating a program to perform a very simple analysis of relatively small pieces of
+prose
+Joan has big plans for analyzing written pieces but decided to start with a program
+that simply counts the number of words in a sample of prose and calculate the
+average length of all words
+Input A sample of English prose with an unknown number of lines containing an
+unknown number of whitespace separated words on each line The number of lines will be
+in the range Words may consist of both uppercase and lowercase letters and there are
+no nonletter symbols or numbers
+Output A single line containing the number of words and the calculated average length
+of all words formatted exactly as shown below in the sample output The average length
+is rounded to the nearest whole number

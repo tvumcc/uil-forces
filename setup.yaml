@@ -102,7 +102,7 @@ contests:
   - name: 2024 UIL Districts
     problem_set: 2024D
     start_time: 2025-09-30T00:06:00Z
-    end_time: 2025-10-13T00:06:00Z
+    end_time: 2025-10-30T00:06:00Z
   - name: Mashup Contest
     problem_set: 2024A
     problems: 

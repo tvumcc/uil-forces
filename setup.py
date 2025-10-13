@@ -9,6 +9,7 @@ db_name = "main.db"
 setup_file_name = "setup.yaml"
 config_file_name = "config.yaml"
 problem_set_path = "problemsets"
+student_data_path = "student_data"
 
 # Set up a new database
 def setup():
@@ -40,6 +41,7 @@ def setup():
         for problem_set in setup_config["problem_sets"]:
             pset_name = problem_set["name"]
             pdf_path = problem_set.get("pdf_path", "")
+            student_input_path = os.path.join(problem_set_path, pset_name, student_data_path)
             dataout_path = os.path.join(problem_set_path, pset_name)
             pset = ProblemSet(name=pset_name, pdf_path=pdf_path)
 
@@ -48,11 +50,18 @@ def setup():
                 note = problem.get("note", "")
                 pages = problem.get("pages", "")
 
+                student_data_file = problem.get("student_input_file", str(prob_name).lower() + ".dat")
                 input_data_file = problem.get("input_data_file", str(prob_name).lower() + ".dat")
                 output_data_file = problem.get("output_data_file", str(prob_name).lower() + ".out")
 
+                student_input = ""
                 judge_input = ""
                 judge_output = ""
+
+                try:
+                    student_input = open(os.path.join(student_input_path, student_data_file), "r").read()
+                except FileNotFoundError:
+                    print(f"WARNING: problem {prob_name} student input file '{input_data_file}' does not exist in {dataout_path}; Student input data will be blank")
 
                 try:
                     judge_input = open(os.path.join(dataout_path, input_data_file), "r").read()
@@ -69,6 +78,7 @@ def setup():
                     note=note,
                     pages=pages,
                     input_file_name=input_data_file,
+                    student_input=student_input,
                     judge_input=judge_input,
                     judge_output=judge_output,
                     problem_set=pset
