@@ -99,3 +99,10 @@ def admin_problem_page():
     if not flask_login.current_user.is_admin:
         return flask.abort(400)
     return flask.send_from_directory(app.static_folder, "src/frontend/html/adminProblem.html")
+
+@app.route("/admin")
+@flask_login.login_required
+def admin_home_page():
+    if not flask_login.current_user.is_admin:
+        return flask.abort(400)
+    return flask.send_from_directory(app.static_folder, "src/frontend/html/adminHome.html")

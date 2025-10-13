@@ -54,13 +54,13 @@ class User(UserMixin, db.Model):
     def serialize(self):
         return self.shallow_serialize() | {
             "passphrase": self.passphrase,
-            "is_admin": self.is_admin
         }
 
     def shallow_serialize(self):
         return {
             "id": self.id,
-            "username": self.username
+            "username": self.username,
+            "is_admin": self.is_admin
         }
 
 class ProblemSet(db.Model):

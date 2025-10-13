@@ -24,6 +24,7 @@ export default defineConfig({
         adminSubmissionList: "./src/frontend/html/adminSubmissionList.html",
         adminProblemSetList: "./src/frontend/html/adminProblemSetList.html",
         adminProblem: "./src/frontend/html/adminProblem.html",
+        adminHome: "./src/frontend/html/adminHome.html",
       },
     },
   },

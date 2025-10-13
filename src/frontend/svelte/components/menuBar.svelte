@@ -65,6 +65,11 @@
         <a class="link" href="/">Home</a>
         <a class="link" href="/contests">Contests</a>
         <a class="link" href="/psets">Practice</a>
+        {#await userPromise then user}
+            {#if user.is_admin}
+                <a class="link" href="/admin">Admin</a>
+            {/if}
+        {/await}
     </div>
     <div id="user-info">
         {#await userPromise then user}
