@@ -91,6 +91,10 @@ problem_sets:
         pages: 14
       - name: Veda
         pages: 15
+  - name: 2025D
+    pdf_path: pdfs/2025D.pdf
+    problems:
+      - name: Atlas
 contests:
   - name: 2024 UIL Invitational A
     problem_set: 2024A

@@ -129,14 +129,17 @@ def grade_submission(submission: Submission, timeout: int = 5):
                     check=True,
                 )
             run_output = run_status.stdout.decode("utf-8")
-            submission_output = "\n".join([x.rstrip() for x in run_output.strip().splitlines()])
-            judge_output = "\n".join([x.rstrip() for x in submission.problem.judge_output.strip().splitlines()])
+            submission_output = run_output.replace("\r\n", "\n").replace("\r", "\n")
+            submission_output = "\n".join([x.rstrip() for x in submission_output.strip().splitlines()])
+            judge_output = submission.problem.judge_output.replace("\r\n", "\n").replace("\r", "\n")
+            judge_output = "\n".join([x.rstrip() for x in judge_output.strip().splitlines()])
             return (Status.Accepted if submission_output == judge_output else Status.WrongAnswer, submission_output)
         except subprocess.TimeoutExpired as e:
             return (Status.TimeLimitExceeded, "")
         except subprocess.CalledProcessError as e:
             return (Status.ErrorRuntime, e.stderr.decode("utf-8")) 
-        except:
+        except Exception as e:
+            print(e)
             return (Status.ErrorServer, "")
     finally:
         try: shutil.rmtree(submission_dir)
@@ -151,7 +154,7 @@ def grade_submission_docker(submission: Submission, timeout: int = 5):
     use_stdin = submission.problem.use_stdin
 
     language_image = {
-        "Java":   "openjdk:11",
+        "Java":   "openjdk:21",
         "Python": "alpine:3.14",
         "C++":    "alpine:3.14"
     }
@@ -201,8 +204,10 @@ def grade_submission_docker(submission: Submission, timeout: int = 5):
                 raise subprocess.CalledProcessError(1, "", stderr=run_status.stderr)
 
             run_output = run_status.stdout.decode("utf-8")     
-            submission_output = "\n".join([x.rstrip() for x in run_output.strip().splitlines()])
-            judge_output = "\n".join([x.rstrip() for x in submission.problem.judge_output.strip().splitlines()])
+            submission_output = run_output.replace("\r\n", "\n").replace("\r", "\n")
+            submission_output = "\n".join([x.rstrip() for x in submission_output.strip().splitlines()])
+            judge_output = submission.problem.judge_output.replace("\r\n", "\n").replace("\r", "\n")
+            judge_output = "\n".join([x.rstrip() for x in judge_output.strip().splitlines()])
             return (Status.Accepted if submission_output == judge_output else Status.WrongAnswer, submission_output)
         except subprocess.TimeoutExpired as e:
             return (Status.TimeLimitExceeded, "")
