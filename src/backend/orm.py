@@ -153,7 +153,11 @@ class Submission(db.Model):
     contest_profile: Mapped[Optional["ContestProfile"]] = relationship(back_populates="submissions")
 
     def serialize(self, admin_view=False):
-        output = {} if self.contest_profile and not self.contest_profile.contest.past() and not admin_view else {"output": self.output}
+        output = {} if self.contest_profile and not self.contest_profile.contest.past() and not admin_view else {
+            "output": self.output,
+            "judge_input": self.problem.judge_input,
+            "judge_output": self.problem.judge_output
+        }
 
         return self.shallow_serialize() | output | {
             "code": self.code
