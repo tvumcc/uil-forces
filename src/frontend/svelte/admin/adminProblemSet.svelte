@@ -11,6 +11,9 @@
 
     let problemName = $state("")
 
+    let files: FileList = $state()!
+    let fileData: ArrayBuffer = $state(new ArrayBuffer(0))
+
     async function getData() {
         let response: Response = await fetch(`/api/admin/pset/${ID}`)
         let json = await response.json()
@@ -58,6 +61,33 @@
         }
     }
 
+    async function uploadPDF(event: Event) {
+        event.preventDefault()
+
+        let formData = new FormData()
+        formData.append("pdf", new Blob([fileData], { type: "application/pdf" }), "pset.pdf")
+
+        let response: Response = await fetch(`/api/admin/pset/${ID}/uploadpdf`, {
+            method: "POST",
+            body: formData
+        })
+
+        if (response.ok) {
+            await getData()
+        }
+    }
+
+    $effect(() => {
+        (async () => {
+            if (files) {
+                for (let file of files) {
+                    fileData = await file.arrayBuffer()
+                    console.log(fileData.byteLength)
+                }
+            }
+        })()
+    })
+
     onMount(getData)
 </script>
 
@@ -88,6 +118,14 @@
         <input name="hide" type="checkbox" bind:checked={hide}>
         <br>
         <input type="submit" value="Update Problem Set">
+    </form>
+
+    <h2>PDF</h2>
+    <a href="/api/admin/pset/{ID}/pdf" target="_blank">Download Current PDF</a>
+    <form onsubmit={uploadPDF}>
+        <label for="pdf-upload">Upload New Pset PDF</label>
+        <input name="pdf-upload" type="file" bind:files>
+        <input type="submit" value="Upload PDF">
     </form>
 
     <h2>Problems</h2>

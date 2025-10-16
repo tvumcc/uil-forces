@@ -182,3 +182,28 @@ def admin_pset_add_problem():
     db.session.commit()
 
     return flask.Response(status=200)
+
+@app.route("/api/admin/pset/<id>/pdf")
+@flask_login.login_required
+def admin_pset_pdf(id):
+    if not flask_login.current_user.is_admin:
+        return flask.abort(400)
+
+    pset = db.session.get(ProblemSet, id)
+    return flask.send_from_directory(app.root_path, pset.pdf_path)
+
+@app.route("/api/admin/pset/<id>/uploadpdf", methods=["POST"])
+@flask_login.login_required
+def admin_pset_upload_pdf(id):
+    if not flask_login.current_user.is_admin:
+        return flask.abort(400)
+
+    file = flask.request.files["pdf"]
+    pset =  db.session.get(ProblemSet, id)
+
+    if file and file.filename.lower().endswith(".pdf"):
+        filepath = os.path.join(app.root_path, pset.pdf_path)
+        file.save(filepath)
+        return flask.Response(status=200)
+    else:
+        return {"message": "invalid file type"}, 400

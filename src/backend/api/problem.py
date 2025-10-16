@@ -35,7 +35,8 @@ def problem_pdf(id):
         writer = pypdf.PdfWriter()
 
         for page in pages:
-            writer.add_page(reader.pages[page])
+            if page > 0 and page <= len(reader.pages):
+                writer.add_page(reader.pages[page])
 
         temp_pdf = "pdfs/problem.pdf"
         with open(temp_pdf, "wb") as output_pdf:

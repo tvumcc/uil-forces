@@ -44,6 +44,7 @@
     function loadEditor(editor: ace.Editor, text: string) {
         editor.setOption("minLines", 5)
         editor.setOption("maxLines", 30)
+        editor.setShowPrintMargin(false)
         editor.setTheme("ace/theme/monokai")
         editor.setValue(text)
         editor.clearSelection();
