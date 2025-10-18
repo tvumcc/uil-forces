@@ -1,6 +1,7 @@
 import flask
 import flask_login
 import sqlalchemy
+from werkzeug.exceptions import HTTPException
 
 import os
 
@@ -30,6 +31,13 @@ login_manager.login_view = "login_page"
 @login_manager.user_loader
 def load_user(id):
     return db.session.get(User, id)
+
+@app.errorhandler(HTTPException)
+def error_handler(e):
+    return {
+        "error": e.name, 
+        "description": e.description
+    }, e.code
 
 if __name__ == "__main__":
     app.run(debug=False, port=5173)

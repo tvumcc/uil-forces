@@ -21,6 +21,11 @@ def get_submission_folder_name(id):
     return f"submission{id}"
 
 def get_submission_file_name(submission: Submission):
+    """
+    Returns the source file name for a submission, including the file extension
+    This is mainly for Java since the source file name must be the same as the name of the sole public class
+    """
+
     match submission.language:
         case "Java":
             regex = r"public\s+class\s+([A-Za-z$_][A-Za-z0-9$_]*).*\{"
@@ -34,6 +39,8 @@ def get_submission_file_name(submission: Submission):
             return None
 
 def setup_submission_for_grading(submission: Submission) -> str:
+    """Helper function to prepare a directory for grading the given submission"""
+
     id = submission.id
     filename = get_submission_file_name(submission)
     submission_folder_name = get_submission_folder_name(id)
@@ -51,12 +58,14 @@ def setup_submission_for_grading(submission: Submission) -> str:
 
     return submission_dir
 
-def assign_status(submission_id, contest_profile_id, docker=False):
+def assign_status(submission, contest_profile, docker=False):
+    """
+    Calls the appropriate function to grade the given submission using Docker or a compiler/interpreter on PATH
+    After the submission has been graded, if a contest profile was supplied, its score will be recalculated
+    """
+
     from main import app
-    print(docker)
     with app.app_context():
-        submission: Submission = db.session.get(Submission, submission_id)
-        contest_profile: ContestProfile = db.session.get(ContestProfile, contest_profile_id)
         if submission.status == Status.Pending.value:
             if docker:
                 status, submission.output = grade_submission_docker(submission)
@@ -65,9 +74,17 @@ def assign_status(submission_id, contest_profile_id, docker=False):
             submission.status = status.value
             if contest_profile is not None:
                 contest_profile.calculate_score()
+            db.session.add(submission)
             db.session.commit()
 
 def grade_submission(submission: Submission, timeout: int = 5):
+    """
+    Compiles (if necessary) and runs the code for the given submission using a local compiler/interpreter on PATH.
+    If the amount of time it takes for the code to run exceeds the specified timeout, the status will be TimeLimitExceeded.
+
+    Returns a tuple of the form (status, output)
+    """
+
     id = submission.id
     filename = get_submission_file_name(submission)
     submission_folder_name = get_submission_folder_name(id)
@@ -128,6 +145,8 @@ def grade_submission(submission: Submission, timeout: int = 5):
                     cwd=submission_dir,
                     check=True,
                 )
+
+            # Check Output
             run_output = run_status.stdout.decode("utf-8")
             submission_output = run_output.replace("\r\n", "\n").replace("\r", "\n")
             submission_output = "\n".join([x.rstrip() for x in submission_output.strip().splitlines()])
@@ -146,6 +165,13 @@ def grade_submission(submission: Submission, timeout: int = 5):
         except: pass
 
 def grade_submission_docker(submission: Submission, timeout: int = 5):
+    """
+    Compiles (if necessary) and runs the code for the given submission using Docker containers.
+    If the amount of time it takes for the code to run exceeds the specified timeout, the status will be TimeLimitExceeded.
+
+    Returns a tuple of the form (status, output)
+    """
+
     id = submission.id
     filename = get_submission_file_name(submission)
     submission_folder_name = get_submission_folder_name(id)
@@ -160,6 +186,7 @@ def grade_submission_docker(submission: Submission, timeout: int = 5):
     }
 
     try:
+        # Compilation
         container_id = subprocess.check_output(f"docker run -d --name {submission_folder_name} --memory=512m --mount type=bind,src={submission_dir},dst=/user/src/app -w /user/src/app {language_image[submission.language]} tail -f /dev/null".split()).decode("utf-8")
 
         language_compile_command = {
@@ -180,13 +207,12 @@ def grade_submission_docker(submission: Submission, timeout: int = 5):
         if compile_status.returncode != 0:
             return (Status.ErrorCompile, compile_status.stderr.decode("utf-8"))
 
+        # Running
         language_run_command = {
             "Java":   f'docker exec -i {container_id} timeout {timeout} java'.split() + [f'{os.path.splitext(filename)[0]}'],
             "Python": f'docker exec {container_id} timeout {timeout} python3'.split() + [f'{filename}'],
             "C++":    f'docker exec {container_id} timeout {timeout} ./{submission_folder_name}'.split()
         }
-
-        print(language_run_command["Java"])
 
         try:
             if use_stdin:
@@ -203,6 +229,7 @@ def grade_submission_docker(submission: Submission, timeout: int = 5):
             if run_status.returncode == 1 or run_status.returncode == 139:
                 raise subprocess.CalledProcessError(1, "", stderr=run_status.stderr)
 
+            # Check Output
             run_output = run_status.stdout.decode("utf-8")     
             submission_output = run_output.replace("\r\n", "\n").replace("\r", "\n")
             submission_output = "\n".join([x.rstrip() for x in submission_output.strip().splitlines()])

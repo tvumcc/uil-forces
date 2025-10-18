@@ -4,6 +4,8 @@ import flask_login
 import threading
 import datetime
 from datetime import timezone
+import os
+import shutil
 
 from main import app
 from src.backend.orm import *
@@ -13,6 +15,8 @@ from sqlalchemy import desc
 @app.route("/api/contests")
 @flask_login.login_required
 def contests():
+    """Returns JSON of 3 lists of contests: upcoming, ongoing, and past, all based on their start and end times"""
+
     contests = db.session.query(Contest).all()
     out = {
         "upcoming": [],
@@ -22,19 +26,23 @@ def contests():
 
     for contest in contests:
         contest_json = contest.shallow_serialize() 
-        if contest.past():
-            out["past"].append(contest_json)
-        elif contest.ongoing():
-            out["ongoing"].append(contest_json)
-        elif contest.upcoming():
-            out["upcoming"].append(contest_json)
+        if contest.past():       out["past"].append(contest_json)
+        elif contest.ongoing():  out["ongoing"].append(contest_json)
+        elif contest.upcoming(): out["upcoming"].append(contest_json)
 
     return out
 
 @app.route("/api/contest/<id>")
 @flask_login.login_required
 def contest(id):
+    """
+    Returns JSON data for the specfied contest depending on if it is upcoming, ongoing, or past
+    This also creates a new contest profile for the requesting user if they do not already have a contest profile associated with the contest
+    """
+
     contest = db.session.get(Contest, id)
+    if not contest:
+        flask.abort(404, description="Contest does not exist")
     contest_profile = db.session.query(ContestProfile).filter_by(user=flask_login.current_user, contest=contest).first()
     if not contest_profile:
         contest_profile = ContestProfile(user=flask_login.current_user, contest=contest)
@@ -57,17 +65,29 @@ def contest(id):
 @app.route("/api/contest/submit", methods=["POST"])
 @flask_login.login_required
 def submit_contest_problem():
-    response = flask.request.get_json()
-    settings = db.session.query(Settings).filter_by(key="docker_grading").first()
-    problem = db.session.get(Problem, response["problem_id"])
-    contest = db.session.get(Contest, response["contest_id"])
-    language = response["language"]
+    """
+    Processes a user's request to submit code to a problem in this contest.
+    This will create a new submission on the database and spawn another thread to run and assign a status to it.
+
+    Whether the submission is ran using a local interpreter/compiler or a Docker container is based on the
+    site-wide setting 'docker_grading'
+
+    The client will continue to poll every 1 second `estimated_wait` times to check if a new status has been assigned to the submission.
+    """
+
+    request = flask.request.get_json()
+    problem = db.session.get(Problem, request["problem_id"])
+    contest = db.session.get(Contest, request["contest_id"])
+    language = request["language"]
+
     if not problem:
-        return {"message": "invalid problem id"}
+        flask.abort(404, description="Problem does not exist")
     if not contest:
-        return {"message": "invalid contest id"}
+        flask.abort(404, description="Contest does not exist")
     if not contest.ongoing():
-        return {"message": "contest is not ongoing, submissions are not allowed"}
+        flask.abort(403, description="Contest is not ongoing; submissions are not allowed at this time")
+    if language not in contest.allowed_languages.split(" "):
+        flask.abort(400, description="Invalid language submitted")
 
     contest_profile = db.session.query(ContestProfile).filter_by(user=flask_login.current_user, contest=contest).first()
     if not contest_profile:
@@ -81,18 +101,18 @@ def submit_contest_problem():
         user=flask_login.current_user,
 
         status=Status.Pending.value,
-        code=response["code"],
+        code=request["code"],
         submit_time=datetime.datetime.now(timezone.utc),
         language=language
     )
     db.session.add(submission)
     db.session.commit()
 
-    thread = threading.Thread(target=assign_status, args=[submission.id, contest_profile.id], kwargs={"docker": True if settings.value.lower() == "true" else False})
+    thread = threading.Thread(target=assign_status, args=[submission, contest_profile], kwargs={"docker": Settings.docker_grading_enabled()})
     thread.daemon = True
     thread.start()
 
-    submissions = db.session.query(Submission).filter_by(contest_profile=contest_profile).order_by(desc(Submission.submit_time)).all()
+    submissions = contest_profile.valid_submissions()
     return {
         "estimated_wait" : 15,
         "submissions": [submission.shallow_serialize() for submission in submissions]
@@ -101,9 +121,14 @@ def submit_contest_problem():
 @app.route("/api/contest/<id>/leaderboard")
 @flask_login.login_required
 def contest_leaderboard(id):
-    contest: Contest = db.session.get(Contest, id)
+    """Returns the current leaderboard for this contest as long as the setting is enabled to show leaderboard and the contest is ongoing or past"""
+
+    contest = db.session.get(Contest, id)
+    if not contest:
+        flask.abort(404, description="Contest does not exist")
+
     if contest.show_leaderboard and not contest.upcoming():
-        contest_profiles: List[ContestProfile] = sorted(contest.contest_profiles, key=lambda x: x.score, reverse=True)
+        contest_profiles = sorted(contest.contest_profiles, key=lambda x: x.score, reverse=True)
 
         leaderboard = []
         for profile in contest_profiles:
@@ -115,18 +140,18 @@ def contest_leaderboard(id):
                 }
                 leaderboard.append(leaderboard_entry)
 
-        return {
-            "leaderboard": leaderboard
-        }
+        return {"leaderboard": leaderboard}
     else: return {}
 
 @app.route("/api/contest/<id>/data")
 @flask_login.login_required
 def contest_data(id):
     contest = db.session.get(Contest, id)
+    if not contest:
+        flask.abort(404, description="Contest does not exist")
 
     try:
-        dirname = f"./{contest.name}"
+        dirname = f"contest{contest.id}-student-data"
         os.mkdir(dirname)
 
         for problem in contest.problems():
@@ -134,36 +159,51 @@ def contest_data(id):
                 with open(os.path.join(dirname, problem.input_file_name), "w") as f:
                     f.write(problem.student_input)
 
-        shutil.make_archive(f"./{contest.name}", "zip", dirname)
-        return flask.send_file(f"./{contest.name}.zip")
+        shutil.make_archive(dirname, "zip", dirname)
+        return flask.send_file(f"{dirname}.zip")
     finally:
         try:
-            shutil.rmtree(f"./{contest.name}")
-            os.remove(f"./{contest.name}.zip")
+            shutil.rmtree(dirname)
+            os.remove(f"{dirname}.zip")
         except: pass
 
-# Admin APIs
+
+
+# Admin API
+
+
 
 @app.route("/api/admin/contests")
 @flask_login.login_required
 def admin_contests():
+    """Returns a list of all contests (upcoming, ongoing, past) contained within the database"""
+
     if not flask_login.current_user.is_admin:
-        return flask.abort(400)
+        flask.abort(403)
+
     return {"contests": [contest.shallow_serialize() for contest in db.session.query(Contest).all()]}
 
 @app.route("/api/admin/contest/<id>")
 @flask_login.login_required
 def admin_contest(id):
+    """Returns JSON data for the queried contest"""
+
     if not flask_login.current_user.is_admin:
-        return flask.abort(400)
+        flask.abort(403)
+
     contest = db.session.get(Contest, id)
+    if not contest:
+        flask.abort(404, description="Contest does not exist")
+
     return {"contest": contest.serialize()}
 
 @app.route("/api/admin/contest/<id>/add/problem", methods=["POST"])
 @flask_login.login_required
 def admin_contest_add_problem(id):
+    """Creates a link between and an existing problem and the specified contest"""
+
     if not flask_login.current_user.is_admin:
-        return flask.abort(400)
+        flask.abort(403)
 
     request = flask.request.get_json()
     pset_name = request["pset_name"]
@@ -171,17 +211,17 @@ def admin_contest_add_problem(id):
 
     contest = db.session.get(Contest, id)
     problem_set = db.session.query(ProblemSet).filter_by(name=pset_name).first()
-    if problem_set is None:
-        return flask.abort(400)
-
+    if not contest:
+        flask.abort(404, description="Contest does not exist")
+    if not problem_set:
+        flask.abort(404, description="Problem set does not exist")
     problem = db.session.query(Problem).filter_by(problem_set=problem_set, name=problem_name).first()
-
-    if problem is None:
-        return flask.abort(400)
+    if not problem:
+        flask.abort(404, description="Problem does not exist")
 
     for p in contest.problem_links:
-        if p.problem == problem.id:
-            return flask.abort(400)
+        if p.problem == problem:
+            flask.abort(400, description=f"Problem {p.problem.id} ({p.problem.name}) is already linked to contest {id} ({contest.name})")
 
     problem_link = ContestProblemAssociation(problem=problem)
     db.session.add(problem_link)
@@ -195,23 +235,25 @@ def admin_contest_add_problem(id):
 
     db.session.commit()
 
-    return flask.Response(status=200)
+    return f"Successfully linked problem {problem.id} ({problem.name}) to contest {id} ({contest.name})"
 
 @app.route("/api/admin/contest/<id>/add/pset", methods=["POST"])
 @flask_login.login_required
 def admin_contest_add_pset(id):
+    """Creates a link between all of the problems in a problem set and the specified contest"""
+
     if not flask_login.current_user.is_admin:
-        return flask.abort(400)
+        flask.abort(403)
 
     request = flask.request.get_json()
     pset_name = request["pset_name"]
 
     contest = db.session.get(Contest, id)
-    problem_set = db.session.query(ProblemSet).filter_by(name=pset_name).first()
-    if problem_set is None:
-        return flask.abort(400)
+    pset = db.session.query(ProblemSet).filter_by(name=pset_name).first()
+    if not pset:
+        flask.abort(404, description="Problem set does not exist")
 
-    for problem in problem_set.problems:
+    for problem in pset.problems:
         if not problem in contest.problems():
             problem_link = ContestProblemAssociation(problem=problem)
             db.session.add(problem_link)
@@ -224,46 +266,50 @@ def admin_contest_add_pset(id):
     db.session.add(contest)
     db.session.commit()
 
-    return flask.Response(status=200)
+    return f"Successfully added problem set {pset.id} ({pset.name}) to contest {contest.id} ({contest.name})"
 
 @app.route("/api/admin/contest/unlinkproblem", methods=["POST"])
 @flask_login.login_required
 def admin_contest_unlink_problem():
+    """Removes the link between the specified contest and problem"""
+
     if not flask_login.current_user.is_admin:
-        return flask.abort(400)
+        flask.abort(403)
 
     request = flask.request.get_json()
     contest_id = request["contest_id"]
     problem_id = request["problem_id"]
 
-    contest: Contest = db.session.get(Contest, contest_id)
+    contest = db.session.get(Contest, contest_id)
     problem = db.session.get(Problem, problem_id)
 
-    if contest is None:
-        return flask.abort(404)
-    if problem is None:
-        return flask.abort(404)
+    if not contest:
+        flask.abort(404, description="Contest does not exist")
+    if not problem:
+        flask.abort(404, description="Problem does not exist")
 
-    try:
-        problem_link_to_remove = None
-        for problem_link in contest.problem_links:
-            if problem_link.problem == problem:
-                problem_link_to_remove = problem_link
-                break
+    problem_link_to_remove = None
+    for problem_link in contest.problem_links:
+        if problem_link.problem == problem:
+            problem_link_to_remove = problem_link
+            break
 
-        db.session.delete(problem_link_to_remove)
-        db.session.add(contest)
-        db.session.commit()
-    except ValueError:
-        return flask.abort(400)
+    if not problem_link_to_remove:
+        flask.abort(400, description=f"Problem {problem.id} ({problem.name}) is not linked to contest {contest.id} ({contest.name})")
 
-    return flask.Response(status=200)
+    db.session.delete(problem_link_to_remove)
+    db.session.add(contest)
+    db.session.commit()
+
+    return f"Successfully unlinked problem {problem.id} ({problem.name}) from contest {contest.id} ({contest.name})"
 
 @app.route("/api/admin/update/contest", methods=["POST"])
 @flask_login.login_required
 def admin_update_contest():
+    """Updates the specified contest with the provided new values"""
+
     if not flask_login.current_user.is_admin:
-        return flask.abort(400)
+        flask.abort(403)
     
     request = flask.request.get_json()
     id = request["id"]
@@ -285,13 +331,15 @@ def admin_update_contest():
     db.session.add(contest)
     db.session.commit()
 
-    return flask.Response(status=200)
+    return f"Successfully updated contest {contest.id} ({contest.name})"
 
 @app.route("/api/admin/add/contest", methods=["POST"])
 @flask_login.login_required
 def admin_add_contest():
+    """Creates a new contest with a name, start time, and end time"""
+
     if not flask_login.current_user.is_admin:
-        return flask.abort(400)
+        flask.abort(403)
     
     request = flask.request.get_json()
 
@@ -299,20 +347,23 @@ def admin_add_contest():
     start_time = datetime.datetime.fromisoformat(request["start_time"])
     end_time = datetime.datetime.fromisoformat(request["end_time"])
 
-    db.session.add(Contest(
+    contest = Contest(
         name=name,
         start_time=start_time,
         end_time=end_time
-    ))
+    )
+    db.session.add(contest)
     db.session.commit()
 
-    return flask.Response(status=200)
+    return f"Successfully added new contest {contest.id} ({contest.name})"
 
 @app.route("/api/admin/contest/updateproblems", methods=["POST"])
 @flask_login.login_required
 def admin_update_contest_problems():
+    """Updates the scoring of the specified contest's problems and refreshes all contest profiles' scores accordingly"""
+
     if not flask_login.current_user.is_admin:
-        return flask.abort(400)
+        flask.abort(403)
     
     request = flask.request.get_json()
     contest_id = request["contest_id"]
@@ -320,18 +371,19 @@ def admin_update_contest_problems():
 
     contest: Contest = db.session.get(Contest, contest_id)
     if not contest:
-        return flask.abort(404)
+        flask.abort(404, description="Contest does not exist")
 
     for problem in problems:
-        problem_link = db.session.query(ContestProblemAssociation).filter_by(contest_id=contest.id, problem_id=problem["id"]).one()
-        problem_link.correct_score = problem["correct_score"]
-        problem_link.incorrect_penalty = problem["incorrect_penalty"]
-        db.session.add(problem_link)
+        problem_link = db.session.query(ContestProblemAssociation).filter_by(contest_id=contest.id, problem_id=problem["id"]).first()
+        if problem_link:
+            problem_link.correct_score = problem["correct_score"]
+            problem_link.incorrect_penalty = problem["incorrect_penalty"]
+            db.session.add(problem_link)
 
     for contest_profile in contest.contest_profiles:
         contest_profile.calculate_score()
         db.session.add(contest_profile)
 
     db.session.commit()
-
-    return flask.Response(status=200)
+    
+    return f"Successfully updated problem scoring for contest {contest.id} ({contest.name})"

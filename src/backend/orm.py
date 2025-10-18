@@ -1,13 +1,11 @@
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import DateTime, ForeignKey, Table, Column, Integer
+from sqlalchemy import ForeignKey 
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from flask_login import UserMixin
 
 from typing import List, Optional
 import datetime
 from datetime import timezone
-import os
-import shutil
 
 class Base(DeclarativeBase):
     pass
@@ -29,6 +27,14 @@ class Settings(db.Model):
 
     key:   Mapped[str] = mapped_column(unique=True)
     value: Mapped[str]
+
+    def practice_site_enabled():
+        practice_site = db.session.query(Settings).filter_by(key="practice_site").first()
+        return practice_site and practice_site.value.lower() == "true"
+
+    def docker_grading_enabled():
+        docker_grading = db.session.query(Settings).filter_by(key="docker_grading").first()
+        return docker_grading and docker_grading.value.lower() == "true"
 
     def serialize(self):
         return {
@@ -101,7 +107,7 @@ class Problem(db.Model):
     judge_input:     Mapped[str]  = mapped_column(default="")
     judge_output:    Mapped[str]  = mapped_column(default="")
 
-    problem_set_id = mapped_column(ForeignKey("problem_set.id"))
+    problem_set_id = mapped_column(ForeignKey("problem_set.id"), nullable=False)
 
     problem_set: Mapped["ProblemSet"]       = relationship(back_populates="problems")
     submissions: Mapped[List["Submission"]] = relationship(back_populates="problem")
@@ -144,8 +150,8 @@ class Submission(db.Model):
     output:      Mapped[str] = mapped_column(default="")
     language:    Mapped[str]
 
-    problem_id         = mapped_column(ForeignKey("problem.id"))
-    user_id            = mapped_column(ForeignKey("user.id"))
+    problem_id         = mapped_column(ForeignKey("problem.id"), nullable=False)
+    user_id            = mapped_column(ForeignKey("user.id"), nullable=False)
     contest_profile_id = mapped_column(ForeignKey("contest_profile.id"))
 
     problem:         Mapped["Problem"]                  = relationship(back_populates="submissions")
@@ -171,7 +177,7 @@ class Submission(db.Model):
             "user": self.user.shallow_serialize(),
             "problem": self.problem.shallow_serialize(),
             "language": self.language
-        } | ({} if self.contest_profile is None else {"contest_profile": self.contest_profile.shallow_serialize()})
+        } | ({} if not self.contest_profile else {"contest_profile": self.contest_profile.shallow_serialize()})
 
 
 class Contest(db.Model):
@@ -230,8 +236,8 @@ class ContestProfile(db.Model):
 
     score: Mapped[int] = mapped_column(default=0)
 
-    user_id    = mapped_column(ForeignKey("user.id"))
-    contest_id = mapped_column(ForeignKey("contest.id"))
+    user_id    = mapped_column(ForeignKey("user.id"), nullable=False)
+    contest_id = mapped_column(ForeignKey("contest.id"), nullable=False)
 
     contest:     Mapped["Contest"]          = relationship(back_populates="contest_profiles")
     user:        Mapped["User"]             = relationship(back_populates="contest_profiles")
