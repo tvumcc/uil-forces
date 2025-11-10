@@ -25,7 +25,7 @@ def login():
 
     return {
         "redirect": flask.url_for("index_page"),
-        "login_success": login_success
+        "loginSuccess": login_success
     }
 
 @app.route("/api/logout")
@@ -58,7 +58,7 @@ def register():
 
     return {
         "redirect": flask.url_for("index_page"),
-        "login_success": True
+        "loginSuccess": True
     }
 
 @app.route("/api/user")
@@ -66,7 +66,7 @@ def register():
 def user():
     """Returns JSON data for the currently logged in user"""
 
-    return flask_login.current_user.shallow_serialize()
+    return {"user": flask_login.current_user.shallow_serialize()}
 
 
 

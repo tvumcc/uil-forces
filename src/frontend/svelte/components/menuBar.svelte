@@ -1,20 +1,23 @@
 <script lang="ts">
-    async function get_user() {
+    import type {User} from "../../utils"
+
+    let user: User | undefined = $state()
+
+    async function getData() {
         let response: Response = await fetch("/api/user")
         let json = await response.json()
-        return json
+        user = json.user
     }
 
     async function logout(event: Event) {
         event.preventDefault()
         let response: Response = await fetch("/api/logout")
         let json = await response.json()        
-        window.location.href = json["redirect"]
+        window.location.href = json.redirect
     }
-
-    let userPromise = get_user()
 </script>
 
+<!-- svelte-ignore css_unused_selector -->
 <style>
     @import "../../style.css";
 
@@ -65,15 +68,13 @@
         <a class="link" href="/">Home</a>
         <a class="link" href="/contests">Contests</a>
         <a class="link" href="/psets">Practice</a>
-        {#await userPromise then user}
-            {#if user.is_admin}
-                <a class="link" href="/admin">Admin</a>
-            {/if}
-        {/await}
+        {#if user !== undefined && user.isAdmin}
+            <a class="link" href="/admin">Admin</a>
+        {/if}
     </div>
     <div id="user-info">
-        {#await userPromise then user}
-            <p id="username">{user.username}</p>
+        {#await getData() then}
+            <p id="username">{user!.username}</p>
         {/await}
         <p>|</p>
         <a class="link" href="/" onclick={logout}>Log out</a>

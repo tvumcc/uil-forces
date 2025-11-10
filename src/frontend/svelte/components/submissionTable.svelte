@@ -1,5 +1,6 @@
 <script lang="ts">
     import Status from "./status.svelte"
+    import type {Submission} from "../../utils"
 
     let {
         submissions, 
@@ -12,13 +13,14 @@
             method: "DELETE"
         })
         if (response.status === 200) {
-            submissions = submissions.filter((submission: any) => submission["id"] !== id)
+            submissions = submissions.filter((submission: Submission) => submission.id !== id)
         } else {
             alert("Error deleting submission")
         }
     }
 </script>
 
+<!-- svelte-ignore css_unused_selector -->
 <style>
     @import "../../style.css";
 
@@ -56,16 +58,16 @@
         <tbody>
             {#each submissions as submission}
                 <tr>
-                    <td>{new Date(submission["submit_time"]).toLocaleString()}</td>
+                    <td>{new Date(submission.submitTime).toLocaleString()}</td>
                     {#if showUsers}
-                        <td>{submission["user"]["username"]}</td>
+                        <td>{submission.user.username}</td>
                     {/if}
-                    <td>{submission["problem"]["name"]}</td>
-                    <td>{submission["language"]}</td>
-                    <td style="width: 175px;"><Status statusCode={submission["status"]} fitText={false}/></td>
-                    <td style="width: 80px;"><a href="/submission?id={submission["id"]}">View Code</a></td>
+                    <td>{submission.problem.name}</td>
+                    <td>{submission.language}</td>
+                    <td style="width: 175px;"><Status statusCode={submission.status} fitText={false}/></td>
+                    <td style="width: 80px;"><a href="/submission?id={submission.id}">View Code</a></td>
                     {#if showDelete}
-                        <td style="width: 80px;"><button onclick={() => deleteSubmission(submission["id"])}>Delete</button></td>
+                        <td style="width: 80px;"><button onclick={() => deleteSubmission(submission.id)}>Delete</button></td>
                     {/if}
                 </tr>
             {/each}

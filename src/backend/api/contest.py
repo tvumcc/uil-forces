@@ -56,10 +56,12 @@ def contest(id):
     elif contest.ongoing():
         submissions = contest_profile.valid_submissions()
     else:
-        return contest.shallow_serialize()
+        return {"contest": contest.shallow_serialize()}
 
-    return contest.serialize() | {
-        "submissions": [submission.shallow_serialize() for submission in submissions]
+    return {
+        "contest": contest.serialize() | {
+            "submissions": [submission.shallow_serialize() for submission in sorted(submissions, key=lambda submission: submission.submit_time, reverse=True)]
+        }
     }
 
 @app.route("/api/contest/submit", methods=["POST"])
@@ -114,7 +116,7 @@ def submit_contest_problem():
 
     submissions = contest_profile.valid_submissions()
     return {
-        "estimated_wait" : 15,
+        "estimatedWait" : 15,
         "submissions": [submission.shallow_serialize() for submission in submissions]
     }
 
@@ -136,7 +138,7 @@ def contest_leaderboard(id):
                 leaderboard_entry = {
                     "user": profile.user.shallow_serialize(),
                     "score": profile.score,
-                    "problems_solved": profile.problem_status_list()
+                    "problemsSolved": profile.problem_status_list()
                 }
                 leaderboard.append(leaderboard_entry)
 

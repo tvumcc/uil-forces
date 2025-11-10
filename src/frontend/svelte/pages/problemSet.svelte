@@ -2,15 +2,14 @@
     import SubmitForm from "../components/submitForm.svelte"
     import MenuBar from "../components/menuBar.svelte"
     import SubmissionTable from "../components/submissionTable.svelte"
+    import type {ProblemSet} from "../../utils"
 
     let params = new URLSearchParams(document.location.search)
     let ID = params.get("id")
+    let validRequest = $state(true)
+    let message = $state("")
 
-    let hide = $state()
-    let psetName = $state("")
-    let problems = $state([])
-    let submissions: any[] = $state([])
-
+    let pset: ProblemSet | undefined = $state(undefined)
     let submissionProblemID = $state(-1)
 
     $effect(() => {
@@ -21,23 +20,20 @@
         }
     })
 
-    async function reloadSubmissions() {
-        let response = await fetch(`/api/pset/${ID}`)
-        let json = await response.json()
-        submissions = json.submissions
-    }
-
     async function getData() {
         let response = await fetch(`/api/pset/${ID}`)
         let json = await response.json()
 
-        hide = json.hide
-        psetName = json.name
-        problems = json.problems
-        submissions = json.submissions
+        if (!response.ok) {
+            validRequest = false
+            message = json.description
+        }
+
+        pset = json.pset
     }
 </script>
 
+<!-- svelte-ignore css_unused_selector -->
 <style>
     @import "../../style.css";
 
@@ -102,21 +98,23 @@
         <MenuBar />
         <div class="main-container" style="flex: 0 0 auto;">
             {#await getData()}
-                <p>Loading...</p>
-            {:then}
-                {#if hide !== undefined && !hide}
-                    <h1>{psetName}</h1>
-                    <a href="/api/pset/{ID}/data" target="_blank">Download Student Data</a>
-                    <h2>Submit Code</h2>
-                    <SubmitForm submissionType={"pset"} {ID} {problems} {reloadSubmissions} bind:submissionProblemID/>
+                 <p>Loading...</p>
+            {:then} 
+                {#if validRequest && pset !== undefined}
+                    {#if pset.hide !== null && !pset.hide}
+                        <h1>{pset.name}</h1>
+                        <a href="/api/pset/{ID}/data" target="_blank">Download Student Data</a>
+                        <h2>Submit Code</h2>
+                        <SubmitForm submissionType={"pset"} ID={ID!} problems={pset.problems!} reloadSubmissions={getData} bind:submissionProblemID/>
 
-                    <h2>Your Submissions</h2>
-                    <SubmissionTable {submissions} showUsers={false}/>
-                {:else}
-                    <p>This problem set is not available for practice.</p>
+                        <h2>Your Submissions</h2>
+                        <SubmissionTable submissions={pset.submissions} showUsers={false}/>
+                    {:else}
+                        <p>This problem set is not available for practice.</p>
+                    {/if}
+                {:else} 
+                    <p>{message}</p>
                 {/if}
-            {:catch error}
-                <p>Error loading contest data: {error.message}</p>
             {/await}
         </div>
     </div>

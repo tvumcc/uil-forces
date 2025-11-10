@@ -1,16 +1,27 @@
 <script lang="ts">
     import * as ace from "ace-builds"
     import { onMount } from "svelte";
+    import type {Problem, ContestProblem} from "../../utils"
+
+    interface SubmitFormProps {
+        submissionType: string
+        ID: string 
+        problems: Problem[] | ContestProblem[]
+        submissionProblemID: number
+        allowedLanguages?: string[]
+        reloadSubmissions: Function
+        reloadLeaderboard?: Function
+    }
 
     let { 
         submissionType, 
         ID,
         problems,
         submissionProblemID = $bindable(-1),
-        allowed_languages = ["Java", "Python", "C++"],
+        allowedLanguages = ["Java", "Python", "C++"],
         reloadSubmissions = () => {},
         reloadLeaderboard = () => {},
-    } = $props()
+    }: SubmitFormProps = $props()
 
     // [Language Name, Language File Extension]
     const languages = new Map([
@@ -21,11 +32,10 @@
 
     let files: FileList = $state()!
     let fileText = $state("")
-
     let codeText = $state("")
 
     let submissionLanguage = $state("Java")
-    let submissionMethod = $state("write_code") 
+    let submissionMethod = $state("writeCode") 
 
     ace.config.set("basePath", "ace-builds/src-noconflict")
     let editor: ace.Editor
@@ -49,7 +59,7 @@
             body: JSON.stringify({
                 contest_id: ID,
                 problem_id: submissionProblemID,
-                code: submissionMethod === "upload_file" ? fileText : codeText,
+                code: submissionMethod === "uploadFile" ? fileText : codeText,
                 language: submissionLanguage 
             }),
             headers: {
@@ -61,7 +71,7 @@
         reloadSubmissions()
         reloadLeaderboard()
 
-        let count = json["estimated_wait"]
+        let count = json.estimatedWait
         let interval_id = setInterval(async () => {
             if (count > 0) {
                 reloadSubmissions()
@@ -85,7 +95,7 @@
 
     $effect(() => {
         const storedCode = localStorage.getItem(`problem_code_${submissionLanguage}_${submissionProblemID}`) || ""
-        if (submissionProblemID !== -1 && submissionMethod === "write_code" && submissionLanguage !== "") {
+        if (submissionProblemID !== -1 && submissionMethod === "writeCode" && submissionLanguage !== "") {
             document.getElementById("editor")!.style.display = "block"
             switch (submissionLanguage) {
                 case "Java":
@@ -119,7 +129,11 @@
         <label for="problem-select">Problem:</label>
         <select id="problem-select" bind:value={submissionProblemID}>
             {#each problems as problem, i}
-                <option value="{problem["id"]}">{i+1}. {problem["name"]}</option>
+                {#if "problem" in problem}
+                    <option value="{problem.problem.id}">{i+1}. {problem.problem.name}</option>
+                {:else}
+                    <option value="{problem.id}">{i+1}. {problem.name}</option>
+                {/if}
             {/each}
         </select>
         {#if submissionProblemID !== -1} 
@@ -131,7 +145,7 @@
         <label for="language-select">Language:</label>
         <select id="language-select" bind:value={submissionLanguage}>
             {#each languages.entries() as [lang, ext]}
-                {#if allowed_languages.includes(lang)}
+                {#if allowedLanguages.includes(lang)}
                     <option value="{lang}">{lang}</option>
                 {/if}
             {/each}
@@ -139,15 +153,15 @@
         <br>
         {#if submissionLanguage !== ""}
             <label for="code">
-                <input type="radio" id="write_code" name="submitType" value="write_code" bind:group={submissionMethod}>
+                <input type="radio" id="write_code" name="submitType" value="writeCode" bind:group={submissionMethod}>
                 Write Code
             </label>
             <label for="file">
-                <input type="radio" id="upload_file" name="submitType" value="upload_file" bind:group={submissionMethod}>
+                <input type="radio" id="upload_file" name="submitType" value="uploadFile" bind:group={submissionMethod}>
                 Upload File
             </label>
 
-            {#if submissionMethod === "upload_file"}
+            {#if submissionMethod === "uploadFile"}
                 <div>
                     <input type="file" bind:files>
                 </div>

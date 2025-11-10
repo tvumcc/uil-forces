@@ -3,35 +3,24 @@
     import MenuBar from "../components/menuBar.svelte"
     import SubmissionTable from "../components/submissionTable.svelte"
     import Leaderboard from "../components/leaderboard.svelte"
+    import type {Contest} from "../../utils"
 
     let params = new URLSearchParams(document.location.search)
     let ID = params.get("id")
+    let validRequest = $state(true)
+    let message = $state("")
 
-    let contestStatus = $state("")
-    let contestName = $state("")
-    let problems = $state([])
-    let submissions = $state([])
-    let allowed_languages = $state([])
-    let show_leaderboard = $state(false)
-    let show_pdf = $state(false)
-
+    let contest: Contest | undefined = $state(undefined)
     let leaderboard: Leaderboard
-
     let submissionProblemID = $state(-1)
 
     $effect(() => {
-        if (submissionProblemID !== -1 && show_pdf) {
+        if (submissionProblemID !== -1 && contest!.showPdf) {
             document.getElementById("pdf-viewer")!.style.display = "flex"
         } else {
             document.getElementById("pdf-viewer")!.style.display = "none"
         }
     })
-
-    async function reloadSubmissions() {
-        let response = await fetch(`/api/contest/${ID}`)
-        let json = await response.json()
-        submissions = json.submissions
-    }
 
     async function reloadLeaderboard() {
         await leaderboard.getData()
@@ -41,16 +30,16 @@
         let response = await fetch(`/api/contest/${ID}`)
         let json = await response.json()
 
-        contestStatus = json.status
-        contestName = json.name
-        problems = json.problems
-        submissions = json.submissions
-        allowed_languages = json.allowed_languages.split(" ")
-        show_leaderboard = json.show_leaderboard
-        show_pdf = json.show_pdf
+        if (!response.ok) {
+            validRequest = false
+            message = json.description
+        }
+
+        contest = json.contest
     }
 </script>
 
+<!-- svelte-ignore css_unused_selector -->
 <style>
     @import "../../style.css";
 
@@ -115,38 +104,40 @@
         <MenuBar />
         <div class="main-container" style="flex: 0 0 auto;">
             {#await getData()}
-                <p>Loading...</p>
+                 <p>Loading...</p>
             {:then}
-                <h1>{contestName}</h1>
-                <a href="/api/contest/{ID}/data" target="_blank">Download Student Data</a>
-                {#if contestStatus === "upcoming"}
-                    <p>The contest has not started yet. You cannot submit solutions.</p>
+                {#if validRequest && contest !== undefined}
+                    <h1>{contest.name}</h1>
+                    <a href="/api/contest/{ID}/data" target="_blank">Download Student Data</a>
+                    {#if contest.status === "upcoming"}
+                        <p>The contest has not started yet. You cannot submit solutions.</p>
+                    {:else}
+                        {#if contest.status === "past"}
+                            <p>The contest has ended. You can still view submissions and the leaderboard, but you cannot submit solutions.</p>
+                        {:else}
+                            <h2>Submit Code</h2>
+                            <SubmitForm submissionType={"contest"} ID={ID!} problems={contest.problems!} allowedLanguages={contest.allowedLanguages!.split(" ")} reloadSubmissions={getData} {reloadLeaderboard} bind:submissionProblemID/>
+                        {/if}
+
+                        {#if contest.showLeaderboard}
+                            <h2>Leaderboard</h2>
+                            <div class="lb" style="width: 100%; overflow-x: scroll;">
+                                <Leaderboard {ID} problems={contest.problems} bind:this={leaderboard}/>            
+                            </div>
+                            <br>
+                        {/if}
+
+                        {#if contest.status === "past"}
+                            <h2>All Submissions</h2>
+                            <SubmissionTable submissions={contest.submissions} showUsers={true}/>
+                        {:else}
+                            <h2>Your Submissions</h2>
+                            <SubmissionTable submissions={contest.submissions} showUsers={false}/>
+                        {/if}
+                    {/if}
                 {:else}
-                    {#if contestStatus === "past"}
-                        <p>The contest has ended. You can still view submissions and the leaderboard, but you cannot submit solutions.</p>
-                    {:else}
-                        <h2>Submit Code</h2>
-                        <SubmitForm submissionType={"contest"} {ID} {problems} {allowed_languages} {reloadSubmissions} {reloadLeaderboard} bind:submissionProblemID/>
-                    {/if}
-
-                    {#if show_leaderboard }
-                        <h2>Leaderboard</h2>
-                        <div class="lb" style="width: 100%; overflow-x: scroll;">
-                            <Leaderboard {ID} {problems} bind:this={leaderboard}/>            
-                        </div>
-                        <br>
-                    {/if}
-
-                    {#if contestStatus === "past"}
-                        <h2>All Submissions</h2>
-                        <SubmissionTable submissions={submissions} showUsers={true}/>
-                    {:else}
-                        <h2>Your Submissions</h2>
-                        <SubmissionTable submissions={submissions} showUsers={false}/>
-                    {/if}
+                    <p>{message}</p>
                 {/if}
-            {:catch error}
-                <p>Error loading contest data: {error.message}</p>
             {/await}
         </div>
     </div>

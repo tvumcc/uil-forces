@@ -32,9 +32,9 @@ def pset(id):
 
     if Settings.practice_site_enabled() and not pset.hide:
         submissions = get_user_pset_submissions(pset)
-        return pset.serialize() | {"submissions": [submission.shallow_serialize() for submission in submissions]}
+        return {"pset": pset.serialize() | {"submissions": [submission.shallow_serialize() for submission in submissions]}}
     else:
-        return {"hide": True}
+        return {"pset": {"hide": True}}
 
 @app.route("/api/psets")
 @flask_login.login_required
@@ -93,8 +93,8 @@ def submit_pset_problem():
         thread.start()
 
         return {
-            "estimated_wait" : 15,
-            "submissions": [submission.shallow_serialize() for submission in get_user_pset_submissions(problem.problem_set.hide)]
+            "estimatedWait" : 15,
+            "submissions": [submission.shallow_serialize() for submission in get_user_pset_submissions(problem.problem_set)]
         }
     else:
         return "The practice site or problem set is currently disabled", 403

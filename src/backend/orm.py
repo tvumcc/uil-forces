@@ -16,8 +16,10 @@ class ContestProblemAssociation(Base):
     __tablename__ = "contest_problem_link"
     contest_id: Mapped[int] = mapped_column(ForeignKey("contest.id"), primary_key=True)
     problem_id: Mapped[int] = mapped_column(ForeignKey("problem.id"), primary_key=True)
-    correct_score: Mapped[int] = mapped_column(default=60)
+
+    correct_score:     Mapped[int] = mapped_column(default=60)
     incorrect_penalty: Mapped[int] = mapped_column(default=5)
+
     problem: Mapped["Problem"] = relationship()
 
 class Settings(db.Model):
@@ -66,7 +68,7 @@ class User(UserMixin, db.Model):
         return {
             "id": self.id,
             "username": self.username,
-            "is_admin": self.is_admin
+            "isAdmin": self.is_admin
         }
 
 class ProblemSet(db.Model):
@@ -74,9 +76,9 @@ class ProblemSet(db.Model):
     
     id: Mapped[int] = mapped_column(primary_key=True)
 
-    name: Mapped[str] = mapped_column(unique=True)
-    pdf_path: Mapped[str] = mapped_column(default="")
-    hide: Mapped[bool] = mapped_column(default=False)
+    name:     Mapped[str]  = mapped_column(unique=True)
+    pdf_path: Mapped[str]  = mapped_column(default="")
+    hide:     Mapped[bool] = mapped_column(default=False)
 
     problems: Mapped[List["Problem"]] = relationship(back_populates="problem_set")
 
@@ -97,8 +99,8 @@ class Problem(db.Model):
 
     id: Mapped[int] = mapped_column(primary_key=True)
 
-    name: Mapped[str] = mapped_column(unique=True)
-    note: Mapped[str] = mapped_column(default="")
+    name:  Mapped[str] = mapped_column(unique=True)
+    note:  Mapped[str] = mapped_column(default="")
     pages: Mapped[str] = mapped_column(default="")
 
     use_stdin:       Mapped[bool] = mapped_column(default=False)
@@ -115,12 +117,12 @@ class Problem(db.Model):
     def serialize(self):
         return self.shallow_serialize() | {
             "pages": self.pages,
-            "use_stdin": self.use_stdin,
-            "input_file_name": self.input_file_name,
-            "student_input": self.student_input,
-            "judge_input": self.judge_input,
-            "judge_output": self.judge_output,
-            "problem_set_id": self.problem_set_id,
+            "useStdin": self.use_stdin,
+            "inputFileName": self.input_file_name,
+            "studentInput": self.student_input,
+            "judgeInput": self.judge_input,
+            "judgeOutput": self.judge_output,
+            "problemSetId": self.problem_set_id,
         }
 
     def shallow_serialize(self):
@@ -161,8 +163,8 @@ class Submission(db.Model):
     def serialize(self, admin_view=False):
         output = {} if self.contest_profile and not self.contest_profile.contest.past() and not admin_view else {
             "output": self.output,
-            "judge_input": self.problem.judge_input,
-            "judge_output": self.problem.judge_output
+            "judgeInput": self.problem.judge_input,
+            "judgeOutput": self.problem.judge_output
         }
 
         return self.shallow_serialize() | output | {
@@ -173,11 +175,11 @@ class Submission(db.Model):
         return {
             "id": self.id,
             "status": self.status,
-            "submit_time": self.submit_time,
+            "submitTime": self.submit_time,
             "user": self.user.shallow_serialize(),
             "problem": self.problem.shallow_serialize(),
             "language": self.language
-        } | ({} if not self.contest_profile else {"contest_profile": self.contest_profile.shallow_serialize()})
+        } | ({} if not self.contest_profile else {"contestProfile": self.contest_profile.shallow_serialize()})
 
 
 class Contest(db.Model):
@@ -191,9 +193,9 @@ class Contest(db.Model):
 
     allowed_languages: Mapped[str] = mapped_column(default="Java")
     show_leaderboard:  Mapped[bool] = mapped_column(default=True)
-    show_pdf: Mapped[bool] = mapped_column(default=False)
+    show_pdf:          Mapped[bool] = mapped_column(default=False)
 
-    problem_links:         Mapped[List["ContestProblemAssociation"]] = relationship()
+    problem_links:    Mapped[List["ContestProblemAssociation"]] = relationship()
     contest_profiles: Mapped[List["ContestProfile"]] = relationship(back_populates="contest")
 
     def problems(self):
@@ -211,22 +213,22 @@ class Contest(db.Model):
     def serialize(self):
         return self.shallow_serialize() | {
             "problems": [problem.shallow_serialize() | {
-                "correct_score": next((pl.correct_score for pl in self.problem_links if pl.problem_id == problem.id), 60),
-                "incorrect_penalty": next((pl.incorrect_penalty for pl in self.problem_links if pl.problem_id == problem.id), 5)   
-            } for problem in sorted(self.problems(), key=lambda x: x.name)],
-            "contest_profiles": [contest_profile.shallow_serialize() for contest_profile in sorted(self.contest_profiles, key=lambda x: x.score)]
+                "correctScore": next((pl.correct_score for pl in self.problem_links if pl.problem_id == problem.id), 60),
+                "incorrectPenalty": next((pl.incorrect_penalty for pl in self.problem_links if pl.problem_id == problem.id), 5)   
+            } for problem in self.problems()],
+            "contestProfiles": [contest_profile.shallow_serialize() for contest_profile in sorted(self.contest_profiles, key=lambda x: x.score)]
         }
 
     def shallow_serialize(self):
         return {
             "id": self.id,
             "name": self.name,
-            "start_time": self.start_time.replace(tzinfo=timezone.utc).isoformat(),
-            "end_time": self.end_time.replace(tzinfo=timezone.utc).isoformat(),
+            "startTime": self.start_time.replace(tzinfo=timezone.utc).isoformat(),
+            "endTime": self.end_time.replace(tzinfo=timezone.utc).isoformat(),
             "status": self.past() and "past" or self.ongoing() and "ongoing" or "upcoming",
-            "allowed_languages": self.allowed_languages,
-            "show_leaderboard": self.show_leaderboard,
-            "show_pdf": self.show_pdf
+            "allowedLanguages": self.allowed_languages,
+            "showLeaderboard": self.show_leaderboard,
+            "showPdf": self.show_pdf
         }
 
 class ContestProfile(db.Model):

@@ -17,3 +17,75 @@ export function toTzIsoString(date: Date): string {
         ':' + pad(date.getMinutes()) +
         ':' + pad(date.getSeconds())
 }
+
+
+export interface Problem {
+    id: number
+    name: string
+}
+
+export interface ContestProblem {
+    problem: Problem
+    correctScore: number
+    incorrectPenalty: number
+}
+
+export interface User {
+    id: number
+    username: string
+    isAdmin?: boolean
+}
+
+export interface Contest {
+    id: number
+    name: string
+    startTime: string
+    endTime: string
+    status: string
+    allowedLanguages: string
+    showLeaderboard: boolean
+    showPdf: boolean
+
+    problems?: ContestProblem[]
+    contestProfiles?: ContestProfile[]
+    submissions?: Submission[]
+}
+
+export interface ContestProfile {
+    user: User
+    contest: Contest
+    id: number
+    score: number
+
+    submissions?: Submission[]
+}
+
+export interface Submission {
+    id: number
+    user: User
+    problem: Problem
+    contestProfile?: ContestProfile
+
+    submitTime: string
+    status: number
+    language: string
+
+    code?: string
+    output?: string
+    judgeInput?: string
+    judgeOutput?: string
+}
+
+export interface ProblemSet {
+    id: number
+    name: string
+    hide: boolean
+    problems?: Problem[]
+    submissions?: Submission[]
+}
+
+export interface LeaderboardEntry {
+    user: User
+    score: number
+    problemsSolved: number[][]
+}

@@ -34,13 +34,15 @@ def submission(id):
     if is_past_contest \
         and not flask_login.current_user.is_admin \
         and flask_login.current_user != user:
-        return "Submission cannot be viewed at this time", 403
+        flask.abort(403, description="Submission cannot be viewed at this time")
 
     if not flask_login.current_user.is_admin and \
         (practice_site and pset and pset.hide or is_past_contest):
         return submission.shallow_serialize()
 
-    return submission.serialize(admin_view=flask_login.current_user.is_admin)
+    return {
+        "submission": submission.serialize(admin_view=flask_login.current_user.is_admin)
+    }
 
 
 
@@ -58,6 +60,8 @@ def admin_submissions_paged(page):
 
     per_page = 20
     submissions = db.session.query(Submission).order_by(Submission.submit_time.desc()).limit(per_page).offset((int(page) - 1) * per_page).all()
+    if len(submissions) == 0:
+        flask.abort(400)
 
     return {
         "submissions": [submission.shallow_serialize() for submission in submissions]
