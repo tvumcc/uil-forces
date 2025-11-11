@@ -2,6 +2,7 @@ import yaml
 import os
 import sqlalchemy
 import datetime
+import shutil
 from sqlalchemy.orm import Session
 from src.backend.orm import *
 
@@ -43,7 +44,8 @@ def setup():
             pdf_path = problem_set.get("pdf_path", "")
             student_input_path = os.path.join(problem_set_path, pset_name, student_data_path)
             dataout_path = os.path.join(problem_set_path, pset_name)
-            pset = ProblemSet(name=pset_name, pdf_path=pdf_path)
+            pset = ProblemSet(name=pset_name)
+
 
             for problem in problem_set["problems"]:
                 prob_name = problem["name"]
@@ -87,6 +89,8 @@ def setup():
                 ))
 
             session.add(pset)
+            session.commit()
+            shutil.copyfile(pdf_path, os.path.join("pdfs", pset.get_pdf_name()))
         
         for contest in setup_config["contests"]:
             contest_name = contest["name"]

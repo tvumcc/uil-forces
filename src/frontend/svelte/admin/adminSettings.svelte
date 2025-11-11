@@ -17,7 +17,6 @@
         }        
 
         settings = json.settings
-        console.log(settings)
     }
 
     async function editSettings(event: Event) {

@@ -26,8 +26,6 @@
         if (contest !== undefined) {
             contest.startTime = toTzIsoString(new Date(contest.startTime))
             contest.endTime = toTzIsoString(new Date(contest.endTime))
-
-            console.log(contest.problems)
         }
     }
 

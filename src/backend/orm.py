@@ -75,10 +75,12 @@ class ProblemSet(db.Model):
     id: Mapped[int] = mapped_column(primary_key=True)
 
     name:     Mapped[str]  = mapped_column(unique=True)
-    pdf_path: Mapped[str]  = mapped_column(default="")
     hide:     Mapped[bool] = mapped_column(default=False)
 
     problems: Mapped[List["Problem"]] = relationship(back_populates="problem_set")
+
+    def get_pdf_name(self):
+        return f"pset{self.id}.pdf"
 
     def serialize(self):
         return self.shallow_serialize() | {

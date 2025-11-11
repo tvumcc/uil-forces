@@ -1,5 +1,4 @@
 <script lang="ts">
-    import { onMount } from "svelte"
     import MenuBar from "../components/menuBar.svelte"
     import type {ProblemSet} from "../../utils"
 
@@ -87,13 +86,10 @@
             if (files) {
                 for (let file of files) {
                     fileData = await file.arrayBuffer()
-                    console.log(fileData.byteLength)
                 }
             }
         })()
     })
-
-    onMount(getData)
 </script>
 
 <style>

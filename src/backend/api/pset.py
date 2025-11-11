@@ -232,7 +232,7 @@ def admin_pset_pdf(id):
     pset = db.session.get(ProblemSet, id)
     if not pset:
         flask.abort(404, description="Problem set does not exist")
-    return flask.send_from_directory(app.root_path, pset.pdf_path)
+    return flask.send_from_directory(app.root_path, os.path.join("pdfs", pset.get_pdf_name()))
 
 @app.route("/api/admin/pset/<id>/uploadpdf", methods=["POST"])
 @flask_login.login_required
@@ -247,8 +247,8 @@ def admin_pset_upload_pdf(id):
     if not pset:
         flask.abort(404, description="Problem set does not exist")
 
-    if file and file.filename.lower().endswith(".pdf"):
-        filepath = os.path.join(app.root_path, pset.pdf_path)
+    if file:
+        filepath = os.path.join(app.root_path, "pdfs", pset.get_pdf_name())
         file.save(filepath)
         return f"Successfully uploaded new PDF for problem set {pset.id} ({pset.name})"
     else:
