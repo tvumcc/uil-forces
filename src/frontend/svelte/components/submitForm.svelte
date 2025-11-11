@@ -1,6 +1,6 @@
 <script lang="ts">
     import * as ace from "ace-builds"
-    import { onMount } from "svelte";
+    import { onMount } from "svelte"
     import type {Problem, ContestProblem} from "../../utils"
 
     interface SubmitFormProps {
@@ -57,8 +57,8 @@
         let response: Response = await fetch(`/api/${submissionType}/submit`, {
             method: "POST",
             body: JSON.stringify({
-                contest_id: ID,
-                problem_id: submissionProblemID,
+                contestID: ID,
+                problemID: submissionProblemID,
                 code: submissionMethod === "uploadFile" ? fileText : codeText,
                 language: submissionLanguage 
             }),
@@ -76,7 +76,7 @@
             if (count > 0) {
                 reloadSubmissions()
                 reloadLeaderboard()
-                count--;
+                count--
             } else {
                 clearInterval(interval_id)
             }
@@ -109,11 +109,11 @@
                     break
             }
             editor.setValue(storedCode)
-            editor.clearSelection();
-            editor.gotoLine(1);
-            editor.getSession().setScrollTop(1);
-            editor.blur();
-            editor.focus();
+            editor.clearSelection()
+            editor.gotoLine(1)
+            editor.getSession().setScrollTop(1)
+            editor.blur()
+            editor.focus()
         } else {
             document.getElementById("editor")!.style.display = "none"
         }

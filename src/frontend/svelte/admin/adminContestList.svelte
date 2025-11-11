@@ -1,9 +1,11 @@
 <script lang="ts">
-    import { onMount } from "svelte"
     import MenuBar from "../components/menuBar.svelte"
-    import {getTzOffset} from "../../utils"
+    import {getTzOffset, type Contest} from "../../utils"
 
-    let contests = $state([]) 
+    let validRequest = $state(true)
+    let message = $state("")
+
+    let contests: Contest[] = $state([]) 
 
     // state for add contest section
     let name = $state()
@@ -13,7 +15,13 @@
     async function getData() {
         let response: Response = await fetch("/api/admin/contests")
         let json = await response.json()
-        contests = json["contests"]
+        
+        if (!response.ok) {
+            validRequest = false
+            message = json.description
+        }
+
+        contests = json.contests
     }
 
     async function addContest(event: Event) {
@@ -23,8 +31,8 @@
             method: "POST",
             body: JSON.stringify({
                 name: name,
-                start_time: new Date(startTime + getTzOffset()).toISOString(),
-                end_time: new Date(endTime + getTzOffset()).toISOString() 
+                startTime: new Date(startTime + getTzOffset()).toISOString(),
+                endTime: new Date(endTime + getTzOffset()).toISOString() 
             }),
             headers: {
                 "Content-Type": "application/json; charset=UTF-8"
@@ -35,8 +43,6 @@
             await getData()
         }
     }
-
-    onMount(getData)
 </script>
 
 <style>
@@ -47,19 +53,27 @@
 <div class="main-container">
     <h1>Contests</h1>
 
-    {#each contests as contest}
-        <a href="/admin/contest?id={contest["id"]}">{contest["name"]}</a>
-        <br>
-    {/each}
+    {#await getData()}
+        <p>Loading...</p> 
+    {:then} 
+        {#if validRequest}
+            {#each contests as contest}
+                <a href="/admin/contest?id={contest.id}">{contest.name}</a>
+                <br>
+            {/each}
 
-    <h2>Add Contest</h2>
-    <form onsubmit={addContest}>
-        <label for="name">Name</label>
-        <input name="name" type="text" bind:value={name}>
-        <label for="start-time">Start Time</label>
-        <input name="start-time" type="datetime-local" bind:value={startTime}>
-        <label for="end-time">End Time</label>
-        <input name="end-time" type="datetime-local" bind:value={endTime}>
-        <input type="submit" value="Add Contest">
-    </form>
+            <h2>Add Contest</h2>
+            <form onsubmit={addContest}>
+                <label for="name">Name</label>
+                <input name="name" type="text" bind:value={name}>
+                <label for="start-time">Start Time</label>
+                <input name="start-time" type="datetime-local" bind:value={startTime}>
+                <label for="end-time">End Time</label>
+                <input name="end-time" type="datetime-local" bind:value={endTime}>
+                <input type="submit" value="Add Contest">
+            </form>
+        {:else}
+            <p>{message}</p>
+        {/if}
+    {/await}
 </div>

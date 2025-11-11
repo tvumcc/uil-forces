@@ -10,7 +10,6 @@ import shutil
 from main import app
 from src.backend.orm import *
 from src.backend.judge import Status, assign_status
-from sqlalchemy import desc
 
 @app.route("/api/contests")
 @flask_login.login_required
@@ -78,8 +77,8 @@ def submit_contest_problem():
     """
 
     request = flask.request.get_json()
-    problem = db.session.get(Problem, request["problem_id"])
-    contest = db.session.get(Contest, request["contest_id"])
+    problem = db.session.get(Problem, request["problemID"])
+    contest = db.session.get(Contest, request["contestID"])
     language = request["language"]
 
     if not problem:
@@ -208,8 +207,8 @@ def admin_contest_add_problem(id):
         flask.abort(403)
 
     request = flask.request.get_json()
-    pset_name = request["pset_name"]
-    problem_name = request["problem_name"]
+    pset_name = request["psetName"]
+    problem_name = request["problemName"]
 
     contest = db.session.get(Contest, id)
     problem_set = db.session.query(ProblemSet).filter_by(name=pset_name).first()
@@ -248,7 +247,7 @@ def admin_contest_add_pset(id):
         flask.abort(403)
 
     request = flask.request.get_json()
-    pset_name = request["pset_name"]
+    pset_name = request["psetName"]
 
     contest = db.session.get(Contest, id)
     pset = db.session.query(ProblemSet).filter_by(name=pset_name).first()
@@ -279,8 +278,8 @@ def admin_contest_unlink_problem():
         flask.abort(403)
 
     request = flask.request.get_json()
-    contest_id = request["contest_id"]
-    problem_id = request["problem_id"]
+    contest_id = request["contestID"]
+    problem_id = request["problemID"]
 
     contest = db.session.get(Contest, contest_id)
     problem = db.session.get(Problem, problem_id)
@@ -316,11 +315,11 @@ def admin_update_contest():
     request = flask.request.get_json()
     id = request["id"]
     name = request["name"]
-    start_time = request["start_time"]
-    end_time = request["end_time"]
-    show_pdf = request["show_pdf"]
-    show_leaderboard = request["show_leaderboard"]
-    allowed_languages = " ".join(str(request["allowed_languages"]).split())
+    start_time = request["startTime"]
+    end_time = request["endTime"]
+    show_pdf = request["showPdf"]
+    show_leaderboard = request["showLeaderboard"]
+    allowed_languages = " ".join(str(request["allowedLanguages"]).split())
 
     contest = db.session.get(Contest, id)
     contest.name = name
@@ -346,8 +345,8 @@ def admin_add_contest():
     request = flask.request.get_json()
 
     name = request["name"]
-    start_time = datetime.datetime.fromisoformat(request["start_time"])
-    end_time = datetime.datetime.fromisoformat(request["end_time"])
+    start_time = datetime.datetime.fromisoformat(request["startTime"])
+    end_time = datetime.datetime.fromisoformat(request["endTime"])
 
     contest = Contest(
         name=name,
@@ -368,7 +367,7 @@ def admin_update_contest_problems():
         flask.abort(403)
     
     request = flask.request.get_json()
-    contest_id = request["contest_id"]
+    contest_id = request["contestID"]
     problems = request["problems"]
 
     contest: Contest = db.session.get(Contest, contest_id)
@@ -378,8 +377,8 @@ def admin_update_contest_problems():
     for problem in problems:
         problem_link = db.session.query(ContestProblemAssociation).filter_by(contest_id=contest.id, problem_id=problem["id"]).first()
         if problem_link:
-            problem_link.correct_score = problem["correct_score"]
-            problem_link.incorrect_penalty = problem["incorrect_penalty"]
+            problem_link.correct_score = problem["correctScore"]
+            problem_link.incorrect_penalty = problem["incorrectPenalty"]
             db.session.add(problem_link)
 
     for contest_profile in contest.contest_profiles:

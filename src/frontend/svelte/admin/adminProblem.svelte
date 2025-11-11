@@ -1,20 +1,14 @@
 <script lang="ts">
-    import { onMount } from "svelte"
     import * as ace from "ace-builds"
     import MenuBar from "../components/menuBar.svelte"
+    import type {Problem} from "../../utils"
 
     let params = new URLSearchParams(document.location.search)
     let ID = params.get("id")
+    let validRequest = $state(true)
+    let message = $state("")
 
-    let problem = $state()
-
-    let name = $state("")
-    let pages = $state("")
-    let useStdin = $state(false)
-    let inputFileName = $state("")
-    let studentInput = $state("")
-    let judgeInput = $state("")
-    let judgeOutput = $state("")
+    let problem: Problem | undefined = $state()
 
     ace.config.set("basePath", "/ace-builds/src-noconflict")
     let studentInputEditor: ace.Editor
@@ -24,21 +18,23 @@
     async function getData() {
         let response: Response = await fetch(`/api/admin/problem/${ID}`)
         let json = await response.json()
-        name = json["problem"]["name"]
-        pages = json["problem"]["pages"] 
-        useStdin = json["problem"]["use_stdin"]
-        inputFileName = json["problem"]["input_file_name"]
-        studentInput = json["problem"]["student_input"] 
-        judgeInput = json["problem"]["judge_input"]
-        judgeOutput = json["problem"]["judge_output"]
 
+        if (!response.ok) {
+            validRequest = false
+            message = json.description
+        }
+
+        problem = json.problem
+    }
+
+    function fillEditors(node: Node) {
         studentInputEditor = ace.edit("student-input")
         judgeInputEditor = ace.edit("judge-input")
         judgeOutputEditor = ace.edit("judge-output")
 
-        loadEditor(studentInputEditor, studentInput)
-        loadEditor(judgeInputEditor, judgeInput)
-        loadEditor(judgeOutputEditor, judgeOutput)
+        loadEditor(studentInputEditor, problem!.studentInput!)
+        loadEditor(judgeInputEditor, problem!.judgeInput!)
+        loadEditor(judgeOutputEditor, problem!.judgeOutput!)
     }
 
     function loadEditor(editor: ace.Editor, text: string) {
@@ -47,11 +43,11 @@
         editor.setShowPrintMargin(false)
         editor.setTheme("ace/theme/monokai")
         editor.setValue(text)
-        editor.clearSelection();
-        editor.gotoLine(1);
-        editor.getSession().setScrollTop(1);
-        editor.blur();
-        editor.focus();
+        editor.clearSelection()
+        editor.gotoLine(1)
+        editor.getSession().setScrollTop(1)
+        editor.blur()
+        editor.focus()
     }
 
     async function editProblem(event: Event) {
@@ -59,29 +55,17 @@
 
         let response: Response = await fetch("/api/admin/update/problem", {
             method: "POST",
-            body: JSON.stringify({
-                id: ID,
-                name: name,
-                pages: pages,
-                use_stdin: useStdin,
-                input_file_name: inputFileName,
-                student_input: studentInputEditor.getValue(),
-                judge_input: judgeInputEditor.getValue(),
-                judge_output: judgeOutputEditor.getValue(),
-            }),
-            headers: {
-                "Content-Type": "application/json; charset=UTF-8"
-            }
+            body: JSON.stringify(problem),
+            headers: {"Content-Type": "application/json; charset=UTF-8"}
         })
 
         if (response.ok) {
             await getData()
         }
     }
-
-    onMount(getData)
 </script>
 
+<!-- svelte-ignore css_unused_selector -->
 <style>
     @import "../../style.css";
 
@@ -102,27 +86,37 @@
 <div class="main-container">
     <h1>Edit Problem</h1>
 
-    <form onsubmit={editProblem}>
-        <label for="name">Name</label>
-        <input name="name" type="text" bind:value={name}>
-        <br>
-        <label for="pages">PDF Pages</label>
-        <input name="pages" type="text" bind:value={pages}>
-        <br>
-        <label for="use-stdin">Use Standard Input</label>
-        <input name="use-stdin" type="checkbox" bind:checked={useStdin}>
-        <br>
-        <label for="input-file-name">Input File Name</label>
-        <input name="input-file-name" type="text" bind:value={inputFileName}>
-        <br>
+    {#await getData()}
+        <p>Loading...</p>
+    {:then} 
+        {#if validRequest && problem !== undefined}
+            <form onsubmit={editProblem}>
+                <label for="name">Name</label>
+                <input name="name" type="text" bind:value={problem.name}>
+                <br>
+                <label for="pages">PDF Pages</label>
+                <input name="pages" type="text" bind:value={problem.pages}>
+                <br>
+                <label for="use-stdin">Use Standard Input</label>
+                <input name="use-stdin" type="checkbox" bind:checked={problem.useStdin}>
+                <br>
+                <label for="input-file-name">Input File Name</label>
+                <input name="input-file-name" type="text" bind:value={problem.inputFileName}>
+                <br>
 
-        <h3>Student Input</h3>
-        <div id="student-input"></div>  
-        <h3>Judge Input</h3>
-        <div id="judge-input"></div>
-        <h3>Judge Output</h3>
-        <div id="judge-output"></div>
+                <div use:fillEditors>
+                    <h3>Student Input</h3>
+                    <div id="student-input"></div>  
+                    <h3>Judge Input</h3>
+                    <div id="judge-input"></div>
+                    <h3>Judge Output</h3>
+                    <div id="judge-output"></div>
+                </div>
 
-        <input type="submit" value="Update Problem">
-    </form>
+                <input type="submit" value="Update Problem">
+            </form>
+        {:else}
+            <p>{message}</p>
+        {/if}
+    {/await}
 </div>

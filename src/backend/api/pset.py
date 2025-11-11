@@ -68,7 +68,7 @@ def submit_pset_problem():
 
     request = flask.request.get_json()
 
-    problem = db.session.get(Problem, request["problem_id"])
+    problem = db.session.get(Problem, request["problemID"])
     language = request["language"]
     if not problem:
         flask.abort(404, description="Problem does not exist")
@@ -205,8 +205,8 @@ def admin_pset_add_problem():
 
     request = flask.request.get_json()
 
-    pset_id = request["pset_id"]
-    problem_name = request["problem_name"]
+    pset_id = request["psetID"]
+    problem_name = request["problemName"]
 
     pset = db.session.get(ProblemSet, pset_id)
     if not pset:

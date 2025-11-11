@@ -11,12 +11,12 @@ def login():
 
     response = flask.request.get_json()
     username = str(response["username"])
-    passphrase = str(response["password"])
+    password = str(response["password"])
 
     login_success = False
     user = db.session.query(User).filter_by(username=username).first()
 
-    if user is not None and user.passphrase == passphrase:
+    if user is not None and user.password == password:
         flask_login.login_user(db.session.get(User, user.id))
         login_success = True
         log.info(f"User '{user.username}' logged in")
@@ -41,14 +41,14 @@ def register():
 
     request = flask.request.get_json()
     username = str(request["username"])
-    passphrase = str(request["password"])
+    password = str(request["password"])
 
     if db.session.query(User).filter_by(username=username).first() is not None:
         flask.abort(400, description="Username already exists")
 
     user = User(
         username=username,
-        passphrase=passphrase,
+        password=password,
         is_admin=False
     )
     db.session.add(user)
@@ -96,11 +96,11 @@ def admin_add_user():
 
     username = request["username"]
     password = request["password"] 
-    is_admin = request["is_admin"]
+    is_admin = request["isAdmin"]
 
     db.session.add(User(
         username=username,
-        passphrase=password,
+        password=password,
         is_admin=is_admin
     ))
     db.session.commit()

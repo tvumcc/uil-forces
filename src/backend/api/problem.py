@@ -86,11 +86,11 @@ def admin_update_problem():
 
     problem.name = request["name"]
     problem.pages = request["pages"]
-    problem.use_stdin = request["use_stdin"]
-    problem.input_file_name = request["input_file_name"]
-    problem.student_input = request["student_input"]
-    problem.judge_input = request["judge_input"]
-    problem.judge_output = request["judge_output"]
+    problem.use_stdin = request["useStdin"]
+    problem.input_file_name = request["inputFileName"]
+    problem.student_input = request["studentInput"]
+    problem.judge_input = request["judgeInput"]
+    problem.judge_output = request["judgeOutput"]
 
     db.session.add(problem)
     db.session.commit()

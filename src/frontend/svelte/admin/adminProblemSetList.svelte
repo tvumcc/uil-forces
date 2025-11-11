@@ -1,18 +1,25 @@
 <script lang="ts">
-    import { onMount } from "svelte"
     import MenuBar from "../components/menuBar.svelte"
+    import type {ProblemSet} from "../../utils"
 
-    let psets = $state([]) 
+    let validRequest = $state(true)
+    let message = $state("")
+
+    let psets: ProblemSet[] = $state([]) 
 
     // state for add pset section
     let name = $state()
-    let startTime: Date = $state(new Date())
-    let endTime: Date = $state(new Date())
 
     async function getData() {
         let response: Response = await fetch("/api/admin/psets")
         let json = await response.json()
-        psets = json["psets"]
+
+        if (!response.ok) {
+            validRequest = false
+            message = json.description
+        }
+
+        psets = json.psets
     }
 
     async function addPset(event: Event) {
@@ -32,8 +39,6 @@
             await getData()
         }
     }
-
-    onMount(getData)
 </script>
 
 <style>
@@ -43,16 +48,23 @@
 <MenuBar />
 <div class="main-container">
     <h1>Problem Sets</h1>
+    {#await getData()}
+        <p>Loading...</p> 
+    {:then} 
+        {#if validRequest}
+            {#each psets as pset}
+                <a href="/admin/pset?id={pset.id}">{pset.name}</a>
+                <br>
+            {/each}
 
-    {#each psets as pset}
-        <a href="/admin/pset?id={pset["id"]}">{pset["name"]}</a>
-        <br>
-    {/each}
-
-    <h2>Add Problem Set</h2>
-    <form onsubmit={addPset}>
-        <label for="name">Name</label>
-        <input name="name" type="text" bind:value={name}>
-        <input type="submit" value="Add Problem Set">
-    </form>
+            <h2>Add Problem Set</h2>
+            <form onsubmit={addPset}>
+                <label for="name">Name</label>
+                <input name="name" type="text" bind:value={name}>
+                <input type="submit" value="Add Problem Set">
+            </form>
+        {:else}
+            <p>{message}</p>
+        {/if}
+    {/await}
 </div>

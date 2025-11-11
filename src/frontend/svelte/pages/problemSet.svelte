@@ -9,7 +9,7 @@
     let validRequest = $state(true)
     let message = $state("")
 
-    let pset: ProblemSet | undefined = $state(undefined)
+    let pset: ProblemSet | undefined = $state()
     let submissionProblemID = $state(-1)
 
     $effect(() => {

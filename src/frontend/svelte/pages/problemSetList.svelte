@@ -12,6 +12,11 @@
         let response: Response = await fetch("/api/psets")
         let json = await response.json()
 
+        if (!response.ok) {
+            validRequest = false
+            message = json.description
+        }
+
         hide = json.hide
         psets = json.psets
     }

@@ -1,18 +1,23 @@
 <script lang="ts">
-    import { onMount } from "svelte"
     import MenuBar from "../components/menuBar.svelte"
+    import type {Settings} from "../../utils"
 
-    let params = new URLSearchParams(document.location.search)
-    let ID = params.get("id")
+    let validRequest = $state(true)
+    let message = $state("")
 
-    let practiceSite = $state(false)
-    let dockerGrading = $state(false)
+    let settings: Settings | undefined = $state()
 
     async function getData() {
         let response: Response = await fetch(`/api/admin/settings`)
         let json = await response.json()
-        practiceSite = json["settings"]["practice_site"]
-        dockerGrading = json["settings"]["docker_grading"]
+
+        if (!response.ok) {
+            validRequest = false
+            message = json.description
+        }        
+
+        settings = json.settings
+        console.log(settings)
     }
 
     async function editSettings(event: Event) {
@@ -21,8 +26,8 @@
         let response: Response = await fetch("/api/admin/update/settings", {
             method: "POST",
             body: JSON.stringify({
-                practice_site: practiceSite,
-                docker_grading: dockerGrading
+                practice_site: settings!.practice_site,
+                docker_grading: settings!.docker_grading
             }),
             headers: {
                 "Content-Type": "application/json; charset=UTF-8"
@@ -33,10 +38,9 @@
             await getData()
         }
     }
-
-    onMount(getData)
 </script>
 
+<!-- svelte-ignore css_unused_selector -->
 <style>
     @import "../../style.css";
 
@@ -56,13 +60,22 @@
 <div class="main-container">
     <h1>Site-wide Settings</h1>
 
-    <form onsubmit={editSettings}>
-        <label for="practice-site">Enable Practice</label>
-        <input name="practice-site" type="checkbox" bind:checked={practiceSite}>
-        <br>
-        <label for="docker-grading">Use Docker Grading</label>
-        <input name="docker-grading" type="checkbox" bind:checked={dockerGrading}>
-        <br>
-        <input type="submit" value="Update Settings">
-    </form>
+    {#await getData()}
+        <p>Loading...</p> 
+    {:then} 
+        {#if validRequest && settings !== undefined} 
+            <form onsubmit={editSettings}>
+                <label for="practice-site">Enable Practice</label>
+                <input name="practice-site" type="checkbox" bind:checked={settings.practice_site}>
+                <br>
+                <label for="docker-grading">Use Docker Grading</label>
+                <input name="docker-grading" type="checkbox" bind:checked={settings.docker_grading}>
+                <br>
+                <input type="submit" value="Update Settings">
+            </form>
+        {:else}
+            <p>{message}</p>
+        {/if}
+    {/await}
+
 </div>

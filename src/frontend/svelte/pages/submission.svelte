@@ -6,10 +6,10 @@
 
     let params = new URLSearchParams(document.location.search)
     let ID = params.get("id")
-    let validRequest = $state(true);
-    let message = $state("");
+    let validRequest = $state(true)
+    let message = $state("")
 
-    let submission: Submission | undefined = $state(undefined)
+    let submission: Submission | undefined = $state()
 
     ace.config.set("basePath", "/ace-builds/src-noconflict")
     let submissionCodeEditor: ace.Editor
@@ -22,8 +22,8 @@
         let json = await response.json()
 
         if (!response.ok) {
-            validRequest = false;
-            message = json.description;
+            validRequest = false
+            message = json.description        
         }
 
         submission = json.submission
@@ -74,11 +74,11 @@
         editor.setShowPrintMargin(false)
         editor.setTheme("ace/theme/monokai")
         editor.setValue(text)
-        editor.clearSelection();
-        editor.gotoLine(1);
-        editor.getSession().setScrollTop(1);
-        editor.blur();
-        editor.focus();
+        editor.clearSelection()
+        editor.gotoLine(1)
+        editor.getSession().setScrollTop(1)
+        editor.blur()
+        editor.focus()
     }
 </script>
 

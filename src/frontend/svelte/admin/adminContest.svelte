@@ -1,18 +1,13 @@
 <script lang="ts">
-    import { onMount } from "svelte"
     import MenuBar from "../components/menuBar.svelte"
-    import { toTzIsoString, getTzOffset } from "../../utils"
+    import { toTzIsoString, getTzOffset, type Contest } from "../../utils"
 
     let params = new URLSearchParams(document.location.search)
     let ID = params.get("id")
+    let validRequest = $state(true)
+    let message = $state("")
 
-    let name = $state("")
-    let startTime = $state("")
-    let endTime = $state("")
-    let allowed_languages = $state([])
-    let show_leaderboard = $state(false)
-    let show_pdf = $state(false)
-    let problems: any[] = $state([])
+    let contest: Contest | undefined = $state()
 
     let psetName = $state("")
     let problemPsetName = $state("")
@@ -21,29 +16,34 @@
     async function getData() {
         let response: Response = await fetch(`/api/admin/contest/${ID}`)
         let json = await response.json()
-        name = json["contest"]["name"]
-        startTime = toTzIsoString(new Date(json["contest"]["start_time"]))
-        endTime = toTzIsoString(new Date(json["contest"]["end_time"]))
-        allowed_languages = json["contest"]["allowed_languages"]
-        show_leaderboard = json["contest"]["show_leaderboard"]
-        show_pdf = json["contest"]["show_pdf"]
-        problems = json["contest"]["problems"]
+        
+        if (!response.ok) {
+            validRequest = false
+            message = json.description
+        }
+
+        contest = json.contest
+        if (contest !== undefined) {
+            contest.startTime = toTzIsoString(new Date(contest.startTime))
+            contest.endTime = toTzIsoString(new Date(contest.endTime))
+
+            console.log(contest.problems)
+        }
     }
 
     async function editContest(event: Event) {
         event.preventDefault()
 
-        console.log(allowed_languages)
         let response: Response = await fetch("/api/admin/update/contest", {
             method: "POST",
             body: JSON.stringify({
-                id: ID,
-                name: name,
-                start_time: new Date(startTime + getTzOffset()).toISOString(),
-                end_time: new Date(endTime + getTzOffset()).toISOString(),
-                show_pdf: show_pdf,
-                show_leaderboard: show_leaderboard,
-                allowed_languages: allowed_languages
+                id: contest!.id,
+                name: contest!.name,
+                startTime: new Date(contest?.startTime + getTzOffset()).toISOString(),
+                endTime: new Date(contest?.endTime + getTzOffset()).toISOString(),
+                showPdf: contest!.showPdf,
+                showLeaderboard: contest?.showLeaderboard,
+                allowedLanguages: contest?.allowedLanguages 
             }),
             headers: {
                 "Content-Type": "application/json; charset=UTF-8"
@@ -61,7 +61,7 @@
         let response: Response = await fetch(`/api/admin/contest/${ID}/add/pset`, {
             method: "POST",
             body: JSON.stringify({
-                pset_name: psetName,
+                psetName: psetName,
             }),
             headers: {
                 "Content-Type": "application/json; charset=UTF-8"
@@ -79,8 +79,8 @@
         let response: Response = await fetch(`/api/admin/contest/${ID}/add/problem`, {
             method: "POST",
             body: JSON.stringify({
-                pset_name: problemPsetName,
-                problem_name: problemName 
+                psetName: problemPsetName,
+                problemName: problemName 
             }),
             headers: {
                 "Content-Type": "application/json; charset=UTF-8"
@@ -92,12 +92,12 @@
         }
     }
 
-    async function unlinkProblem(problem_id: number) {
+    async function unlinkProblem(problemID: number) {
         let response: Response = await fetch("/api/admin/contest/unlinkproblem", {
             method: "POST",
             body: JSON.stringify({
-                contest_id: ID,
-                problem_id: problem_id
+                contestID: ID,
+                problemID: problemID
             }),
             headers: {
                 "Content-Type": "application/json; charset=UTF-8"
@@ -113,14 +113,8 @@
         let response: Response = await fetch("/api/admin/contest/updateproblems", {
             method: "POST",
             body: JSON.stringify({
-                contest_id: ID,
-                problems: problems.map((problem) => {
-                    return {
-                        id: problem["id"],
-                        correct_score: problem["correct_score"],
-                        incorrect_penalty: problem["incorrect_penalty"]
-                    }
-                })
+                contestID: ID,
+                problems: contest!.problems
             }),
             headers: {
                 "Content-Type": "application/json; charset=UTF-8"
@@ -131,10 +125,9 @@
             await getData()
         }
     }
-
-    onMount(getData)
 </script>
 
+<!-- svelte-ignore css_unused_selector -->
 <style>
     @import "../../style.css";
 
@@ -154,63 +147,70 @@
 <MenuBar />
 <div class="main-container">
     <h1>Edit Contest</h1>
+    {#await getData()}
+        <p>Loading...</p> 
+    {:then} 
+        {#if validRequest && contest !== undefined}
+            <form onsubmit={editContest}>
+                <label for="name">Name</label>
+                <input name="name" type="text" bind:value={contest.name}>
+                <label for="start-time">Start Time</label>
+                <input name="start-time" type="datetime-local" bind:value={contest.startTime}>
+                <label for="end-time">End Time</label>
+                <input name="end-time" type="datetime-local" bind:value={contest.endTime}>
+                <br>
+                <label for="show-pdf">Show PDF Problem Statement Viewer</label>
+                <input name="show-pdf" type="checkbox" bind:checked={contest.showPdf}>
+                <br>
+                <label for="show-leaderboard">Show Leaderboard</label>
+                <input name="show-leaderboard" type="checkbox" bind:checked={contest.showLeaderboard}>
+                <br>
+                <label for="allowed-languages">Allowed Languages (space separated)</label>
+                <input name="allowed-languages" type="text" bind:value={contest.allowedLanguages}>
+                <br>
+                <input type="submit" value="Update Contest">
+            </form>
 
-    <form onsubmit={editContest}>
-        <label for="name">Name</label>
-        <input name="name" type="text" bind:value={name}>
-        <label for="start-time">Start Time</label>
-        <input name="start-time" type="datetime-local" bind:value={startTime}>
-        <label for="end-time">End Time</label>
-        <input name="end-time" type="datetime-local" bind:value={endTime}>
-        <br>
-        <label for="show-pdf">Show PDF Problem Statement Viewer</label>
-        <input name="show-pdf" type="checkbox" bind:checked={show_pdf}>
-        <br>
-        <label for="show-leaderboard">Show Leaderboard</label>
-        <input name="show-leaderboard" type="checkbox" bind:checked={show_leaderboard}>
-        <br>
-        <label for="allowed-languages">Allowed Languages (space separated)</label>
-        <input name="allowed-languages" type="text" bind:value={allowed_languages}>
-        <br>
-        <input type="submit" value="Update Contest">
-    </form>
+            <h2>Problems</h2>
+            <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Score</th>
+                    <th>Penalty</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+            {#each contest!.problems as problem: ContestProblem, i}
+                <tr class="pb-row">
+                    <td>{problem.problem.name}</td>
+                    <td><input type="text" bind:value={problem.correctScore}></td>
+                    <td><input type="text" bind:value={problem.incorrectPenalty}></td>
+                    <td><button onclick={async ()=>{await unlinkProblem(problem.problem.id)}}>Remove</button></td>
+                </tr>
+            {/each}
+            </tbody>
+            </table>
+            <button onclick={updateProblemScores}>Update Problems and Recalculate Scores</button>
 
-    <h2>Problems</h2>
-    <table>
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Score</th>
-            <th>Penalty</th>
-            <th>Action</th>
-        </tr>
-    </thead>
-    <tbody>
-    {#each problems as problem, i}
-        <tr class="pb-row">
-            <td>{problem.name}</td>
-            <td><input type="text" bind:value={problem.correct_score}></td>
-            <td><input type="text" bind:value={problem.incorrect_penalty}></td>
-            <td><button onclick={async ()=>{await unlinkProblem(problem.id)}}>Remove</button></td>
-        </tr>
-    {/each}
-    </tbody>
-    </table>
-    <button onclick={updateProblemScores}>Update Problems and Recalculate Scores</button>
+            <h2>Add Problem Set</h2>
+            <form onsubmit={addProblemSet}>
+                <label for="pset-name">Problem Set Name</label>
+                <input name="pset-name" type="text" bind:value={psetName}>
+                <input type="submit" value="Add Problem Set">
+            </form>
 
-    <h2>Add Problem Set</h2>
-    <form onsubmit={addProblemSet}>
-        <label for="pset-name">Problem Set Name</label>
-        <input name="pset-name" type="text" bind:value={psetName}>
-        <input type="submit" value="Add Problem Set">
-    </form>
-
-    <h2>Add Problem</h2>
-    <form onsubmit={addProblem}>
-        <label for="problem-pset-name">Problem Set Name</label>
-        <input name="problem-pset-name" type="text" bind:value={problemPsetName}>
-        <label for="problem-name">Problem Name</label>
-        <input name="problem-name" type="text" bind:value={problemName}>
-        <input type="submit" value="Add Problem">
-    </form>
+            <h2>Add Problem</h2>
+            <form onsubmit={addProblem}>
+                <label for="problem-pset-name">Problem Set Name</label>
+                <input name="problem-pset-name" type="text" bind:value={problemPsetName}>
+                <label for="problem-name">Problem Name</label>
+                <input name="problem-name" type="text" bind:value={problemName}>
+                <input type="submit" value="Add Problem">
+            </form>
+        {:else}
+            <p>{message}</p>
+        {/if}
+    {/await}
 </div>

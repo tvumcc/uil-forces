@@ -36,7 +36,7 @@ def setup():
             password = user["password"]
             is_admin = user.get("admin", False)
 
-            session.add(User(username=username, passphrase=password, is_admin=is_admin))
+            session.add(User(username=username, password=password, is_admin=is_admin))
 
         for problem_set in setup_config["problem_sets"]:
             pset_name = problem_set["name"]

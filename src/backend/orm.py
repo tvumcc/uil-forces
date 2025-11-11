@@ -50,18 +50,16 @@ class User(UserMixin, db.Model):
 
     id: Mapped[int] = mapped_column(primary_key=True)
 
-    username:   Mapped[str] = mapped_column(unique=True)
-    passphrase: Mapped[str]
-
-    is_admin:      Mapped[bool] = mapped_column(default=False)
-    password_hash: Mapped[Optional[str]]
+    username: Mapped[str]  = mapped_column(unique=True)
+    password: Mapped[str]
+    is_admin: Mapped[bool] = mapped_column(default=False)
 
     contest_profiles: Mapped[List["ContestProfile"]] = relationship(back_populates="user") 
     submissions:      Mapped[List["Submission"]]     = relationship(back_populates="user")
 
     def serialize(self):
         return self.shallow_serialize() | {
-            "passphrase": self.passphrase,
+            "password": self.password,
         }
 
     def shallow_serialize(self):
@@ -122,7 +120,7 @@ class Problem(db.Model):
             "studentInput": self.student_input,
             "judgeInput": self.judge_input,
             "judgeOutput": self.judge_output,
-            "problemSetId": self.problem_set_id,
+            "problemSetID": self.problem_set_id,
         }
 
     def shallow_serialize(self):
@@ -212,7 +210,8 @@ class Contest(db.Model):
 
     def serialize(self):
         return self.shallow_serialize() | {
-            "problems": [problem.shallow_serialize() | {
+            "problems": [{
+                "problem": problem.shallow_serialize(),
                 "correctScore": next((pl.correct_score for pl in self.problem_links if pl.problem_id == problem.id), 60),
                 "incorrectPenalty": next((pl.incorrect_penalty for pl in self.problem_links if pl.problem_id == problem.id), 5)   
             } for problem in self.problems()],

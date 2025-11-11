@@ -22,6 +22,14 @@ export function toTzIsoString(date: Date): string {
 export interface Problem {
     id: number
     name: string
+
+    pages?: string
+    useStdin?: boolean
+    inputFileName?: string
+    studentInput?: string
+    judgeInput?: string
+    judgeOutput?: string
+    problemSetID?: number
 }
 
 export interface ContestProblem {
@@ -34,6 +42,7 @@ export interface User {
     id: number
     username: string
     isAdmin?: boolean
+    password?: string
 }
 
 export interface Contest {
@@ -88,4 +97,9 @@ export interface LeaderboardEntry {
     user: User
     score: number
     problemsSolved: number[][]
+}
+
+export interface Settings {
+    practice_site: boolean
+    docker_grading: boolean
 }

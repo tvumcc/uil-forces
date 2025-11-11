@@ -1,13 +1,14 @@
 <script lang="ts">
     import { onMount } from "svelte"
     import MenuBar from "../components/menuBar.svelte"
+    import type {ProblemSet} from "../../utils"
 
     let params = new URLSearchParams(document.location.search)
     let ID = params.get("id")
+    let validRequest = $state(true)
+    let message = $state("")
 
-    let name = $state("")
-    let hide = $state(true)
-    let problems = $state([])
+    let pset: ProblemSet | undefined = $state()
 
     let problemName = $state("")
 
@@ -17,9 +18,13 @@
     async function getData() {
         let response: Response = await fetch(`/api/admin/pset/${ID}`)
         let json = await response.json()
-        name = json["pset"]["name"]
-        hide = json["pset"]["hide"]
-        problems = json["pset"]["problems"]
+
+        if (!response.ok) {
+            validRequest = false
+            message = json.description
+        }
+
+        pset = json.pset
     }
 
     async function editPset(event: Event) {
@@ -29,8 +34,8 @@
             method: "POST",
             body: JSON.stringify({
                 id: ID,
-                name: name,
-                hide: hide
+                name: pset!.name,
+                hide: pset!.hide
             }),
             headers: {
                 "Content-Type": "application/json; charset=UTF-8"
@@ -48,8 +53,8 @@
         let response: Response = await fetch(`/api/admin/pset/add/problem`, {
             method: "POST",
             body: JSON.stringify({
-                pset_id: ID,
-                problem_name: problemName 
+                psetID: pset!.id,
+                problemName: problemName 
             }),
             headers: {
                 "Content-Type": "application/json; charset=UTF-8"
@@ -110,44 +115,52 @@
 <div class="main-container">
     <h1>Edit Problem Set</h1>
 
-    <form onsubmit={editPset}>
-        <label for="name">Name</label>
-        <input name="name" type="text" bind:value={name}>
-        <br>
-        <label for="hide">Make Problem Set Hidden</label>
-        <input name="hide" type="checkbox" bind:checked={hide}>
-        <br>
-        <input type="submit" value="Update Problem Set">
-    </form>
+    {#await getData()}
+        <p>Loading...</p> 
+    {:then} 
+        {#if validRequest && pset !== undefined} 
+            <form onsubmit={editPset}>
+                <label for="name">Name</label>
+                <input name="name" type="text" bind:value={pset.name}>
+                <br>
+                <label for="hide">Make Problem Set Hidden</label>
+                <input name="hide" type="checkbox" bind:checked={pset.hide}>
+                <br>
+                <input type="submit" value="Update Problem Set">
+            </form>
 
-    <h2>PDF</h2>
-    <a href="/api/admin/pset/{ID}/pdf" target="_blank">Download Current PDF</a>
-    <form onsubmit={uploadPDF}>
-        <label for="pdf-upload">Upload New Pset PDF</label>
-        <input name="pdf-upload" type="file" bind:files>
-        <input type="submit" value="Upload PDF">
-    </form>
+            <h2>PDF</h2>
+            <a href="/api/admin/pset/{ID}/pdf" target="_blank">Download Current PDF</a>
+            <form onsubmit={uploadPDF}>
+                <label for="pdf-upload">Upload New Pset PDF</label>
+                <input name="pdf-upload" type="file" bind:files>
+                <input type="submit" value="Upload PDF">
+            </form>
 
-    <h2>Problems</h2>
-    <table>
-    <thead>
-        <tr>
-            <th>Name</th>
-        </tr>
-    </thead>
-    <tbody>
-    {#each problems as problem}
-        <tr class="pb-row">
-            <td><a href="/admin/problem?id={problem["id"]}">{problem["name"]}</a></td>
-        </tr>
-    {/each}
-    </tbody>
-    </table>
+            <h2>Problems</h2>
+            <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                </tr>
+            </thead>
+            <tbody>
+            {#each pset.problems as problem}
+                <tr class="pb-row">
+                    <td><a href="/admin/problem?id={problem.id}">{problem.name}</a></td>
+                </tr>
+            {/each}
+            </tbody>
+            </table>
 
-    <h2>Add Problem</h2>
-    <form onsubmit={addProblem}>
-        <label for="problem-name">Problem Name</label>
-        <input name="problem-name" type="text" bind:value={problemName}>
-        <input type="submit" value="Add Problem">
-    </form>
+            <h2>Add Problem</h2>
+            <form onsubmit={addProblem}>
+                <label for="problem-name">Problem Name</label>
+                <input name="problem-name" type="text" bind:value={problemName}>
+                <input type="submit" value="Add Problem">
+            </form>
+        {:else}
+            <p>{message}</p>
+        {/if}
+    {/await}
 </div>

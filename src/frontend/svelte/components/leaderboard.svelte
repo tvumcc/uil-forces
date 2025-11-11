@@ -11,11 +11,10 @@
         leaderboard = json.leaderboard
     }
 
-    onMount(() => {
-        getData()
-    })
+    onMount(getData)
 </script>
 
+<!-- svelte-ignore css_unused_selector -->
 <style>
     @import "../../style.css";
 

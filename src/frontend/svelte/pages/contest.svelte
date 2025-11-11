@@ -10,8 +10,8 @@
     let validRequest = $state(true)
     let message = $state("")
 
-    let contest: Contest | undefined = $state(undefined)
-    let leaderboard: Leaderboard
+    let contest: Contest | undefined = $state()
+    let leaderboard: Leaderboard | undefined = $state()
     let submissionProblemID = $state(-1)
 
     $effect(() => {
@@ -23,7 +23,7 @@
     })
 
     async function reloadLeaderboard() {
-        await leaderboard.getData()
+        await leaderboard!.getData()
     }
 
     async function getData() {
