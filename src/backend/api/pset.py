@@ -1,5 +1,6 @@
 import flask
 import flask_login
+import yaml
 
 import threading
 import datetime
@@ -253,3 +254,84 @@ def admin_pset_upload_pdf(id):
         return f"Successfully uploaded new PDF for problem set {pset.id} ({pset.name})"
     else:
         return "Invalid file type, please upload a PDF", 400
+
+@app.route("/api/admin/psets/import")
+@flask_login.login_required
+def admin_import_psets():
+    pass
+
+@app.route("/api/admin/psets/export")
+@flask_login.login_required
+def admin_export_psets():
+    """
+    Exports all of the problem sets in the database into a zip file 
+    containing all data files, PDFs, and a setup.yaml for specifying the data layout
+    """
+
+    if not flask_login.current_user.is_admin:
+        flask.abort(403)
+
+    try:
+        export_dir = "psets-export"
+        pdfs_dir = os.path.join(export_dir, "pdfs")
+        psets_dir = os.path.join(export_dir, "psets")
+        setup_file_path = os.path.join(export_dir, "setup.yaml")
+
+        os.mkdir(export_dir)
+        os.mkdir(pdfs_dir)
+        os.mkdir(psets_dir)
+
+        psets = db.session.query(ProblemSet).all()
+        problemsets = []
+        
+        for pset in psets:
+            pset_dir = os.path.join(psets_dir, pset.name)
+            student_data_dir = os.path.join(pset_dir, "student_data")
+
+            os.mkdir(pset_dir)
+            os.mkdir(student_data_dir)
+
+            problemsets.append({
+                "name": pset.name,
+                "pdf_path": pset.get_pdf_name(),
+                "problems": [{
+                    "name": problem.name,
+                    "note": problem.note,
+                    "pages": problem.pages,
+                    "use_stdin": problem.use_stdin,
+                    "student_data_file": problem.input_file_name,
+                    "input_data_file": problem.input_file_name,
+                    "output_data_file": os.path.splitext(problem.input_file_name)[0] + ".out" 
+                } for problem in pset.problems]
+            })
+
+            for problem in pset.problems:
+                output_file_name = os.path.splitext(problem.input_file_name)[0] + ".out"
+
+                if len(problem.student_input) > 0:
+                    with open(os.path.join(student_data_dir, problem.input_file_name), "w") as f:
+                        f.write(problem.student_input)
+                
+                if len(problem.judge_input) > 0:
+                    with open(os.path.join(pset_dir, problem.input_file_name), "w") as f:
+                        f.write(problem.judge_input)
+
+                with open(os.path.join(pset_dir, output_file_name), "w") as f:
+                    f.write(problem.judge_output)
+
+            shutil.copyfile(os.path.join("pdfs", pset.get_pdf_name()), os.path.join(pdfs_dir, pset.get_pdf_name()))
+
+        setup_config = {
+            "problemsets": problemsets
+        }
+
+        with open(setup_file_path, "w") as f:
+            yaml.dump(setup_config, f)
+
+        shutil.make_archive(export_dir, "zip", export_dir)
+        return flask.send_file(f"{export_dir}.zip")
+    finally:
+        try:
+            shutil.rmtree(export_dir)
+            os.remove(f"{export_dir}.zip")
+        except: pass

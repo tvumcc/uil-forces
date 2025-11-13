@@ -10,6 +10,9 @@
     // state for add pset section
     let name = $state()
 
+    let files: FileList = $state()!
+    let fileData: ArrayBuffer = $state(new ArrayBuffer(0))
+
     async function getData() {
         let response: Response = await fetch("/api/admin/psets")
         let json = await response.json()
@@ -39,6 +42,32 @@
             await getData()
         }
     }
+
+    async function importPsets(event: Event) {
+        event.preventDefault()
+
+        let formData = new FormData()
+        formData.append("psets", new Blob([fileData], { type: "application/zip" }), "psets.zip")
+
+        let response: Response = await fetch(`/api/admin/psets/import`, {
+            method: "POST",
+            body: formData
+        })
+
+        if (response.ok) {
+            await getData()
+        }
+    }
+
+    $effect(() => {
+        (async () => {
+            if (files) {
+                for (let file of files) {
+                    fileData = await file.arrayBuffer()
+                }
+            }
+        })()
+    })
 </script>
 
 <style>
@@ -63,6 +92,14 @@
                 <input name="name" type="text" bind:value={name}>
                 <input type="submit" value="Add Problem Set">
             </form>
+
+            <h2>Import Problem Sets</h2>
+            <form onsubmit={importPsets}>
+                <input name="import-psets" type="file" bind:files>
+                <input type="submit" value="Import Problem Sets">
+            </form>
+
+            <a href="/api/admin/psets/export" target="_blank">Export Problem Sets</a>
         {:else}
             <p>{message}</p>
         {/if}
