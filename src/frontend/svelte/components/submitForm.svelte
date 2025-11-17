@@ -30,7 +30,6 @@
         ["C++", "cpp"]
     ])
 
-    let files: FileList = $state()!
     let fileText = $state("")
     let codeText = $state("")
 
@@ -83,15 +82,18 @@
         }, 1000)
     }
 
-    $effect(() => {
-        (async () => {
-            if (files) {
-                for (let file of files) {
-                    fileText = await file.text()
-                }
+    async function loadFileFromInput(event: Event) {
+        let files = (event.currentTarget as HTMLInputElement).files
+        if (files) {
+            for (let file of files) {
+                fileText = await file.text()
             }
-        })()
-    })
+        }
+    }
+
+    function clearFileInput(event: Event) {
+        (event.currentTarget as HTMLInputElement).value = ""
+    }
 
     $effect(() => {
         const storedCode = localStorage.getItem(`problem_code_${submissionLanguage}_${submissionProblemID}`) || ""
@@ -163,7 +165,7 @@
 
             {#if submissionMethod === "uploadFile"}
                 <div>
-                    <input type="file" bind:files>
+                    <input type="file" oninput={loadFileFromInput} onclick={clearFileInput}>
                 </div>
             {/if}
         {/if}
