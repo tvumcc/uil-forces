@@ -11,6 +11,7 @@ import shutil
 from main import app
 from src.backend.orm import *
 from src.backend.judge import Status, assign_status
+from src.backend.log import log
 from sqlalchemy import desc
 
 def get_user_pset_submissions(pset: ProblemSet):
@@ -255,10 +256,91 @@ def admin_pset_upload_pdf(id):
     else:
         return "Invalid file type, please upload a PDF", 400
 
-@app.route("/api/admin/psets/import")
+@app.route("/api/admin/psets/import", methods=["POST"])
 @flask_login.login_required
 def admin_import_psets():
-    pass
+    if not flask_login.current_user.is_admin:
+        flask.abort(403)
+
+    try:
+        zip_name = "pset-import.zip"
+
+        import_dir = "psets-import"
+        pdfs_dir = os.path.join(import_dir, "pdfs")
+        psets_dir = os.path.join(import_dir, "psets")
+        setup_file_path = os.path.join(import_dir, "setup.yaml")
+
+        file = flask.request.files["psets"]
+        file.save(zip_name)
+        shutil.unpack_archive(zip_name, import_dir, "zip")
+
+        with open(os.path.join(import_dir, "setup.yaml"), "r") as f:
+            document = f.read()
+            setup_config = yaml.safe_load(document)
+
+            for problem_set in setup_config["problemsets"]:
+                pset_name = problem_set["name"]
+
+                if db.session.query(ProblemSet).filter_by(name=pset_name).first() is not None:
+                    log.info(f"Problem set '{pset_name}' already exists")
+                    continue
+
+                student_data_dir = os.path.join(psets_dir, pset_name, "student_data")
+                pset_dir = os.path.join(psets_dir, pset_name)
+                pdf_path = problem_set.get("pdf_path", "")
+                pset = ProblemSet(name=pset_name)
+
+                for problem in problem_set["problems"]:
+                    prob_name = problem["name"]
+                    note = problem.get("note", "")
+                    pages = problem.get("pages", "")
+                    use_stdin = problem.get("use_stdin", False)
+
+                    student_data_file = problem.get("student_input_file", str(prob_name).lower() + ".dat")
+                    input_data_file = problem.get("input_data_file", str(prob_name).lower() + ".dat")
+                    output_data_file = problem.get("output_data_file", str(prob_name).lower() + ".out")
+
+                    student_input = ""
+                    judge_input = ""
+                    judge_output = ""
+
+                    try:
+                        student_input = open(os.path.join(student_data_dir, student_data_file), "r").read()
+                    except FileNotFoundError:
+                        print(f"WARNING: problem {prob_name} student input file '{student_data_file}' does not exist in {student_data_dir}; Student input data will be blank")
+
+                    try:
+                        judge_input = open(os.path.join(pset_dir, input_data_file), "r").read()
+                    except FileNotFoundError:
+                        print(f"WARNING: problem {prob_name} input file '{input_data_file}' does not exist in {pset_dir}; Input data will be blank")
+
+                    try:
+                        judge_output = open(os.path.join(pset_dir, output_data_file), "r").read()
+                    except FileNotFoundError:
+                        print(f"ERROR: problem {prob_name} output file '{output_data_file}' does not exist in {pset_dir}; Aborting")
+
+                    db.session.add(Problem(
+                        name=prob_name,
+                        note=note,
+                        pages=pages,
+                        use_stdin=use_stdin,
+                        input_file_name=input_data_file,
+                        student_input=student_input,
+                        judge_input=judge_input,
+                        judge_output=judge_output,
+                        problem_set=pset
+                    ))
+
+                db.session.add(pset)
+                db.session.commit()
+                shutil.copyfile(os.path.join(pdfs_dir, pdf_path), os.path.join("pdfs", pset.get_pdf_name()))
+        
+        return f"Successfully imported {0} new problem sets"
+    finally:
+        shutil.rmtree(import_dir)
+        os.remove(zip_name)
+
+    return "Failed to import new problem sets"
 
 @app.route("/api/admin/psets/export")
 @flask_login.login_required

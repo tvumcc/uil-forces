@@ -8,7 +8,6 @@ from src.backend.orm import *
 
 db_name = "main.db"
 setup_file_name = "setup.yaml"
-config_file_name = "config.yaml"
 problem_set_path = "problemsets"
 student_data_path = "student_data"
 
@@ -39,7 +38,7 @@ def setup():
 
             session.add(User(username=username, password=password, is_admin=is_admin))
 
-        for problem_set in setup_config["problem_sets"]:
+        for problem_set in setup_config["problemsets"]:
             pset_name = problem_set["name"]
             pdf_path = problem_set.get("pdf_path", "")
             student_input_path = os.path.join(problem_set_path, pset_name, student_data_path)
