@@ -7,6 +7,7 @@ import enum
 import re
 
 from src.backend.orm import *
+from src.backend.log import *
 
 class Status(enum.Enum):
     Pending = 0
@@ -28,7 +29,7 @@ def get_submission_file_name(submission: Submission):
 
     match submission.language:
         case "Java":
-            regex = r"public\s+class\s+([A-Za-z$_][A-Za-z0-9$_]*).*\{"
+            regex = r"public\s+class\s+([A-Za-z$_][A-Za-z0-9$_]*).*\{*"
             match = re.search(regex, submission.code)
             return match.group(1) + ".java" if match else "error"
         case "Python":
@@ -92,17 +93,6 @@ def grade_submission(submission: Submission, timeout: int = 5):
     use_stdin = submission.problem.use_stdin
 
     try:
-        # Language specific setup
-        match submission.language:
-            case "Java":
-                # Set up Custom Security Manager Policy
-                policy_file_text = f'grant {{\n\tpermission java.io.FilePermission "{os.path.join(submission_dir, (submission.problem.name).lower())}.dat", "read";\n}};'
-                with open(os.path.join(submission_folder_name, "grading.policy"), "w") as f:
-                    f.write(policy_file_text)
-            case "Python": pass
-            case "C++": pass
-
-
         # Compilation
         language_compile_command = {
             "Java":   f"javac {filename}".split(),
@@ -121,7 +111,7 @@ def grade_submission(submission: Submission, timeout: int = 5):
         
         # Running
         language_run_command = {
-            "Java":   f"java -Djava.security.manager -Djava.security.policy=grading.policy {os.path.splitext(filename)[0]}".split(),
+            "Java":   f"java {os.path.splitext(filename)[0]}".split(),
             "Python": f"python {filename}".split(),
             "C++":    f"./{submission_folder_name}".split()
         }
@@ -156,7 +146,7 @@ def grade_submission(submission: Submission, timeout: int = 5):
         except subprocess.TimeoutExpired as e:
             return (Status.TimeLimitExceeded, "")
         except subprocess.CalledProcessError as e:
-            return (Status.ErrorRuntime, e.stderr.decode("utf-8")) 
+            return (Status.ErrorRuntime, e.stdout.decode("utf-8")) 
         except Exception as e:
             print(e)
             return (Status.ErrorServer, "")
