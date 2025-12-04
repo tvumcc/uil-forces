@@ -21,7 +21,6 @@ def submission(id):
     does not belong to the requesting user.
     """
 
-    practice_site = Settings.practice_site_enabled()
     submission = db.session.get(Submission, id)
     if not submission:
         flask.abort(404, description="Submission does not exist")
@@ -29,19 +28,15 @@ def submission(id):
     pset = submission.problem.pset
     user = submission.user
     contest_profile = submission.contest_profile
-    is_past_contest = contest_profile and not contest_profile.contest.past()
+    past_contest = contest_profile and contest_profile.contest.past()
 
-    if is_past_contest \
+    if not past_contest \
         and not flask_login.current_user.is_admin \
         and flask_login.current_user != user:
         flask.abort(403, description="Submission cannot be viewed at this time")
 
-    if not flask_login.current_user.is_admin and \
-        (practice_site and pset and pset.hide or is_past_contest):
-        return submission.shallow_serialize()
-
     return {
-        "submission": submission.serialize(admin_view=flask_login.current_user.is_admin)
+        "submission": submission.serialize(user=user, admin_view=flask_login.current_user.is_admin)
     }
 
 
