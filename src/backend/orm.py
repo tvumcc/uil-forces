@@ -6,6 +6,7 @@ from flask_login import UserMixin
 from typing import List, Optional
 import datetime
 from datetime import timezone
+import zoneinfo
 
 class Base(DeclarativeBase):
     pass
@@ -200,13 +201,23 @@ class Contest(db.Model):
         return [problem_link.problem for problem_link in self.problem_links]
 
     def past(self):
-        return datetime.datetime.now() > self.end_time
+        now = datetime.datetime.now().astimezone(tz=timezone.utc)
+        end = self.end_time.replace(tzinfo=zoneinfo.ZoneInfo("UTC"))
+
+        return now > end
 
     def ongoing(self):
-        return self.start_time < datetime.datetime.now() and datetime.datetime.now() < self.end_time
+        now = datetime.datetime.now().astimezone(tz=timezone.utc)
+        start = self.start_time.replace(tzinfo=zoneinfo.ZoneInfo("UTC"))
+        end = self.end_time.replace(tzinfo=zoneinfo.ZoneInfo("UTC"))
+
+        return start < now and now < end
 
     def upcoming(self):
-        return datetime.datetime.now() < self.start_time
+        now = datetime.datetime.now().astimezone(tz=timezone.utc)
+        start = self.start_time.replace(tzinfo=zoneinfo.ZoneInfo("UTC"))
+
+        return now < start
 
     def serialize(self):
         return self.shallow_serialize() | {
