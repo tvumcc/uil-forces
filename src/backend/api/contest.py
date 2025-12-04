@@ -211,12 +211,12 @@ def admin_contest_add_problem(id):
     problem_name = request["problemName"]
 
     contest = db.session.get(Contest, id)
-    problem_set = db.session.query(ProblemSet).filter_by(name=pset_name).first()
+    pset = db.session.query(ProblemSet).filter_by(name=pset_name).first()
     if not contest:
         flask.abort(404, description="Contest does not exist")
-    if not problem_set:
+    if not pset:
         flask.abort(404, description="Problem set does not exist")
-    problem = db.session.query(Problem).filter_by(problem_set=problem_set, name=problem_name).first()
+    problem = db.session.query(Problem).filter_by(pset=pset, name=problem_name).first()
     if not problem:
         flask.abort(404, description="Problem does not exist")
 

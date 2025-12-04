@@ -26,7 +26,7 @@ def submission(id):
     if not submission:
         flask.abort(404, description="Submission does not exist")
 
-    pset = submission.problem.problem_set
+    pset = submission.problem.pset
     user = submission.user
     contest_profile = submission.contest_profile
     is_past_contest = contest_profile and not contest_profile.contest.past()

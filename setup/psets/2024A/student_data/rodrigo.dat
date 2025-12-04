@@ -1,0 +1,14 @@
+5 8 2000
+Prague 4.3 321.43 9 2.7
+Milan 3.7 456.70 9 4.2
+Casablanca 2.6 134.52 5 3.8
+Paris 1.2 1000.03 10 2.5
+Beijing 3.5 300.54 7 3.9
+Prague Milan 400
+Milan Casablanca 700
+Prague Paris 550
+Casablanca Paris 700
+Dallas Paris 1200
+Dallas Casablanca 1100
+Milan Beijing 1800
+Casablanca Beijing 2000

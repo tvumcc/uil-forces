@@ -25,9 +25,7 @@ class ContestProblemAssociation(Base):
 class Settings(db.Model):
     __tablename__ = "settings"
 
-    id: Mapped[int] = mapped_column(primary_key=True)
-
-    key:   Mapped[str] = mapped_column(unique=True)
+    key:   Mapped[str] = mapped_column(primary_key=True)
     value: Mapped[str]
 
     def practice_site_enabled():
@@ -70,14 +68,14 @@ class User(UserMixin, db.Model):
         }
 
 class ProblemSet(db.Model):
-    __tablename__ = "problem_set"
+    __tablename__ = "pset"
     
     id: Mapped[int] = mapped_column(primary_key=True)
 
     name:     Mapped[str]  = mapped_column(unique=True)
     hide:     Mapped[bool] = mapped_column(default=False)
 
-    problems: Mapped[List["Problem"]] = relationship(back_populates="problem_set")
+    problems: Mapped[List["Problem"]] = relationship(back_populates="pset")
 
     def get_pdf_name(self):
         return f"pset{self.id}.pdf"
@@ -109,9 +107,9 @@ class Problem(db.Model):
     judge_input:     Mapped[str]  = mapped_column(default="")
     judge_output:    Mapped[str]  = mapped_column(default="")
 
-    problem_set_id = mapped_column(ForeignKey("problem_set.id"), nullable=False)
+    pset_id = mapped_column(ForeignKey("pset.id"), nullable=False)
 
-    problem_set: Mapped["ProblemSet"]       = relationship(back_populates="problems")
+    pset: Mapped["ProblemSet"]       = relationship(back_populates="problems")
     submissions: Mapped[List["Submission"]] = relationship(back_populates="problem")
 
     def serialize(self):
@@ -122,7 +120,7 @@ class Problem(db.Model):
             "studentInput": self.student_input,
             "judgeInput": self.judge_input,
             "judgeOutput": self.judge_output,
-            "problemSetID": self.problem_set_id,
+            "psetID": self.pset_id,
         }
 
     def shallow_serialize(self):

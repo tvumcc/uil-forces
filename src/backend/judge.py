@@ -241,7 +241,7 @@ def grade_submission_docker(submission: Submission, timeout: int = 5):
         except subprocess.CalledProcessError as e:
             return (Status.ErrorRuntime, e.stderr.decode("utf-8"))
         except Exception as e:
-            print(e)
+            log.error(e)
             return (Status.ErrorServer, "")
     finally:
         try: shutil.rmtree(submission_dir)

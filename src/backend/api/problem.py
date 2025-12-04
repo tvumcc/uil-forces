@@ -27,8 +27,8 @@ def problem_pdf(id):
                 problem_ongoing = True
                 break
     try:
-        if Settings.practice_site_enabled() and not problem.problem_set.hide or problem_ongoing:
-            pdf_path = os.path.join("pdfs", problem.problem_set.get_pdf_name())
+        if Settings.practice_site_enabled() and not problem.pset.hide or problem_ongoing:
+            pdf_path = os.path.join("pdfs", problem.pset.get_pdf_name())
             pages = [int(x)-1 for x in problem.pages.split()]
 
             if not os.path.exists(pdf_path) or len(pages) == 0:

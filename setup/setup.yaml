@@ -1,0 +1,38 @@
+practice_site: true 
+docker_grading: true
+users:
+  - username: tvumcc
+    password: globbler
+    admin: true
+  - username: piigle
+    password: jello
+  - username: acemavrick
+    password: lol
+psets:
+  - name: 2024A
+    pdf_path: 2024A.pdf
+    problems:
+      - name: Akansha
+        pages: 2
+      - name: Andrew
+        pages: 3
+      - name: Bautista
+        pages: 4
+      - name: Chuanli
+        pages: 5
+      - name: Dominika
+        pages: 6 7
+      - name: Gerald
+        pages: 8
+      - name: Hiro
+        pages: 9
+      - name: Joan
+        pages: 10
+      # - name: Manisha
+      #   pages: 11
+      # - name: Patryk
+      #   pages: 12
+      # - name: Rodrigo
+      #   pages: 13
+      # - name: Svetlana
+      #   pages: 14 15
