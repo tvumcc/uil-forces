@@ -76,6 +76,8 @@ class ProblemSet(db.Model):
     name:     Mapped[str]  = mapped_column(unique=True)
     hide:     Mapped[bool] = mapped_column(default=False)
 
+    grading_timeout: Mapped[float]  = mapped_column(default=5.0)
+
     problems: Mapped[List["Problem"]] = relationship(back_populates="pset")
 
     def get_pdf_name(self):
@@ -90,7 +92,8 @@ class ProblemSet(db.Model):
         return {
             "id": self.id,
             "name": self.name,
-            "hide": self.hide
+            "hide": self.hide,
+            "gradingTimeout": self.grading_timeout
         }
 
 class Problem(db.Model):

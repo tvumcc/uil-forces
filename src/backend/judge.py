@@ -69,16 +69,16 @@ def assign_status(submission, contest_profile, docker=False):
     with app.app_context():
         if submission.status == Status.Pending.value:
             if docker:
-                status, submission.output = grade_submission_docker(submission)
+                status, submission.output = grade_submission_docker(submission, submission.problem.pset.grading_timeout)
             else:
-                status, submission.output = grade_submission(submission)
+                status, submission.output = grade_submission(submission, submission.problem.pset.grading_timeout)
             submission.status = status.value
             if contest_profile is not None:
                 contest_profile.calculate_score()
             db.session.add(submission)
             db.session.commit()
 
-def grade_submission(submission: Submission, timeout: int = 5):
+def grade_submission(submission: Submission, timeout: float = 5.0):
     """
     Compiles (if necessary) and runs the code for the given submission using a local compiler/interpreter on PATH.
     If the amount of time it takes for the code to run exceeds the specified timeout, the status will be TimeLimitExceeded.
@@ -154,7 +154,7 @@ def grade_submission(submission: Submission, timeout: int = 5):
         try: shutil.rmtree(submission_dir)
         except: pass
 
-def grade_submission_docker(submission: Submission, timeout: int = 5):
+def grade_submission_docker(submission: Submission, timeout: float = 5.0):
     """
     Compiles (if necessary) and runs the code for the given submission using Docker containers.
     If the amount of time it takes for the code to run exceeds the specified timeout, the status will be TimeLimitExceeded.

@@ -170,10 +170,12 @@ def admin_update_pset():
     id = request["id"]
     name = request["name"]
     hide = request["hide"]
+    grading_timeout = request["gradingTimeout"]
 
     pset = db.session.get(ProblemSet, id)
     pset.name = name
     pset.hide = hide
+    pset.grading_timeout = grading_timeout
 
     db.session.add(pset)
     db.session.commit()

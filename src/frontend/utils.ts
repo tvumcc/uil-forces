@@ -89,6 +89,7 @@ export interface ProblemSet {
     id: number
     name: string
     hide: boolean
+    gradingTimeout: number
     problems?: Problem[]
     submissions?: Submission[]
 }

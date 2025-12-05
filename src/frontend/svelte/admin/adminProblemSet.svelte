@@ -34,7 +34,8 @@
             body: JSON.stringify({
                 id: ID,
                 name: pset!.name,
-                hide: pset!.hide
+                hide: pset!.hide,
+                gradingTimeout: pset!.gradingTimeout
             }),
             headers: {
                 "Content-Type": "application/json; charset=UTF-8"
@@ -121,6 +122,9 @@
                 <br>
                 <label for="hide">Make Problem Set Hidden</label>
                 <input name="hide" type="checkbox" bind:checked={pset.hide}>
+                <br>
+                <label for="timeout">Grading Timeout (seconds)</label>
+                <input name="timeout" type="number" step="any" bind:value={pset.gradingTimeout}>
                 <br>
                 <input type="submit" value="Update Problem Set">
             </form>

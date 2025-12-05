@@ -76,9 +76,9 @@ def import_from_directory(import_dir):
                     pages = problem.get("pages", "")
                     use_stdin = problem.get("use_stdin", False)
 
-                    student_data_file = problem.get("student_input_file", str(problem_name).lower() + ".dat")
                     input_data_file = problem.get("input_data_file", str(problem_name).lower() + ".dat")
                     output_data_file = problem.get("output_data_file", str(problem_name).lower() + ".out")
+                    student_data_file = problem.get("student_input_file", input_data_file)
 
                     student_input = ""
                     judge_input = ""
