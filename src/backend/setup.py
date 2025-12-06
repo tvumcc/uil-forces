@@ -21,12 +21,15 @@ def init_new_db():
         print(f"{db_name} already exists! Use setup to make an entirely new database.")
         return False
 
-    engine = sqlalchemy.create_engine(f"sqlite:///{db_name}")
+    engine = sqlalchemy.create_engine(
+        f"sqlite:///{db_name}", 
+        connect_args={"check_same_thread": False}
+    )
     Base.metadata.create_all(engine)
     session: Session = Session(engine)
     
     session.add(Settings(key="practice_site", value="true"))
-    session.add(Settings(key="docker_grading", value="true"))
+    session.add(Settings(key="docker_grading", value="false"))
     session.commit()
     session.close()
 

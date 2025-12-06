@@ -1,5 +1,5 @@
 practice_site: true 
-docker_grading: true
+docker_grading: false 
 users:
   - username: tvumcc
     password: globbler

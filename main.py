@@ -1,12 +1,19 @@
 import flask
 import flask_login
-import sqlalchemy
+from sqlalchemy import event
+from sqlalchemy.engine import Engine
 from werkzeug.exceptions import HTTPException
 
 import os
 
 from src.backend.orm import *
 from src.backend.judge import *
+
+@event.listens_for(Engine, "connect")
+def set_sqlite_pragma(dbapi_connection, connection_record):
+    cursor = dbapi_connection.cursor()
+    cursor.execute("PRAGMA foreign_keys=ON")
+    cursor.close()
 
 app = flask.Flask(__name__, static_folder="./dist", static_url_path="")
 app.secret_key = open("secret.txt", "r").read().strip()
@@ -21,8 +28,8 @@ from src.backend.api.pset import *
 from src.backend.api.submission import *
 from src.backend.api.settings import *
 
-with app.app_context():
-    db.create_all()
+if not os.path.exists("main.db"):
+    print("Initialize the database first by running setup.py")
 
 login_manager = flask_login.LoginManager()
 login_manager.init_app(app)

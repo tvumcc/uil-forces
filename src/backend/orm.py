@@ -15,13 +15,14 @@ db = SQLAlchemy(model_class=Base)
 
 class ContestProblemAssociation(Base):
     __tablename__ = "contest_problem_link"
-    contest_id: Mapped[int] = mapped_column(ForeignKey("contest.id"), primary_key=True)
-    problem_id: Mapped[int] = mapped_column(ForeignKey("problem.id"), primary_key=True)
+    contest_id: Mapped[int] = mapped_column(ForeignKey("contest.id", ondelete="CASCADE"), primary_key=True)
+    problem_id: Mapped[int] = mapped_column(ForeignKey("problem.id", ondelete="CASCADE"), primary_key=True)
 
     correct_score:     Mapped[int] = mapped_column(default=60)
     incorrect_penalty: Mapped[int] = mapped_column(default=5)
 
-    problem: Mapped["Problem"] = relationship()
+    contest: Mapped["Contest"] = relationship(back_populates="problem_links")
+    problem: Mapped["Problem"] = relationship(back_populates="contest_links")
 
 class Settings(db.Model):
     __tablename__ = "settings"
@@ -114,7 +115,8 @@ class Problem(db.Model):
     pset_id = mapped_column(ForeignKey("pset.id"), nullable=False)
 
     pset: Mapped["ProblemSet"]       = relationship(back_populates="problems")
-    submissions: Mapped[List["Submission"]] = relationship(back_populates="problem")
+    submissions: Mapped[List["Submission"]] = relationship(back_populates="problem", passive_deletes=True)
+    contest_links: Mapped[List["ContestProblemAssociation"]] = relationship(back_populates="problem", passive_deletes=True)
 
     def serialize(self):
         return self.shallow_serialize() | {
@@ -154,8 +156,8 @@ class Submission(db.Model):
     output:      Mapped[str] = mapped_column(default="")
     language:    Mapped[str]
 
-    problem_id         = mapped_column(ForeignKey("problem.id"), nullable=False)
-    user_id            = mapped_column(ForeignKey("user.id"), nullable=False)
+    problem_id         = mapped_column(ForeignKey("problem.id", ondelete="CASCADE"))
+    user_id            = mapped_column(ForeignKey("user.id"))
     contest_profile_id = mapped_column(ForeignKey("contest_profile.id"))
 
     problem:         Mapped["Problem"]                  = relationship(back_populates="submissions")
@@ -203,7 +205,7 @@ class Contest(db.Model):
     show_leaderboard:  Mapped[bool] = mapped_column(default=True)
     show_pdf:          Mapped[bool] = mapped_column(default=False)
 
-    problem_links:    Mapped[List["ContestProblemAssociation"]] = relationship()
+    problem_links:    Mapped[List["ContestProblemAssociation"]] = relationship(back_populates="contest")
     contest_profiles: Mapped[List["ContestProfile"]] = relationship(back_populates="contest")
 
     def problems(self):

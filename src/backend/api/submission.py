@@ -65,7 +65,7 @@ def admin_submissions_paged(page):
 @app.route("/api/admin/submission/<id>/delete", methods=["DELETE"])
 @flask_login.login_required
 def admin_submission_delete(id):
-    """Removes the specified submission from the database, updating contest scores accordingly"""
+    """Removes the specified submission from the database"""
 
     if not flask_login.current_user.is_admin:
         flask.abort(403)
@@ -73,10 +73,6 @@ def admin_submission_delete(id):
     submission = db.session.get(Submission, id)
     if not submission:
         return flask.abort(404, description="Submission does not exist")
-
-    if submission.contest_profile:
-        submission.contest_profile.calculate_score()
-        db.session.add(submission.contest_profile)
 
     db.session.delete(submission)
     db.session.commit()

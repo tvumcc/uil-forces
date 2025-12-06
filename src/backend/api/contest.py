@@ -133,6 +133,9 @@ def contest_leaderboard(id):
 
         leaderboard = []
         for profile in contest_profiles:
+            profile.calculate_score()
+            db.session.add(profile)
+
             if len(profile.valid_submissions()) > 0:
                 leaderboard_entry = {
                     "user": profile.user.shallow_serialize(),
@@ -140,6 +143,8 @@ def contest_leaderboard(id):
                     "problemsSolved": profile.problem_status_list()
                 }
                 leaderboard.append(leaderboard_entry)
+
+        db.session.commit()
 
         return {"leaderboard": leaderboard}
     else: return {}
@@ -229,11 +234,6 @@ def admin_contest_add_problem(id):
 
     contest.problem_links.append(problem_link)
     db.session.add(contest)
-
-    for profile in contest.contest_profiles:
-        profile.calculate_score()
-        db.session.add(profile)
-
     db.session.commit()
 
     return f"Successfully linked problem {problem.id} ({problem.name}) to contest {id} ({contest.name})"
@@ -259,10 +259,6 @@ def admin_contest_add_pset(id):
             problem_link = ContestProblemAssociation(problem=problem)
             db.session.add(problem_link)
             contest.problem_links.append(problem_link)
-
-    for profile in contest.contest_profiles:
-        profile.calculate_score()
-        db.session.add(profile)
 
     db.session.add(contest)
     db.session.commit()
@@ -375,7 +371,7 @@ def admin_update_contest_problems():
         flask.abort(404, description="Contest does not exist")
 
     for problem in problems:
-        problem_link = db.session.query(ContestProblemAssociation).filter_by(contest_id=contest.id, problem_id=problem["id"]).first()
+        problem_link = db.session.query(ContestProblemAssociation).filter_by(contest_id=contest.id, problem_id=problem["problem"]["id"]).first()
         if problem_link:
             problem_link.correct_score = problem["correctScore"]
             problem_link.incorrect_penalty = problem["incorrectPenalty"]

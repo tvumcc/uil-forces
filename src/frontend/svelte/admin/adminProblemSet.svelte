@@ -82,6 +82,15 @@
         }
     }
 
+    async function deleteProblem(problemID: number) {
+        let response: Response = await fetch(`/api/admin/problem/${problemID}/delete`, {
+            method: "DELETE"
+        })
+        if (response.ok) {
+            await getData()
+        }
+    }
+
     $effect(() => {
         (async () => {
             if (files) {
@@ -142,12 +151,14 @@
             <thead>
                 <tr>
                     <th>Name</th>
+                    <th>Action</th>
                 </tr>
             </thead>
             <tbody>
             {#each pset.problems as problem}
                 <tr class="pb-row">
                     <td><a href="/admin/problem?id={problem.id}">{problem.name}</a></td>
+                    <td><button onclick={() => deleteProblem(problem.id)}>Delete</button></td>
                 </tr>
             {/each}
             </tbody>

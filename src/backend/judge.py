@@ -74,7 +74,9 @@ def assign_status(submission, contest_profile, docker=False):
                 status, submission.output = grade_submission(submission, submission.problem.pset.grading_timeout)
             submission.status = status.value
             if contest_profile is not None:
+                contest_profile = db.session.merge(contest_profile)
                 contest_profile.calculate_score()
+            submission = db.session.merge(submission)
             db.session.add(submission)
             db.session.commit()
 

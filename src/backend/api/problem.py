@@ -98,3 +98,19 @@ def admin_update_problem():
     log.info(f"Problem {problem.id} ({problem.name}) updated by {flask_login.current_user.username}")
 
     return f"Successfully updated problem {problem.id}"
+
+@app.route("/api/admin/problem/<id>/delete", methods=["DELETE"])
+@flask_login.login_required
+def admin_delete_problem(id):
+    """Deletes the specified problem and its submissions"""
+
+    problem = db.session.get(Problem, id) 
+    if not problem:
+        return flask.abort(404, description="Problem does not exist")
+
+    # submissions = problem.submissions
+
+    db.session.delete(problem)
+    db.session.commit()
+
+    return f"Successfully deleted problem {id}"
