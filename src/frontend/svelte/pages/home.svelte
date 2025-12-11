@@ -1,12 +1,13 @@
 <script lang="ts">
     import MenuBar from "../components/menuBar.svelte"
-    import type {Contest} from "../../utils"
+    import type {Contest, User} from "../../utils"
 
     let validRequest = $state(true)
     let message = $state("")
 
     let ongoingContests: Contest[] = $state([])
     let upcomingContests: Contest[] = $state([])
+    let userLeaderboard: [User, number][] = $state([])
 
     async function getData() {
         let response: Response = await fetch("/api/contests")
@@ -19,6 +20,14 @@
 
         ongoingContests = json.ongoing
         upcomingContests = json.upcoming
+
+        let leaderboardResponse: Response = await fetch("/api/users/leaderboard")
+        let leaderboardJson = await leaderboardResponse.json()
+
+        console.log(leaderboardJson)
+        for (let i = 0; i < leaderboardJson.length; i++) {
+            userLeaderboard.push([leaderboardJson[i].user, leaderboardJson[i].problemsSolved])
+        }
     }
 </script>
 
@@ -34,6 +43,27 @@
         <p>Loading...</p>
     {:then} 
         {#if validRequest}
+            <h2>Leaderboard</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th>User</th>
+                        <th>Problems Solved</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {#each userLeaderboard as leaderboardEntry, i}
+                        <tr>
+                            <td>{i+1}.</td>
+                            <td>{leaderboardEntry[0].username}</td>
+                            <td>{leaderboardEntry[1]}</td>
+                        </tr>
+                    {/each}
+                </tbody>
+
+            </table>
+
             {#if ongoingContests.length > 0}
                 <h2>Ongoing Contests</h2>
                 {#each ongoingContests as contest}

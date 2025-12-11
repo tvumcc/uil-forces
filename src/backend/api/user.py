@@ -1,5 +1,6 @@
 import flask
 import flask_login
+import sqlalchemy
 
 from main import app
 from src.backend.orm import *
@@ -67,6 +68,32 @@ def user():
     """Returns JSON data for the currently logged in user"""
 
     return {"user": flask_login.current_user.shallow_serialize()}
+
+@app.route("/api/user/<id>/problems")
+@flask_login.login_required
+def user_problems(id):
+    """Returns how many unique problems the specified user has solved"""
+
+    user = db.session.get(User, id)
+    if not user:
+        return flask.abort(404, description="User does not exist")
+
+    return {
+        "user": user.shallow_serialize(),
+        "problemsSolved": user.problems_solved()
+    }
+
+@app.route("/api/users/leaderboard")
+@flask_login.login_required
+def users_leaderboard():
+    """Returns the top 10 users ranked by number of unique problems solved"""
+
+    users = sorted(db.session.query(User).all(), key=lambda user: user.problems_solved(), reverse=True)[:10]
+
+    return [{
+        "user": user.shallow_serialize(),
+        "problemsSolved": user.problems_solved()
+    } for user in users]
 
 
 

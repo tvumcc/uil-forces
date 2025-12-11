@@ -57,6 +57,14 @@ class User(UserMixin, db.Model):
     contest_profiles: Mapped[List["ContestProfile"]] = relationship(back_populates="user") 
     submissions:      Mapped[List["Submission"]]     = relationship(back_populates="user")
 
+    def problems_solved(self):
+        problems = set()
+        submission: Submission
+        for submission in self.submissions:
+            if submission.status == 1:
+                problems.add(submission.problem.id)
+        return len(problems)
+
     def serialize(self):
         return self.shallow_serialize() | {
             "password": self.password,

@@ -108,8 +108,6 @@ def admin_delete_problem(id):
     if not problem:
         return flask.abort(404, description="Problem does not exist")
 
-    # submissions = problem.submissions
-
     db.session.delete(problem)
     db.session.commit()
 
