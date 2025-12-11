@@ -1,6 +1,7 @@
 <script lang="ts">
     let username = $state()
     let password = $state()
+    let invalidLogin = $state(false)
 
     async function login(event: Event) {
         event.preventDefault()
@@ -15,12 +16,15 @@
                 "Content-Type": "application/json; charset=UTF-8"
             }
         })
-        let json = await response.json()
 
         if (response.ok) {
+            let json = await response.json()
             if (json.loginSuccess) {
                 window.location.href = json.redirect
             }
+        } else {
+            invalidLogin = true
+            console.log("HELLO? 2")
         }
     }
 </script>
@@ -68,6 +72,11 @@
     <form onsubmit={login}>
         <div class="form-region">
             <h1>UIL Forces</h1>
+        </div>
+        <div class="form-region">
+            {#if invalidLogin}
+                <p>Invalid Login</p>
+            {/if}
         </div>
         <div class="form-region">
             <label for="username">Username:</label>

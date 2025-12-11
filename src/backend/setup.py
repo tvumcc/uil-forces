@@ -1,9 +1,10 @@
 import yaml
-import os
 import sqlalchemy
-import datetime
-import shutil
+from werkzeug.security import generate_password_hash 
 from sqlalchemy.orm import Session
+
+import os
+import shutil
 
 from src.backend.orm import *
 from src.backend.log import log
@@ -59,9 +60,9 @@ def import_from_directory(import_dir):
 
                 existing_user = db.session.query(User).filter_by(username=username).first()
                 if existing_user is not None:
-                    db.session.merge(User(id=existing_user.id, username=username, password=password, is_admin=is_admin))
+                    db.session.merge(User(id=existing_user.id, username=username, password_hash=generate_password_hash(password), is_admin=is_admin))
                 else:
-                    db.session.add(User(username=username, password=password, is_admin=is_admin))
+                    db.session.add(User(username=username, password_hash=generate_password_hash(password), is_admin=is_admin))
 
             for pset_config in setup_config["psets"]:
                 pset_name = pset_config["name"]

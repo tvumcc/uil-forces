@@ -39,6 +39,9 @@
 <div class="main-container">
     <h1>Home</h1>
 
+    <p>Welcome to UIL Forces Beta!</p>
+    <p>Visit the <a href="https://github.com/tvumcc/uil-forces">GitHub repository</a> to report bugs and contribute to development.</p>
+
     {#await getData()}
         <p>Loading...</p>
     {:then} 

@@ -59,7 +59,6 @@
         {#if validRequest} 
             {#each users as user}
                 <a href="/user?id={user["id"]}">{user.username} {user.isAdmin ? "(admin)" : ""}</a>
-                <p>Password: {user.password}</p>
                 <br>
             {/each}
 

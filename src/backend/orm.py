@@ -51,7 +51,7 @@ class User(UserMixin, db.Model):
     id: Mapped[int] = mapped_column(primary_key=True)
 
     username: Mapped[str]  = mapped_column(unique=True)
-    password: Mapped[str]
+    password_hash: Mapped[str]
     is_admin: Mapped[bool] = mapped_column(default=False)
 
     contest_profiles: Mapped[List["ContestProfile"]] = relationship(back_populates="user") 
@@ -66,9 +66,7 @@ class User(UserMixin, db.Model):
         return len(problems)
 
     def serialize(self):
-        return self.shallow_serialize() | {
-            "password": self.password,
-        }
+        return self.shallow_serialize()
 
     def shallow_serialize(self):
         return {

@@ -18,6 +18,7 @@
     "vite": "^7.0.4"
   },
   "dependencies": {
-    "ace-builds": "^1.43.3"
+    "ace-builds": "^1.43.3",
+    "fast-glob": "^3.3.3"
   }
 }

@@ -1,5 +1,6 @@
 import flask
 import flask_login
+from werkzeug.security import generate_password_hash, check_password_hash
 import sqlalchemy
 
 from main import app
@@ -17,7 +18,7 @@ def login():
     login_success = False
     user = db.session.query(User).filter_by(username=username).first()
 
-    if user is not None and user.password == password:
+    if user is not None and check_password_hash(user.password_hash, password):
         flask_login.login_user(db.session.get(User, user.id))
         login_success = True
         log.info(f"User '{user.username}' logged in")
@@ -49,7 +50,7 @@ def register():
 
     user = User(
         username=username,
-        password=password,
+        password_hash=generate_password_hash(password),
         is_admin=False
     )
     db.session.add(user)
@@ -127,7 +128,7 @@ def admin_add_user():
 
     db.session.add(User(
         username=username,
-        password=password,
+        password_hash=generate_password_hash(password),
         is_admin=is_admin
     ))
     db.session.commit()
