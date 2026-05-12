@@ -61,7 +61,7 @@ class User(UserMixin, db.Model):
         problems = set()
         submission: Submission
         for submission in self.submissions:
-            if submission.status == 1:
+            if submission.valid() and submission.status == 1:
                 problems.add(submission.problem.id)
         return len(problems)
 
@@ -196,6 +196,9 @@ class Submission(db.Model):
             "problem": self.problem.shallow_serialize(),
             "language": self.language
         } | ({} if not self.contest_profile else {"contestProfile": self.contest_profile.shallow_serialize()})
+
+    def valid(self):
+        return self.problem is not None
 
 
 class Contest(db.Model):

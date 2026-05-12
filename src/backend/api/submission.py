@@ -22,10 +22,9 @@ def submission(id):
     """
 
     submission = db.session.get(Submission, id)
-    if not submission:
+    if submission is None or not submission.valid():
         flask.abort(404, description="Submission does not exist")
 
-    pset = submission.problem.pset
     user = submission.user
     contest_profile = submission.contest_profile
     past_contest = contest_profile and contest_profile.contest.past()
@@ -58,8 +57,13 @@ def admin_submissions_paged(page):
     if len(submissions) == 0:
         flask.abort(400)
 
+    submissions_json = []
+    for submission in submissions:
+        if submission is not None and submission.valid():
+            submissions_json.append(submission.shallow_serialize())
+
     return {
-        "submissions": [submission.shallow_serialize() for submission in submissions]
+        "submissions": submissions_json
     }
 
 @app.route("/api/admin/submission/<id>/delete", methods=["DELETE"])

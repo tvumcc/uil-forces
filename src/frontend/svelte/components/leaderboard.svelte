@@ -25,7 +25,7 @@
     }
 
     td {
-        border: 1px gray solid;
+        border: 0px gray solid;
         margin: 0;
         padding: 8px;
         text-align: center;
