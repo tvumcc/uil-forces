@@ -133,13 +133,20 @@
         border-collapse: collapse;
     }
 
+    td {
+        padding: 4px;
+    }
+
     .pb-row td {
-        border: 1px gray solid;
+        border: 0;
         margin: 0;
         padding: 8px;
         text-align: left;
     }
     
+    .full-width {
+        width: 100%;
+    }
 </style>
 
 <MenuBar />
@@ -150,22 +157,34 @@
     {:then} 
         {#if validRequest && contest !== undefined}
             <form onsubmit={editContest}>
-                <label for="name">Name</label>
-                <input name="name" type="text" bind:value={contest.name}>
-                <label for="start-time">Start Time</label>
-                <input name="start-time" type="datetime-local" bind:value={contest.startTime}>
-                <label for="end-time">End Time</label>
-                <input name="end-time" type="datetime-local" bind:value={contest.endTime}>
-                <br>
-                <label for="show-pdf">Show PDF Problem Statement Viewer</label>
-                <input name="show-pdf" type="checkbox" bind:checked={contest.showPdf}>
-                <br>
-                <label for="show-leaderboard">Show Leaderboard</label>
-                <input name="show-leaderboard" type="checkbox" bind:checked={contest.showLeaderboard}>
-                <br>
-                <label for="allowed-languages">Allowed Languages (space separated)</label>
-                <input name="allowed-languages" type="text" bind:value={contest.allowedLanguages}>
-                <br>
+                <table>
+                    <tbody>
+                        <tr>
+                            <td><label for="name">Name</label></td>
+                            <td><input name="name" type="text" bind:value={contest.name} class="full-width"></td>
+                        </tr>
+                        <tr>
+                            <td><label for="start-time">Start Time</label></td>
+                            <td><input name="start-time" type="datetime-local" bind:value={contest.startTime} class="full-width"></td>
+                        </tr>
+                        <tr>
+                            <td><label for="end-time">End Time</label></td>
+                            <td><input name="end-time" type="datetime-local" bind:value={contest.endTime} class="full-width"></td>
+                        </tr>
+                        <tr>
+                            <td><label for="allowed-languages">Allowed Languages (space separated)</label></td>
+                            <td><input name="allowed-languages" type="text" bind:value={contest.allowedLanguages} class="full-width"></td>
+                        </tr>
+                        <tr>
+                            <td><label for="show-pdf">Show PDF Problem Statement Viewer</label></td>
+                            <td><input name="show-pdf" type="checkbox" bind:checked={contest.showPdf}></td>
+                        </tr>
+                        <tr>
+                            <td><label for="show-leaderboard">Show Leaderboard</label></td>
+                            <td><input name="show-leaderboard" type="checkbox" bind:checked={contest.showLeaderboard}></td>
+                        </tr>
+                    </tbody>
+                </table>
                 <input type="submit" value="Update Contest">
             </form>
 
@@ -201,10 +220,18 @@
 
             <h2>Add Problem</h2>
             <form onsubmit={addProblem}>
-                <label for="problem-pset-name">Problem Set Name</label>
-                <input name="problem-pset-name" type="text" bind:value={problemPsetName}>
-                <label for="problem-name">Problem Name</label>
-                <input name="problem-name" type="text" bind:value={problemName}>
+                <table>
+                    <tbody>
+                        <tr>
+                            <td><label for="problem-pset-name">Problem Set Name</label></td>
+                            <td><input name="problem-pset-name" type="text" bind:value={problemPsetName}></td>
+                        </tr>
+                        <tr>
+                            <td><label for="problem-name">Problem Name</label></td>
+                            <td><input name="problem-name" type="text" bind:value={problemName}></td>
+                        </tr>
+                    </tbody>
+                </table>
                 <input type="submit" value="Add Problem">
             </form>
         {:else}

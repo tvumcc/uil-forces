@@ -64,12 +64,18 @@
     {:then} 
         {#if validRequest && settings !== undefined} 
             <form onsubmit={editSettings}>
-                <label for="practice-site">Enable Practice</label>
-                <input name="practice-site" type="checkbox" bind:checked={settings.practice_site}>
-                <br>
-                <label for="docker-grading">Use Docker Grading</label>
-                <input name="docker-grading" type="checkbox" bind:checked={settings.docker_grading}>
-                <br>
+                <table>
+                    <tbody>
+                        <tr>
+                            <td><label for="practice-site">Enable Practice</label></td>
+                            <td><input name="practice-site" type="checkbox" bind:checked={settings.practice_site}></td>
+                        </tr>
+                        <tr>
+                            <td><label for="docker-grading">Use Docker Grading</label></td>
+                            <td><input name="docker-grading" type="checkbox" bind:checked={settings.docker_grading}></td>
+                        </tr>
+                    </tbody>
+                </table>
                 <input type="submit" value="Update Settings">
             </form>
         {:else}

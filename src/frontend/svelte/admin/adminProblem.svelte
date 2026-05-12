@@ -79,7 +79,6 @@
         padding: 8px;
         text-align: left;
     }
-    
 </style>
 
 <MenuBar />
@@ -91,18 +90,26 @@
     {:then} 
         {#if validRequest && problem !== undefined}
             <form onsubmit={editProblem}>
-                <label for="name">Name</label>
-                <input name="name" type="text" bind:value={problem.name}>
-                <br>
-                <label for="pages">PDF Pages</label>
-                <input name="pages" type="text" bind:value={problem.pages}>
-                <br>
-                <label for="use-stdin">Use Standard Input</label>
-                <input name="use-stdin" type="checkbox" bind:checked={problem.useStdin}>
-                <br>
-                <label for="input-file-name">Input File Name</label>
-                <input name="input-file-name" type="text" bind:value={problem.inputFileName}>
-                <br>
+                <table>
+                    <tbody>
+                        <tr>
+                            <td><label for="name">Name</label></td>
+                            <td><input name="name" type="text" bind:value={problem.name}></td>
+                        </tr>
+                        <tr>
+                            <td><label for="pages">PDF Pages</label></td>
+                            <td><input name="pages" type="text" bind:value={problem.pages}></td>
+                        </tr>
+                        <tr>
+                            <td><label for="use-stdin">Use Standard Input</label></td>
+                            <td><input name="use-stdin" type="checkbox" bind:checked={problem.useStdin}></td>
+                        </tr>
+                        <tr>
+                            <td><label for="input-file-name">Input File Name</label></td>
+                            <td><input name="input-file-name" type="text" bind:value={problem.inputFileName}></td>
+                        </tr>
+                    </tbody>
+                </table>
 
                 <div use:fillEditors>
                     <h3>Student Input</h3>
