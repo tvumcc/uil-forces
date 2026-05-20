@@ -3,9 +3,7 @@ import os
 from src.backend.orm import *
 from src.backend.setup import *
 
-setup_path = "setup"
-
-if __name__ == "__main__":
+def setup(setup_path = "setup"):
     if init_new_db():
         if not os.path.exists(setup_path):
             print(f"Setup directory './{setup_path}' does not exist! Aborting...")

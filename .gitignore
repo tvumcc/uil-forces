@@ -28,3 +28,7 @@ run
 secret.txt
 pdfs/
 setup/
+pyinstaller-dist
+pyinstaller-build
+_internal
+main

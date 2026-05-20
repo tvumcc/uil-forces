@@ -4,7 +4,7 @@ import pypdf
 
 import os
 
-from main import app
+from main import app, runtime_dir
 from src.backend.orm import *
 from src.backend.log import log
 
@@ -28,7 +28,7 @@ def problem_pdf(id):
                 break
     try:
         if Settings.practice_site_enabled() and not problem.pset.hide or problem_ongoing:
-            pdf_path = os.path.join("pdfs", problem.pset.get_pdf_name())
+            pdf_path = os.path.join(runtime_dir, "pdfs", problem.pset.get_pdf_name())
             pages = [int(x)-1 for x in problem.pages.split()]
 
             if not os.path.exists(pdf_path) or len(pages) == 0:
@@ -41,10 +41,11 @@ def problem_pdf(id):
                 if page > 0 and page <= len(reader.pages):
                     writer.add_page(reader.pages[page])
 
-            temp_pdf = f"pdfs/problem{id}.pdf"
+            temp_pdf = os.path.join(runtime_dir, "pdfs", f"problem{id}.pdf")
             with open(temp_pdf, "wb") as output_pdf:
                 writer.write(output_pdf)
-            return flask.send_from_directory(app.root_path, temp_pdf)
+            response = flask.send_from_directory(os.path.join(runtime_dir, "pdfs"), f"problem{id}.pdf")
+            return response
         else:
             return f"PDF for problem {id} cannot be accessed at this time", 403
     finally:

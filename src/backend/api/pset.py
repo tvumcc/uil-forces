@@ -8,7 +8,7 @@ from datetime import timezone
 import os
 import shutil
 
-from main import app
+from main import app, runtime_dir
 from src.backend.orm import *
 from src.backend.setup import *
 from src.backend.judge import Status, assign_status
@@ -113,7 +113,7 @@ def pset_data(id):
 
     if Settings.practice_site_enabled() and not pset.hide:
         try:
-            dirname = f"pset{pset.id}-student-data"
+            dirname = os.path.join(runtime_dir, f"pset{pset.id}-student-data")
             os.mkdir(dirname)
 
             for problem in pset.problems:
@@ -237,7 +237,7 @@ def admin_pset_pdf(id):
     pset = db.session.get(ProblemSet, id)
     if not pset:
         flask.abort(404, description="Problem set does not exist")
-    return flask.send_from_directory(app.root_path, os.path.join("pdfs", pset.get_pdf_name()))
+    return flask.send_from_directory(runtime_dir, os.path.join("pdfs", pset.get_pdf_name()))
 
 @app.route("/api/admin/pset/<id>/uploadpdf", methods=["POST"])
 @flask_login.login_required
@@ -253,7 +253,7 @@ def admin_pset_upload_pdf(id):
         flask.abort(404, description="Problem set does not exist")
 
     if file:
-        filepath = os.path.join(app.root_path, "pdfs", pset.get_pdf_name())
+        filepath = os.path.join(runtime_dir, "pdfs", pset.get_pdf_name())
         file.save(filepath)
         return f"Successfully uploaded new PDF for problem set {pset.id} ({pset.name})"
     else:
@@ -272,7 +272,7 @@ def admin_import_psets():
 
     try:
         zip_name = "pset-import.zip"
-        import_dir = "psets-import"
+        import_dir = os.path.join(runtime_dir, "psets-import")
 
         file = flask.request.files["psets"]
         file.save(zip_name)
@@ -302,7 +302,7 @@ def admin_export_psets():
         flask.abort(403)
 
     try:
-        export_dir = "psets-export"
+        export_dir = os.path.join(runtime_dir, "psets-export")
         export_psets(export_dir)
         return flask.send_file(f"{export_dir}.zip")
     finally:

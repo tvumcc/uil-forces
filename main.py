@@ -4,10 +4,11 @@ from sqlalchemy import event
 from sqlalchemy.engine import Engine
 from werkzeug.exceptions import HTTPException
 
-import os
+import os, sys
 
 from src.backend.orm import *
 from src.backend.judge import *
+import setup
 
 @event.listens_for(Engine, "connect")
 def set_sqlite_pragma(dbapi_connection, connection_record):
@@ -15,9 +16,26 @@ def set_sqlite_pragma(dbapi_connection, connection_record):
     cursor.execute("PRAGMA foreign_keys=ON")
     cursor.close()
 
-app = flask.Flask(__name__, static_folder="./dist", static_url_path="")
-app.secret_key = open("secret.txt", "r").read().strip()
-app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{os.path.abspath("main.db")}"
+def resource_path(relative_path):
+    if hasattr(sys, '_MEIPASS'):
+        base_path = sys._MEIPASS
+    else:
+        base_path = os.path.abspath(".")
+    return os.path.join(base_path, relative_path)
+
+if hasattr(sys, '_MEIPASS'):
+    runtime_dir = os.path.dirname(sys.executable)
+else:
+    runtime_dir = os.path.abspath(".")
+
+app = flask.Flask(__name__, static_folder=resource_path("./dist"), static_url_path="")
+
+secret_path = os.path.join(runtime_dir, "secret.txt")
+app.secret_key = open(secret_path, "r").read().strip()
+
+db_path = os.path.join(runtime_dir, "main.db")
+app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{db_path}"
+
 db.init_app(app)
 
 from src.backend.pages import *
@@ -47,4 +65,19 @@ def error_handler(e):
     }, e.code
 
 if __name__ == "__main__":
-    app.run(debug=False, host="0.0.0.0", port=5173)
+    print("UIL Forces")
+    print("Possible actions:")
+    print("1. Run server")
+    print("2. Start server setup")
+
+    terminating_action = False
+    while not terminating_action:
+        action = input("Please specify an action: ")
+        if action == "1":
+            app.run(debug=False, host="0.0.0.0", port=5173)
+            terminating_action = True
+        elif action == "2":
+            setup.setup()
+            print("Successfully completed setup.")
+        else:
+            print("Invalid action.")

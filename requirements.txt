@@ -1,3 +1,4 @@
+altgraph==0.17.5
 APScheduler==3.11.0
 blinker==1.9.0
 click==8.2.1
@@ -11,9 +12,12 @@ itsdangerous==2.2.0
 Jinja2==3.1.6
 MarkupSafe==3.0.2
 packaging==25.0
+pyinstaller==6.20.0
+pyinstaller-hooks-contrib==2026.5
 pypdf==6.0.0
 python-dateutil==2.9.0.post0
 PyYAML==6.0.2
+setuptools==82.0.1
 six==1.17.0
 SQLAlchemy==2.0.42
 typing_extensions==4.14.1
