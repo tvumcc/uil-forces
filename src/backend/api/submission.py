@@ -54,8 +54,6 @@ def admin_submissions_paged(page):
 
     per_page = 20
     submissions = db.session.query(Submission).order_by(Submission.submit_time.desc()).limit(per_page).offset((int(page) - 1) * per_page).all()
-    if len(submissions) == 0:
-        flask.abort(400)
 
     submissions_json = []
     for submission in submissions:
