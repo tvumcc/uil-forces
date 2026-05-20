@@ -32,3 +32,4 @@ pyinstaller-dist
 pyinstaller-build
 _internal
 main
+!example-setup-dir/pdfs
