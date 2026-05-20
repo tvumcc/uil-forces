@@ -8,6 +8,8 @@ There is a PDF viewer to read problem statements, the option of an in-browser co
 
 Setup only needs to be done once for each instance of UIL Forces. It is done to initialize the database with all of the problem sets, PDFs, and data files.
 
+Before setup, make sure to add a secret key (any form of text) in a file called `secret.txt` located in the root directory. This directory will also contain the database file which will be created after going through the following steps.
+
 After running the project, select action 2: "Start server setup". This will scan the working directory for a folder named `setup` with a file structure as depicted below:
 
 <p align="center"><img src="screenshots/setup_file_structure.png"></p>
