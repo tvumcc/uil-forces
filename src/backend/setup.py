@@ -7,7 +7,7 @@ import os
 import shutil
 
 from src.backend.orm import *
-from src.backend.log import log
+from src.backend.utils import log
 
 db_name = "main.db"
 pdfs_path = "pdfs"

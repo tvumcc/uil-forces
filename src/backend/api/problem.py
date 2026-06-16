@@ -6,10 +6,10 @@ import os
 
 from main import app, runtime_dir
 from src.backend.orm import *
-from src.backend.log import log
+from src.backend.utils import log, user_required, admin_required
 
 @app.route("/api/problem/<id>/pdf")
-@flask_login.login_required
+@user_required
 def problem_pdf(id):
     """Returns a section of the problem set PDF for the specified problem"""
 
@@ -59,12 +59,9 @@ def problem_pdf(id):
 
 
 @app.route("/api/admin/problem/<id>")
-@flask_login.login_required
+@admin_required
 def admin_problem(id):
     """Return JSON data for the queried problem"""
-
-    if not flask_login.current_user.is_admin:
-        flask.abort(403)
         
     problem = db.session.get(Problem, id) 
     if not problem:
@@ -73,12 +70,9 @@ def admin_problem(id):
     return {"problem": problem.serialize()}
 
 @app.route("/api/admin/update/problem", methods=["POST"])
-@flask_login.login_required
+@admin_required
 def admin_update_problem():
     """Updates the specified problem with the provided new values"""
-
-    if not flask_login.current_user.is_admin:
-        flask.abort(403)
 
     request = flask.request.get_json()
     problem = db.session.get(Problem, request["id"]) 
@@ -101,7 +95,7 @@ def admin_update_problem():
     return f"Successfully updated problem {problem.id}"
 
 @app.route("/api/admin/problem/<id>/delete", methods=["DELETE"])
-@flask_login.login_required
+@admin_required
 def admin_delete_problem(id):
     """Deletes the specified problem and its submissions"""
 

@@ -3,10 +3,10 @@ import flask_login
 
 from main import app
 from src.backend.orm import *
-from src.backend.log import log
+from src.backend.utils import log, user_required, admin_required
 
 @app.route("/api/submission/<id>")
-@flask_login.login_required
+@user_required
 def submission(id):
     """
     Returns JSON data for the queried submission
@@ -45,12 +45,9 @@ def submission(id):
 
 
 @app.route("/api/admin/submissions/<page>")
-@flask_login.login_required
+@admin_required
 def admin_submissions_paged(page):
     """Returns a 1-indexed page out of all of the submissions in the database"""
-
-    if not flask_login.current_user.is_admin: 
-        flask.abort(403)
 
     per_page = 20
     submissions = db.session.query(Submission).order_by(Submission.submit_time.desc()).limit(per_page).offset((int(page) - 1) * per_page).all()
@@ -65,12 +62,9 @@ def admin_submissions_paged(page):
     }
 
 @app.route("/api/admin/submission/<id>/delete", methods=["DELETE"])
-@flask_login.login_required
+@admin_required
 def admin_submission_delete(id):
     """Removes the specified submission from the database"""
-
-    if not flask_login.current_user.is_admin:
-        flask.abort(403)
 
     submission = db.session.get(Submission, id)
     if not submission:

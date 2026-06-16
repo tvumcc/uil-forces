@@ -7,7 +7,7 @@ import enum
 import re
 
 from src.backend.orm import *
-from src.backend.log import *
+from src.backend.utils import *
 
 class Status(enum.Enum):
     Pending = 0

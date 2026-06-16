@@ -49,7 +49,7 @@ Then build the backend:
 ```bash
 # Setup virtual environment
 python -m venv .venv
-.venv/bin/activate.bat # Windows Only
+.venv\Scripts\activate.bat # Windows Only
 source .venv/bin/activate # MacOS & Linux Only
 pip install -r requirements.txt
 ```

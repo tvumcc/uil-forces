@@ -3,15 +3,12 @@ import flask_login
 
 from main import app
 from src.backend.orm import *
-from src.backend.log import log
+from src.backend.utils import log, admin_required
 
 @app.route("/api/admin/settings")
-@flask_login.login_required
+@admin_required
 def admin_settings():
     """Returns JSON data for the current configuration of the site-wide settings"""
-
-    if not flask_login.current_user.is_admin:
-        flask.abort(403)
 
     settings = db.session.query(Settings).all()
     out = {}
@@ -23,12 +20,9 @@ def admin_settings():
     return {"settings": out}
 
 @app.route("/api/admin/update/settings", methods=["POST"])
-@flask_login.login_required
+@admin_required
 def admin_update_settings():
     """Updates the site-wide settings with new values"""
-
-    if not flask_login.current_user.is_admin:
-        flask.abort(403)
 
     request = flask.request.get_json()
     for key, value in request.items():

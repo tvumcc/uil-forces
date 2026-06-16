@@ -10,9 +10,10 @@ import shutil
 from main import app
 from src.backend.orm import *
 from src.backend.judge import Status, assign_status
+from src.backend.utils import log, user_required, admin_required
 
 @app.route("/api/contests")
-@flask_login.login_required
+@user_required
 def contests():
     """Returns JSON of 3 lists of contests: upcoming, ongoing, and past, all based on their start and end times"""
 
@@ -32,7 +33,7 @@ def contests():
     return out
 
 @app.route("/api/contest/<id>")
-@flask_login.login_required
+@user_required
 def contest(id):
     """
     Returns JSON data for the specfied contest depending on if it is upcoming, ongoing, or past
@@ -64,7 +65,7 @@ def contest(id):
     }
 
 @app.route("/api/contest/submit", methods=["POST"])
-@flask_login.login_required
+@user_required
 def submit_contest_problem():
     """
     Processes a user's request to submit code to a problem in this contest.
@@ -120,7 +121,7 @@ def submit_contest_problem():
     }
 
 @app.route("/api/contest/<id>/leaderboard")
-@flask_login.login_required
+@user_required
 def contest_leaderboard(id):
     """Returns the current leaderboard for this contest as long as the setting is enabled to show leaderboard and the contest is ongoing or past"""
 
@@ -150,7 +151,7 @@ def contest_leaderboard(id):
     else: return {}
 
 @app.route("/api/contest/<id>/data")
-@flask_login.login_required
+@user_required
 def contest_data(id):
     contest = db.session.get(Contest, id)
     if not contest:
@@ -180,22 +181,16 @@ def contest_data(id):
 
 
 @app.route("/api/admin/contests")
-@flask_login.login_required
+@admin_required
 def admin_contests():
     """Returns a list of all contests (upcoming, ongoing, past) contained within the database"""
-
-    if not flask_login.current_user.is_admin:
-        flask.abort(403)
 
     return {"contests": [contest.shallow_serialize() for contest in db.session.query(Contest).all()]}
 
 @app.route("/api/admin/contest/<id>")
-@flask_login.login_required
+@admin_required
 def admin_contest(id):
     """Returns JSON data for the queried contest"""
-
-    if not flask_login.current_user.is_admin:
-        flask.abort(403)
 
     contest = db.session.get(Contest, id)
     if not contest:
@@ -204,12 +199,9 @@ def admin_contest(id):
     return {"contest": contest.serialize()}
 
 @app.route("/api/admin/contest/<id>/add/problem", methods=["POST"])
-@flask_login.login_required
+@admin_required
 def admin_contest_add_problem(id):
     """Creates a link between and an existing problem and the specified contest"""
-
-    if not flask_login.current_user.is_admin:
-        flask.abort(403)
 
     request = flask.request.get_json()
     pset_name = request["psetName"]
@@ -239,12 +231,9 @@ def admin_contest_add_problem(id):
     return f"Successfully linked problem {problem.id} ({problem.name}) to contest {id} ({contest.name})"
 
 @app.route("/api/admin/contest/<id>/add/pset", methods=["POST"])
-@flask_login.login_required
+@admin_required
 def admin_contest_add_pset(id):
     """Creates a link between all of the problems in a problem set and the specified contest"""
-
-    if not flask_login.current_user.is_admin:
-        flask.abort(403)
 
     request = flask.request.get_json()
     pset_name = request["psetName"]
@@ -266,12 +255,9 @@ def admin_contest_add_pset(id):
     return f"Successfully added problem set {pset.id} ({pset.name}) to contest {contest.id} ({contest.name})"
 
 @app.route("/api/admin/contest/unlinkproblem", methods=["POST"])
-@flask_login.login_required
+@admin_required
 def admin_contest_unlink_problem():
     """Removes the link between the specified contest and problem"""
-
-    if not flask_login.current_user.is_admin:
-        flask.abort(403)
 
     request = flask.request.get_json()
     contest_id = request["contestID"]
@@ -301,12 +287,9 @@ def admin_contest_unlink_problem():
     return f"Successfully unlinked problem {problem.id} ({problem.name}) from contest {contest.id} ({contest.name})"
 
 @app.route("/api/admin/update/contest", methods=["POST"])
-@flask_login.login_required
+@admin_required
 def admin_update_contest():
     """Updates the specified contest with the provided new values"""
-
-    if not flask_login.current_user.is_admin:
-        flask.abort(403)
     
     request = flask.request.get_json()
     id = request["id"]
@@ -331,12 +314,9 @@ def admin_update_contest():
     return f"Successfully updated contest {contest.id} ({contest.name})"
 
 @app.route("/api/admin/add/contest", methods=["POST"])
-@flask_login.login_required
+@admin_required
 def admin_add_contest():
     """Creates a new contest with a name, start time, and end time"""
-
-    if not flask_login.current_user.is_admin:
-        flask.abort(403)
     
     request = flask.request.get_json()
 
@@ -355,12 +335,9 @@ def admin_add_contest():
     return f"Successfully added new contest {contest.id} ({contest.name})"
 
 @app.route("/api/admin/contest/updateproblems", methods=["POST"])
-@flask_login.login_required
+@admin_required
 def admin_update_contest_problems():
     """Updates the scoring of the specified contest's problems and refreshes all contest profiles' scores accordingly"""
-
-    if not flask_login.current_user.is_admin:
-        flask.abort(403)
     
     request = flask.request.get_json()
     contest_id = request["contestID"]

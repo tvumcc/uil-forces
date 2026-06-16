@@ -5,7 +5,7 @@ import sqlalchemy
 
 from main import app
 from src.backend.orm import *
-from src.backend.log import log
+from src.backend.utils import log, user_required, admin_required
 
 @app.route("/api/login", methods=["GET", "POST"])
 def login():
@@ -64,14 +64,14 @@ def register():
     }
 
 @app.route("/api/user")
-@flask_login.login_required
+@user_required
 def user():
     """Returns JSON data for the currently logged in user"""
 
     return {"user": flask_login.current_user.shallow_serialize()}
 
 @app.route("/api/user/<id>/problems")
-@flask_login.login_required
+@user_required
 def user_problems(id):
     """Returns how many unique problems the specified user has solved"""
 
@@ -81,19 +81,19 @@ def user_problems(id):
 
     return {
         "user": user.shallow_serialize(),
-        "problemsSolved": user.problems_solved()
+        "problemsSolved": user.num_problems_solved()
     }
 
 @app.route("/api/users/leaderboard")
-@flask_login.login_required
+@user_required
 def users_leaderboard():
     """Returns the top 10 users ranked by number of unique problems solved"""
 
-    users = sorted(db.session.query(User).all(), key=lambda user: user.problems_solved(), reverse=True)[:10]
+    users = sorted(db.session.query(User).all(), key=lambda user: user.num_problems_solved(), reverse=True)[:10]
 
     return [{
         "user": user.shallow_serialize(),
-        "problemsSolved": user.problems_solved()
+        "problemsSolved": user.num_problems_solved()
     } for user in users]
 
 
@@ -103,22 +103,16 @@ def users_leaderboard():
 
 
 @app.route("/api/admin/users")
-@flask_login.login_required
+@admin_required
 def admin_users():
     """Returns a list of all users"""
-
-    if not flask_login.current_user.is_admin:
-        flask.abort(403)
 
     return {"users": [user.serialize() for user in db.session.query(User).all()]}
 
 @app.route("/api/admin/add/user", methods=["POST"])
-@flask_login.login_required
+@admin_required
 def admin_add_user():
     """Adds a new user to the database given its username, password, and admin status"""
-
-    if not flask_login.current_user.is_admin:
-        flask.abort(400)
 
     request = flask.request.get_json()
 

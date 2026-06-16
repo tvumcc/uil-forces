@@ -67,7 +67,6 @@
         <h1>UIL Forces</h1>
         <a class="link" href="/">Home</a>
         <a class="link" href="/contests">Contests</a>
-        <a class="link" href="/psets">Practice</a>
         {#if user !== undefined && user.isAdmin}
             <a class="link" href="/admin">Admin</a>
         {/if}
