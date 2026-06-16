@@ -7,7 +7,7 @@ from werkzeug.exceptions import HTTPException
 import os, sys
 
 from src.backend.orm import *
-from src.backend.judge import *
+from src.backend.setup import *
 import setup
 
 @event.listens_for(Engine, "connect")
@@ -31,7 +31,11 @@ else:
 app = flask.Flask(__name__, static_folder=resource_path("./dist"), static_url_path="")
 
 secret_path = os.path.join(runtime_dir, "secret.txt")
-app.secret_key = open(secret_path, "r").read().strip()
+try:
+    app.secret_key = open(secret_path, "r").read().strip()
+except:
+    print("No secret key found. In the root directory, create a file named 'secret.txt' containing the secret key.")
+    exit()
 
 db_path = os.path.join(runtime_dir, "main.db")
 app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{db_path}"
@@ -45,9 +49,6 @@ from src.backend.api.contest import *
 from src.backend.api.pset import *
 from src.backend.api.submission import *
 from src.backend.api.settings import *
-
-if not os.path.exists("main.db"):
-    print("Initialize the database first by running setup.py")
 
 login_manager = flask_login.LoginManager()
 login_manager.init_app(app)
@@ -69,15 +70,21 @@ if __name__ == "__main__":
     print("Possible actions:")
     print("1. Run server")
     print("2. Start server setup")
+    print("3. Quit")
 
     terminating_action = False
     while not terminating_action:
         action = input("Please specify an action: ")
         if action == "1":
-            app.run(debug=False, host="0.0.0.0", port=5173)
-            terminating_action = True
+            if not os.path.exists("main.db"):
+                print("A database does not yet exist for this instance. Select '2. Start server setup' to create it.")
+            else:
+                app.run(debug=False, host="0.0.0.0", port=5173)
+                terminating_action = True
         elif action == "2":
             setup.setup()
             print("Successfully completed setup.")
+        elif action == "3":
+            terminating_action = True
         else:
             print("Invalid action.")

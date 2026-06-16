@@ -1,13 +1,12 @@
 import flask
 import flask_login
 from werkzeug.security import generate_password_hash, check_password_hash
-import sqlalchemy
 
 from main import app
 from src.backend.orm import *
-from src.backend.utils import log, user_required, admin_required
+from src.backend.utils import log, admin_required
 
-@app.route("/api/login", methods=["GET", "POST"])
+@app.route("/api/login", methods=["POST"])
 def login():
     """Logs in the client as an existing user"""
 
@@ -15,20 +14,15 @@ def login():
     username = str(response["username"])
     password = str(response["password"])
 
-    login_success = False
     user = db.session.query(User).filter_by(username=username).first()
 
     if user is not None and check_password_hash(user.password_hash, password):
         flask_login.login_user(db.session.get(User, user.id))
-        login_success = True
         log.info(f"User '{user.username}' logged in")
     else:
         return "Login failed; invalid credentials", 400
 
-    return {
-        "redirect": flask.url_for("index_page"),
-        "loginSuccess": login_success
-    }
+    return {"redirect": flask.url_for("index_page")}
 
 @app.route("/api/logout")
 def logout():
@@ -58,20 +52,17 @@ def register():
 
     flask_login.login_user(db.session.get(User, user.id))
 
-    return {
-        "redirect": flask.url_for("index_page"),
-        "loginSuccess": True
-    }
+    return {"redirect": flask.url_for("index_page")}
 
 @app.route("/api/user")
-@user_required
+@flask_login.login_required
 def user():
     """Returns JSON data for the currently logged in user"""
 
     return {"user": flask_login.current_user.shallow_serialize()}
 
 @app.route("/api/user/<id>/problems")
-@user_required
+@flask_login.login_required
 def user_problems(id):
     """Returns how many unique problems the specified user has solved"""
 
@@ -85,16 +76,17 @@ def user_problems(id):
     }
 
 @app.route("/api/users/leaderboard")
-@user_required
+@flask_login.login_required
 def users_leaderboard():
     """Returns the top 10 users ranked by number of unique problems solved"""
 
-    users = sorted(db.session.query(User).all(), key=lambda user: user.num_problems_solved(), reverse=True)[:10]
+    ranked = sorted(
+        ((user, user.num_problems_solved()) for user in db.session.query(User).all()),
+        key=lambda entry: entry[1],
+        reverse=True
+    )[:10]
 
-    return [{
-        "user": user.shallow_serialize(),
-        "problemsSolved": user.num_problems_solved()
-    } for user in users]
+    return [{"user": user.shallow_serialize(), "problemsSolved": count} for user, count in ranked]
 
 
 
@@ -107,7 +99,7 @@ def users_leaderboard():
 def admin_users():
     """Returns a list of all users"""
 
-    return {"users": [user.serialize() for user in db.session.query(User).all()]}
+    return {"users": [user.shallow_serialize() for user in db.session.query(User).all()]}
 
 @app.route("/api/admin/add/user", methods=["POST"])
 @admin_required

@@ -30,20 +30,9 @@ class Settings(db.Model):
     key:   Mapped[str] = mapped_column(primary_key=True)
     value: Mapped[str]
 
-    def practice_site_enabled():
-        practice_site = db.session.query(Settings).filter_by(key="practice_site").first()
-        return practice_site and practice_site.value.lower() == "true"
-
     def docker_grading_enabled():
         docker_grading = db.session.query(Settings).filter_by(key="docker_grading").first()
         return docker_grading and docker_grading.value.lower() == "true"
-
-    def serialize(self):
-        return {
-            "id": self.id,
-            "key": self.key,
-            "value": self.value
-        }
 
 class User(UserMixin, db.Model):
     __tablename__ = "user"
@@ -64,9 +53,6 @@ class User(UserMixin, db.Model):
             if submission.valid() and submission.status == 1:
                 problems.add(submission.problem.id)
         return len(problems)
-
-    def serialize(self):
-        return self.shallow_serialize()
 
     def shallow_serialize(self):
         return {
@@ -169,10 +155,7 @@ class Submission(db.Model):
     contest_profile: Mapped[Optional["ContestProfile"]] = relationship(back_populates="submissions")
 
     def serialize(self, user=None, admin_view=False):
-        practice_site = Settings.practice_site_enabled()
-
-        io = {} if (self.contest_profile and not self.contest_profile.contest.is_past() \
-                    or practice_site and self.problem.pset and self.problem.pset.hide) \
+        io = {} if self.contest_profile and not self.contest_profile.contest.is_past() \
                     and not admin_view else {
             "output": self.output,
             "judgeInput": self.problem.judge_input,
@@ -300,11 +283,9 @@ class ContestProfile(db.Model):
         score = 0
 
         for problem_status in self.problem_status_list():
-            problem_link = db.session.query(ContestProblemAssociation).filter_by(contest_id=self.contest_id, problem_id=problem_status[0]).first()
-
             if problem_status[1] > 0:
-                score += problem_link.correct_score
-                score -= problem_status[2] * problem_link.incorrect_penalty
+                score += problem_status[3]
+                score -= problem_status[2] * problem_status[4]
 
         self.score = score
         return score

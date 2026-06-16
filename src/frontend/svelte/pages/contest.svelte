@@ -45,7 +45,6 @@
 
     .horizontal-split {
         display: flex;
-        /* grid-template-columns: 1fr 1fr; */
         width: 100%;
         height: 100%;
 

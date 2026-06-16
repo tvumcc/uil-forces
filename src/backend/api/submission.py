@@ -3,18 +3,16 @@ import flask_login
 
 from main import app
 from src.backend.orm import *
-from src.backend.utils import log, user_required, admin_required
+from src.backend.utils import log, admin_required
 
 @app.route("/api/submission/<id>")
-@user_required
+@flask_login.login_required
 def submission(id):
     """
     Returns JSON data for the queried submission
     
-    The submission's output, judge input, and judge output can potentially
-    be hidden based on multiple factors:
-    - if both the practice site and associated ProblemSet are hidden
-    - or if the submission belongs to an ongoing or upcoming contest
+    The submission's output, judge input, and judge output are hidden
+    while the submission belongs to an ongoing or upcoming contest.
     
     If the submission belongs to an ongoing or upcoming contest,
     the submission cannot be accessed (even without the i/o) if the submission

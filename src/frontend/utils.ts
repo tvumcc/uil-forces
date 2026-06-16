@@ -87,7 +87,6 @@ export interface Submission {
 export interface ProblemSet {
     id: number
     name: string
-    hide: boolean
     gradingTimeout: number
     problems?: Problem[]
     submissions?: Submission[]
@@ -100,6 +99,5 @@ export interface LeaderboardEntry {
 }
 
 export interface Settings {
-    practice_site: boolean
     docker_grading: boolean
 }

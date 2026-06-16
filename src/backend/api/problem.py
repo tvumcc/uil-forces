@@ -6,10 +6,10 @@ import os
 
 from main import app, runtime_dir
 from src.backend.orm import *
-from src.backend.utils import log, user_required, admin_required
+from src.backend.utils import log, admin_required
 
 @app.route("/api/problem/<id>/pdf")
-@user_required
+@flask_login.login_required
 def problem_pdf(id):
     """Returns a section of the problem set PDF for the specified problem"""
 
@@ -17,17 +17,14 @@ def problem_pdf(id):
     if not problem:
         flask.abort(404)
 
-    # Only allow access to the problem's PDF if the practice site is enabled and the problem set is not hidden 
-    # or if there is an ongoing contest with the problem
-    contests = db.session.query(Contest).all()
+    # Only allow access to the problem's PDF during an ongoing contest with PDFs enabled
     problem_ongoing = False
-    for contest in contests:
-        if contest.is_ongoing() and contest.show_pdf:
-            if problem in contest.problems():
-                problem_ongoing = True
-                break
+    for contest in db.session.query(Contest).all():
+        if contest.is_ongoing() and contest.show_pdf and problem in contest.problems():
+            problem_ongoing = True
+            break
     try:
-        if Settings.practice_site_enabled() and not problem.pset.hide or problem_ongoing:
+        if problem_ongoing:
             pdf_path = os.path.join(runtime_dir, "pdfs", problem.pset.get_pdf_name())
             pages = [int(x)-1 for x in problem.pages.split()]
 

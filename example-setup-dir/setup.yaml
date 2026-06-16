@@ -1,4 +1,3 @@
-practice_site: true 
 docker_grading: false 
 users:
   - username: example-admin 

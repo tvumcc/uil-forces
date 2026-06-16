@@ -24,7 +24,6 @@
         let leaderboardResponse: Response = await fetch("/api/users/leaderboard")
         let leaderboardJson = await leaderboardResponse.json()
 
-        console.log(leaderboardJson)
         for (let i = 0; i < leaderboardJson.length; i++) {
             userLeaderboard.push([leaderboardJson[i].user, leaderboardJson[i].problemsSolved])
         }

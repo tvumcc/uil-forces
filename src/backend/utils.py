@@ -15,13 +15,6 @@ log.addHandler(console_handler)
 console_handler.setFormatter(formatter)
 log.setLevel(logging.INFO)
 
-def user_required(f):
-    @functools.wraps(f)
-    @flask_login.login_required
-    def decorated_function(*args, **kwargs):
-        return f(*args, **kwargs)
-    return decorated_function
-
 def admin_required(f):
     @functools.wraps(f)
     @flask_login.login_required

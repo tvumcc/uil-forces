@@ -19,12 +19,9 @@
 
         if (response.ok) {
             let json = await response.json()
-            if (json.loginSuccess) {
-                window.location.href = json.redirect
-            }
+            window.location.href = json.redirect
         } else {
             invalidLogin = true
-            console.log("HELLO? 2")
         }
     }
 </script>

@@ -18,9 +18,7 @@
         let json = await response.json()
 
         if (response.ok) {
-            if (json.loginSuccess) {
-                window.location.href = json.redirect
-            }
+            window.location.href = json.redirect
         }
     }
 </script>

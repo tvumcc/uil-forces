@@ -25,7 +25,6 @@
         let response: Response = await fetch("/api/admin/update/settings", {
             method: "POST",
             body: JSON.stringify({
-                practice_site: settings!.practice_site,
                 docker_grading: settings!.docker_grading
             }),
             headers: {
@@ -66,10 +65,6 @@
             <form onsubmit={editSettings}>
                 <table>
                     <tbody>
-                        <tr>
-                            <td><label for="practice-site">Enable Practice</label></td>
-                            <td><input name="practice-site" type="checkbox" bind:checked={settings.practice_site}></td>
-                        </tr>
                         <tr>
                             <td><label for="docker-grading">Use Docker Grading</label></td>
                             <td><input name="docker-grading" type="checkbox" bind:checked={settings.docker_grading}></td>

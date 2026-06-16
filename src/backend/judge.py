@@ -1,5 +1,3 @@
-from sqlalchemy.orm import Session
-
 import os
 import shutil
 import subprocess
@@ -20,6 +18,10 @@ class Status(enum.Enum):
 
 def get_submission_folder_name(id):
     return f"submission{id}"
+
+def normalize_output(text: str) -> str:
+    text = text.replace("\r\n", "\n").replace("\r", "\n")
+    return "\n".join(line.rstrip() for line in text.strip().splitlines())
 
 def get_submission_file_name(submission: Submission):
     """
@@ -86,9 +88,7 @@ def grade_submission(submission: Submission, timeout: float = 5.0):
     Returns a tuple of the form (status, output)
     """
 
-    id = submission.id
     filename = get_submission_file_name(submission)
-    submission_folder_name = get_submission_folder_name(id)
     submission_dir = setup_submission_for_grading(submission)
     use_stdin = submission.problem.use_stdin
 
@@ -116,7 +116,7 @@ def grade_submission(submission: Submission, timeout: float = 5.0):
 
         try:
             if use_stdin:
-                with open(os.path.join(submission_folder_name, submission.problem.input_file_name), "rb") as f:
+                with open(os.path.join(submission_dir, submission.problem.input_file_name), "rb") as f:
                     run_status = subprocess.run(
                         language_run_command[submission.language], 
                         capture_output=True, 
@@ -135,11 +135,8 @@ def grade_submission(submission: Submission, timeout: float = 5.0):
                 )
 
             # Check Output
-            run_output = run_status.stdout.decode("utf-8")
-            submission_output = run_output.replace("\r\n", "\n").replace("\r", "\n")
-            submission_output = "\n".join([x.rstrip() for x in submission_output.strip().splitlines()])
-            judge_output = submission.problem.judge_output.replace("\r\n", "\n").replace("\r", "\n")
-            judge_output = "\n".join([x.rstrip() for x in judge_output.strip().splitlines()])
+            submission_output = normalize_output(run_status.stdout.decode("utf-8"))
+            judge_output = normalize_output(submission.problem.judge_output)
             return (Status.Accepted if submission_output == judge_output else Status.WrongAnswer, submission_output)
         except subprocess.TimeoutExpired as e:
             return (Status.TimeLimitExceeded, "")
@@ -160,9 +157,8 @@ def grade_submission_docker(submission: Submission, timeout: float = 5.0):
     Returns a tuple of the form (status, output)
     """
 
-    id = submission.id
     filename = get_submission_file_name(submission)
-    submission_folder_name = get_submission_folder_name(id)
+    submission_folder_name = get_submission_folder_name(submission.id)
     submission_dir = setup_submission_for_grading(submission)
     container_id = ""
     use_stdin = submission.problem.use_stdin
@@ -187,9 +183,6 @@ def grade_submission_docker(submission: Submission, timeout: float = 5.0):
             cwd=submission_dir
         )
 
-        print(compile_status.stdout.decode("utf-8"))
-        print(compile_status.stderr.decode("utf-8"))
-
         if compile_status.returncode != 0:
             return (Status.ErrorCompile, compile_status.stderr.decode("utf-8"))
 
@@ -201,25 +194,18 @@ def grade_submission_docker(submission: Submission, timeout: float = 5.0):
 
         try:
             if use_stdin:
-                with open(os.path.join(submission_folder_name, submission.problem.input_file_name), "rb") as f:
+                with open(os.path.join(submission_dir, submission.problem.input_file_name), "rb") as f:
                     run_status = subprocess.run(language_run_command[submission.language], stdin=f, capture_output=True)
             else:
                 run_status = subprocess.run(language_run_command[submission.language], capture_output=True)
 
-            print(run_status.returncode)
-            print(run_status.stdout.decode("utf-8"))
-            print(run_status.stderr.decode("utf-8"))
             if run_status.returncode == 124 or run_status.returncode == 143:
                 raise subprocess.TimeoutExpired("", "")
             if run_status.returncode == 1 or run_status.returncode == 139:
                 raise subprocess.CalledProcessError(1, "", stderr=run_status.stderr)
 
-            # Check Output
-            run_output = run_status.stdout.decode("utf-8")     
-            submission_output = run_output.replace("\r\n", "\n").replace("\r", "\n")
-            submission_output = "\n".join([x.rstrip() for x in submission_output.strip().splitlines()])
-            judge_output = submission.problem.judge_output.replace("\r\n", "\n").replace("\r", "\n")
-            judge_output = "\n".join([x.rstrip() for x in judge_output.strip().splitlines()])
+            submission_output = normalize_output(run_status.stdout.decode("utf-8"))
+            judge_output = normalize_output(submission.problem.judge_output)
             return (Status.Accepted if submission_output == judge_output else Status.WrongAnswer, submission_output)
         except subprocess.TimeoutExpired as e:
             return (Status.TimeLimitExceeded, "")

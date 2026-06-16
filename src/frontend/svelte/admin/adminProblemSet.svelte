@@ -34,7 +34,6 @@
             body: JSON.stringify({
                 id: ID,
                 name: pset!.name,
-                hide: pset!.hide,
                 gradingTimeout: pset!.gradingTimeout
             }),
             headers: {

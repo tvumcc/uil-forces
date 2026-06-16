@@ -9,8 +9,7 @@ files = [
     "keybinding-vim.js"
 ]
 
-os.mkdir("dist/ace-builds")
-os.mkdir("dist/ace-builds/src-noconflict")
+os.makedirs("dist/ace-builds/src-noconflict", exist_ok=True)
 
 for file in files:
     shutil.copyfile(os.path.join("node_modules/ace-builds/src-noconflict", file), os.path.join("dist/ace-builds/src-noconflict", file))

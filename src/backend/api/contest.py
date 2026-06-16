@@ -10,30 +10,30 @@ import shutil
 from main import app
 from src.backend.orm import *
 from src.backend.judge import Status, assign_status
-from src.backend.utils import log, user_required, admin_required
+from src.backend.utils import admin_required
 
 @app.route("/api/contests")
-@user_required
+@flask_login.login_required
 def contests():
     """Returns JSON of 3 lists of contests: upcoming, ongoing, and past, all based on their start and end times"""
 
-    contests = db.session.query(Contest).all()
     out = {
         "upcoming": [],
         "ongoing": [],
         "past": []
     }
 
-    for contest in contests:
-        contest_json = contest.shallow_serialize() 
-        if contest.is_past():       out["past"].append(contest_json)
-        elif contest.is_ongoing():  out["ongoing"].append(contest_json)
-        elif contest.is_upcoming(): out["upcoming"].append(contest_json)
+    for contest in db.session.query(Contest).all():
+        contest_json = contest.shallow_serialize()
+        match contest_json["status"]:
+            case "past": out["past"].append(contest_json)
+            case "ongoing": out["ongoing"].append(contest_json)
+            case "upcoming": out["upcoming"].append(contest_json)
 
     return out
 
 @app.route("/api/contest/<id>")
-@user_required
+@flask_login.login_required
 def contest(id):
     """
     Returns JSON data for the specfied contest depending on if it is upcoming, ongoing, or past
@@ -65,7 +65,7 @@ def contest(id):
     }
 
 @app.route("/api/contest/submit", methods=["POST"])
-@user_required
+@flask_login.login_required
 def submit_contest_problem():
     """
     Processes a user's request to submit code to a problem in this contest.
@@ -121,7 +121,7 @@ def submit_contest_problem():
     }
 
 @app.route("/api/contest/<id>/leaderboard")
-@user_required
+@flask_login.login_required
 def contest_leaderboard(id):
     """Returns the current leaderboard for this contest as long as the setting is enabled to show leaderboard and the contest is ongoing or past"""
 
@@ -151,7 +151,7 @@ def contest_leaderboard(id):
     else: return {}
 
 @app.route("/api/contest/<id>/data")
-@user_required
+@flask_login.login_required
 def contest_data(id):
     contest = db.session.get(Contest, id)
     if not contest:

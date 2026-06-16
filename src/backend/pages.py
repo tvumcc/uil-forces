@@ -1,7 +1,8 @@
 import flask
+import flask_login
 
 from main import app
-from src.backend.utils import user_required, admin_required
+from src.backend.utils import admin_required
 
 # Publicly accessible pages
 
@@ -16,22 +17,22 @@ def register_page():
 # User accessible pages
 
 @app.route("/")
-@user_required
+@flask_login.login_required
 def index_page():
     return flask.send_from_directory(app.static_folder, "src/frontend/html/home.html")
 
 @app.route("/contest")
-@user_required
+@flask_login.login_required
 def contest_page():
     return flask.send_from_directory(app.static_folder, "src/frontend/html/contest.html")
 
 @app.route("/contests")
-@user_required
+@flask_login.login_required
 def contest_list_page():
     return flask.send_from_directory(app.static_folder, "src/frontend/html/contestList.html")
 
 @app.route("/submission")
-@user_required
+@flask_login.login_required
 def submission_page():
     return flask.send_from_directory(app.static_folder, "src/frontend/html/submission.html")
 

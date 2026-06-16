@@ -13,9 +13,8 @@ def admin_settings():
     settings = db.session.query(Settings).all()
     out = {}
     for setting in settings:
-        match setting.key:
-            case "practice_site" | "docker_grading":
-                out[setting.key] = True if setting.value.lower() == "true" else False
+        if setting.key == "docker_grading":
+            out[setting.key] = setting.value.lower() == "true"
 
     return {"settings": out}
 
@@ -26,11 +25,11 @@ def admin_update_settings():
 
     request = flask.request.get_json()
     for key, value in request.items():
+        if key != "docker_grading":
+            continue
         setting = db.session.query(Settings).filter_by(key=key).first()
         if setting:
-            match key:
-                case "practice_site" | "docker_grading":
-                    setting.value = "true" if value else "false"
+            setting.value = "true" if value else "false"
             db.session.add(setting)
     db.session.commit()
 

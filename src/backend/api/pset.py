@@ -1,10 +1,5 @@
 import flask
-import flask_login
-import yaml
 
-import threading
-import datetime
-from datetime import timezone
 import os
 import shutil
 
@@ -40,12 +35,10 @@ def admin_update_pset():
     request = flask.request.get_json()
     id = request["id"]
     name = request["name"]
-    hide = request["hide"]
     grading_timeout = request["gradingTimeout"]
 
     pset = db.session.get(ProblemSet, id)
     pset.name = name
-    pset.hide = hide
     pset.grading_timeout = grading_timeout
 
     db.session.add(pset)
