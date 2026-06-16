@@ -129,9 +129,6 @@
                 <label for="name">Name</label>
                 <input name="name" type="text" bind:value={pset.name}>
                 <br>
-                <label for="hide">Make Problem Set Hidden</label>
-                <input name="hide" type="checkbox" bind:checked={pset.hide}>
-                <br>
                 <label for="timeout">Grading Timeout (seconds)</label>
                 <input name="timeout" type="number" step="any" bind:value={pset.gradingTimeout}>
                 <br>

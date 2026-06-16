@@ -11,9 +11,7 @@ import shutil
 from main import app, runtime_dir
 from src.backend.orm import *
 from src.backend.setup import *
-from src.backend.judge import Status, assign_status
 from src.backend.utils import log, admin_required
-from sqlalchemy import desc
 
 # Admin API
 

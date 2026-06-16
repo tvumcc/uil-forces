@@ -62,9 +62,6 @@
                 case "Python":
                     editor.session.setMode("ace/mode/python")
                     break
-                case "C++":
-                    editor.session.setMode("ace/mode/c_cpp")
-                    break
             }
         }
 

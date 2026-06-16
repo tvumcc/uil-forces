@@ -34,8 +34,6 @@ def get_submission_file_name(submission: Submission):
             return match.group(1) + ".java" if match else "error"
         case "Python":
             return get_submission_folder_name(submission.id) + ".py"
-        case "C++":
-            return get_submission_folder_name(submission.id) + ".cpp"
         case _:
             return None
 
@@ -98,7 +96,6 @@ def grade_submission(submission: Submission, timeout: float = 5.0):
         # Compilation
         language_compile_command = {
             "Java":   f"javac {filename}".split(),
-            "C++":    f"g++ {filename} -o {submission_folder_name}".split()
         }
 
         if submission.language in language_compile_command.keys():
@@ -115,7 +112,6 @@ def grade_submission(submission: Submission, timeout: float = 5.0):
         language_run_command = {
             "Java":   f"java {os.path.splitext(filename)[0]}".split(),
             "Python": f"python {filename}".split(),
-            "C++":    f"./{submission_folder_name}".split()
         }
 
         try:
@@ -174,7 +170,6 @@ def grade_submission_docker(submission: Submission, timeout: float = 5.0):
     language_image = {
         "Java":   "openjdk:21",
         "Python": "alpine:3.14",
-        "C++":    "alpine:3.14"
     }
 
     try:
@@ -184,7 +179,6 @@ def grade_submission_docker(submission: Submission, timeout: float = 5.0):
         language_compile_command = {
             "Java":   f'docker exec {container_id} javac'.split() + [f'{filename}'],
             "Python": f"docker exec {container_id} apk add python3".split(),
-            "C++":    f'docker exec {container_id} sh -c'.split() + [f'apk add g++ && g++ "{filename}" -o "{submission_folder_name}"']
         }
 
         compile_status = subprocess.run(
@@ -203,7 +197,6 @@ def grade_submission_docker(submission: Submission, timeout: float = 5.0):
         language_run_command = {
             "Java":   f'docker exec -i {container_id} timeout {timeout} java'.split() + [f'{os.path.splitext(filename)[0]}'],
             "Python": f'docker exec {container_id} timeout {timeout} python3'.split() + [f'{filename}'],
-            "C++":    f'docker exec {container_id} timeout {timeout} ./{submission_folder_name}'.split()
         }
 
         try:

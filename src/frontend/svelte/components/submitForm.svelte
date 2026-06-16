@@ -1,6 +1,4 @@
 <script lang="ts">
-    import * as ace from "ace-builds"
-    import { onMount } from "svelte"
     import type {Problem, ContestProblem} from "../../utils"
 
     interface SubmitFormProps {
@@ -18,7 +16,7 @@
         ID,
         problems,
         submissionProblemID = $bindable(-1),
-        allowedLanguages = ["Java", "Python", "C++"],
+        allowedLanguages = ["Java", "Python"],
         reloadSubmissions = () => {},
         reloadLeaderboard = () => {},
     }: SubmitFormProps = $props()
@@ -27,29 +25,10 @@
     const languages = new Map([
         ["Java", "java"],
         ["Python", "py"],
-        ["C++", "cpp"]
     ])
 
     let fileText = $state("")
-    let codeText = $state("")
-
     let submissionLanguage = $state("Java")
-    let submissionMethod = $state("writeCode") 
-
-    ace.config.set("basePath", "ace-builds/src-noconflict")
-    let editor: ace.Editor
-
-    async function loadEditor() {
-        editor = ace.edit("editor")
-        editor.setOption("minLines", 5)
-        editor.setOption("maxLines", 30)
-        editor.setTheme("ace/theme/monokai")
-
-        editor.on("change", () => {
-            localStorage.setItem(`problem_code_${submissionLanguage}_${submissionProblemID}`, editor.getValue())
-            codeText = editor.getValue()
-        })
-    }
 
     async function submitProblem(event: Event) {
         event.preventDefault()
@@ -58,7 +37,7 @@
             body: JSON.stringify({
                 contestID: ID,
                 problemID: submissionProblemID,
-                code: submissionMethod === "uploadFile" ? fileText : codeText,
+                code: fileText,
                 language: submissionLanguage 
             }),
             headers: {
@@ -94,36 +73,6 @@
     function clearFileInput(event: Event) {
         (event.currentTarget as HTMLInputElement).value = ""
     }
-
-    $effect(() => {
-        const storedCode = localStorage.getItem(`problem_code_${submissionLanguage}_${submissionProblemID}`) || ""
-        if (submissionProblemID !== -1 && submissionMethod === "writeCode" && submissionLanguage !== "") {
-            document.getElementById("editor")!.style.display = "block"
-            switch (submissionLanguage) {
-                case "Java":
-                    editor.session.setMode("ace/mode/java")
-                    break
-                case "Python":
-                    editor.session.setMode("ace/mode/python")
-                    break
-                case "C++":
-                    editor.session.setMode("ace/mode/c_cpp")
-                    break
-            }
-            editor.setValue(storedCode)
-            editor.clearSelection()
-            editor.gotoLine(1)
-            editor.getSession().setScrollTop(1)
-            editor.blur()
-            editor.focus()
-        } else {
-            document.getElementById("editor")!.style.display = "none"
-        }
-    })
-
-    onMount(() => {
-        loadEditor()
-    })
 </script>
 
 <form onsubmit={submitProblem}>
@@ -154,21 +103,9 @@
         </select>
         <br>
         {#if submissionLanguage !== ""}
-            <label for="code">
-                <input type="radio" id="write_code" name="submitType" value="writeCode" bind:group={submissionMethod}>
-                Write Code
-            </label>
-            <label for="file">
-                <input type="radio" id="upload_file" name="submitType" value="uploadFile" bind:group={submissionMethod}>
-                Upload File
-            </label>
-
-            {#if submissionMethod === "uploadFile"}
-                <div>
-                    <input type="file" oninput={loadFileFromInput} onclick={clearFileInput}>
-                </div>
-            {/if}
+            <div>
+                <input type="file" oninput={loadFileFromInput} onclick={clearFileInput}>
+            </div>
         {/if}
     {/if}
-    <div id="editor"></div>
 </form>

@@ -81,7 +81,6 @@ class ProblemSet(db.Model):
     id: Mapped[int] = mapped_column(primary_key=True)
 
     name:     Mapped[str]  = mapped_column(unique=True)
-    hide:     Mapped[bool] = mapped_column(default=False)
 
     grading_timeout: Mapped[float]  = mapped_column(default=5.0)
 
@@ -99,7 +98,6 @@ class ProblemSet(db.Model):
         return {
             "id": self.id,
             "name": self.name,
-            "hide": self.hide,
             "gradingTimeout": self.grading_timeout
         }
 
@@ -173,7 +171,7 @@ class Submission(db.Model):
     def serialize(self, user=None, admin_view=False):
         practice_site = Settings.practice_site_enabled()
 
-        io = {} if (self.contest_profile and not self.contest_profile.contest.past() \
+        io = {} if (self.contest_profile and not self.contest_profile.contest.is_past() \
                     or practice_site and self.problem.pset and self.problem.pset.hide) \
                     and not admin_view else {
             "output": self.output,
@@ -220,20 +218,20 @@ class Contest(db.Model):
     def problems(self):
         return [problem_link.problem for problem_link in self.problem_links]
 
-    def past(self):
+    def is_past(self):
         now = datetime.datetime.now().astimezone(tz=timezone.utc)
         end = self.end_time.replace(tzinfo=zoneinfo.ZoneInfo("UTC"))
 
         return now > end
 
-    def ongoing(self):
+    def is_ongoing(self):
         now = datetime.datetime.now().astimezone(tz=timezone.utc)
         start = self.start_time.replace(tzinfo=zoneinfo.ZoneInfo("UTC"))
         end = self.end_time.replace(tzinfo=zoneinfo.ZoneInfo("UTC"))
 
         return start < now and now < end
 
-    def upcoming(self):
+    def is_upcoming(self):
         now = datetime.datetime.now().astimezone(tz=timezone.utc)
         start = self.start_time.replace(tzinfo=zoneinfo.ZoneInfo("UTC"))
 
@@ -255,7 +253,7 @@ class Contest(db.Model):
             "name": self.name,
             "startTime": self.start_time.replace(tzinfo=timezone.utc).isoformat(),
             "endTime": self.end_time.replace(tzinfo=timezone.utc).isoformat(),
-            "status": self.past() and "past" or self.ongoing() and "ongoing" or "upcoming",
+            "status": self.is_past() and "past" or self.is_ongoing() and "ongoing" or "upcoming",
             "allowedLanguages": self.allowed_languages,
             "showLeaderboard": self.show_leaderboard,
             "showPdf": self.show_pdf

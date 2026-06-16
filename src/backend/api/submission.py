@@ -27,7 +27,7 @@ def submission(id):
 
     user = submission.user
     contest_profile = submission.contest_profile
-    past_contest = contest_profile and contest_profile.contest.past()
+    past_contest = contest_profile and contest_profile.contest.is_past()
 
     if not past_contest \
         and not flask_login.current_user.is_admin \

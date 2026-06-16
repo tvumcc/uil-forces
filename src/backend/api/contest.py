@@ -26,9 +26,9 @@ def contests():
 
     for contest in contests:
         contest_json = contest.shallow_serialize() 
-        if contest.past():       out["past"].append(contest_json)
-        elif contest.ongoing():  out["ongoing"].append(contest_json)
-        elif contest.upcoming(): out["upcoming"].append(contest_json)
+        if contest.is_past():       out["past"].append(contest_json)
+        elif contest.is_ongoing():  out["ongoing"].append(contest_json)
+        elif contest.is_upcoming(): out["upcoming"].append(contest_json)
 
     return out
 
@@ -50,10 +50,10 @@ def contest(id):
         db.session.commit()
 
     submissions = []
-    if contest.past(): 
+    if contest.is_past(): 
         for profile in contest.contest_profiles:
             submissions += profile.valid_submissions()
-    elif contest.ongoing():
+    elif contest.is_ongoing():
         submissions = contest_profile.valid_submissions()
     else:
         return {"contest": contest.shallow_serialize()}
@@ -86,7 +86,7 @@ def submit_contest_problem():
         flask.abort(404, description="Problem does not exist")
     if not contest:
         flask.abort(404, description="Contest does not exist")
-    if not contest.ongoing():
+    if not contest.is_ongoing():
         flask.abort(403, description="Contest is not ongoing; submissions are not allowed at this time")
     if language not in contest.allowed_languages.split(" "):
         flask.abort(400, description="Invalid language submitted")
@@ -129,7 +129,7 @@ def contest_leaderboard(id):
     if not contest:
         flask.abort(404, description="Contest does not exist")
 
-    if contest.show_leaderboard and not contest.upcoming():
+    if contest.show_leaderboard and not contest.is_upcoming():
         contest_profiles = sorted(contest.contest_profiles, key=lambda x: x.score, reverse=True)
 
         leaderboard = []

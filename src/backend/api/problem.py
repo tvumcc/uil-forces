@@ -22,7 +22,7 @@ def problem_pdf(id):
     contests = db.session.query(Contest).all()
     problem_ongoing = False
     for contest in contests:
-        if contest.ongoing() and contest.show_pdf:
+        if contest.is_ongoing() and contest.show_pdf:
             if problem in contest.problems():
                 problem_ongoing = True
                 break

@@ -2,7 +2,7 @@
 
 This is a contest manager and practice site made for the UIL Computer Science Programming event.
 
-There is a PDF viewer to read problem statements, the option of an in-browser code editor or a file upload for submission, and the choice of Java, Python, or C++ as langagues.
+There is a PDF viewer to read problem statements, the option of an in-browser code editor or a file upload for submission, and the choice of Java and Python as langagues.
 
 ## Setup
 
