@@ -1,6 +1,8 @@
 <script lang="ts">
     import MenuBar from "../components/menuBar.svelte"
+    import Toast from "../components/toast.svelte"
     import type {User} from "../../utils"
+    import { addToast, ToastType } from "../../toastStore.svelte";
 
     let validRequest = $state(true)
     let message = $state("")
@@ -41,6 +43,9 @@
 
         if (response.ok) {
             await getData()
+            addToast(`Created user ${username}.`)
+        } else {
+            addToast(`Failed to create user ${username}`, ToastType.Error)
         }
     }
 </script>
@@ -50,6 +55,7 @@
 </style>
 
 <MenuBar />
+<Toast />
 <div class="main-container">
     <h1>Users</h1>
 
