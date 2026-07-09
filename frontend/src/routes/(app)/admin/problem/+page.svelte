@@ -1,7 +1,7 @@
 <script lang="ts">
     import * as ace from "ace-builds"
     import MenuBar from "$lib/menuBar.svelte"
-    import type {Problem} from "$lib/utils"
+    import {csrfFetch, type Problem} from "$lib/utils"
 
     let params = new URLSearchParams(document.location.search)
     let ID = params.get("id")
@@ -53,11 +53,7 @@
     async function editProblem(event: Event) {
         event.preventDefault()
 
-        let response: Response = await fetch("/api/admin/update/problem", {
-            method: "POST",
-            body: JSON.stringify(problem),
-            headers: {"Content-Type": "application/json; charset=UTF-8"}
-        })
+        let response: Response = await csrfFetch("/api/admin/update/problem", "POST", JSON.stringify(problem))
 
         if (response.ok) {
             await getData()

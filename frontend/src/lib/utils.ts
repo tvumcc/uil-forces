@@ -19,6 +19,31 @@ export function toTzIsoString(date: Date): string {
 }
 
 
+let csrfToken: string | null = null
+
+async function getCsrfToken() {
+    if (!csrfToken) {
+        let response = await fetch("/api/csrf-token")
+        let data = await response.json()
+        csrfToken = data.csrfToken
+    }
+    return csrfToken
+}
+
+export async function csrfFetch(url: string, method: string, body: any) {
+    let token = await getCsrfToken()
+
+    return fetch(url, {
+        method: method,
+        headers: {
+            "Content-Type": "application/json; charset=UTF-8",
+            "X-CSRFToken": token!,
+        },
+        body: body,
+    })
+}
+
+
 export interface Problem {
     id: number
     name: string

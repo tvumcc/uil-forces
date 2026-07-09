@@ -1,5 +1,5 @@
 <script lang="ts">
-    import type {Problem, ContestProblem} from "$lib/utils"
+    import {type Problem, type ContestProblem, csrfFetch} from "$lib/utils"
 
     interface SubmitFormProps {
         submissionType: string
@@ -32,18 +32,12 @@
 
     async function submitProblem(event: Event) {
         event.preventDefault()
-        let response: Response = await fetch(`/api/${submissionType}/submit`, {
-            method: "POST",
-            body: JSON.stringify({
-                contestID: ID,
-                problemID: submissionProblemID,
-                code: fileText,
-                language: submissionLanguage 
-            }),
-            headers: {
-                "Content-Type": "application/json; charset=UTF-8"
-            }
-        })
+        let response: Response = await csrfFetch(`/api/${submissionType}/submit`, "POST", JSON.stringify({
+            contestID: ID,
+            problemID: submissionProblemID,
+            code: fileText,
+            language: submissionLanguage 
+        }))
         let json = await response.json()
 
         reloadSubmissions()

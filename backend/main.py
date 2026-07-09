@@ -1,5 +1,6 @@
 import flask
 import flask_login
+import flask_wtf
 from sqlalchemy import event
 from sqlalchemy.engine import Engine
 from werkzeug.exceptions import HTTPException
@@ -27,7 +28,9 @@ if hasattr(sys, '_MEIPASS'):
 else:
     runtime_dir = os.path.abspath(".")
 
-app = flask.Flask(__name__, static_folder=resource_path("dist"), static_url_path="")
+DIST_DIR = resource_path("dist")
+
+app = flask.Flask(__name__, static_folder=None)
 
 secret_path = os.path.join(runtime_dir, "secret.txt")
 try:
@@ -69,4 +72,18 @@ def error_handler(e):
 @app.route("/", defaults={"path": ""})
 @app.route("/<path:path>")
 def spa_shell(path):
-    return flask.send_from_directory(app.static_folder, "index.html")
+    full_path = os.path.join(DIST_DIR, path)
+    if path and os.path.isfile(full_path):
+        return flask.send_from_directory(DIST_DIR, path)
+    return flask.send_from_directory(DIST_DIR, "index.html")
+
+csrf = flask_wtf.CSRFProtect()
+csrf.init_app(app)
+
+@app.route("/api/csrf-token", methods=["GET"])
+def csrf_token():
+    return {"csrfToken": flask_wtf.csrf.generate_csrf()}
+
+@app.errorhandler(flask_wtf.csrf.CSRFError)
+def handle_csrf_error(e):
+    return {"error": "csrf_invalid", "description": e.description}, 400

@@ -1,7 +1,7 @@
 <script lang="ts">
     import MenuBar from "$lib/menuBar.svelte"
     import Toast from "$lib/toast.svelte"
-    import type {User} from "$lib/utils"
+    import {csrfFetch, type User} from "$lib/utils"
     import { addToast, ToastType } from "$lib/toastStore.svelte"
 
     let validRequest = $state(true)
@@ -29,17 +29,11 @@
     async function addUser(event: Event) {
         event.preventDefault()
 
-        let response = await fetch("/api/admin/add/user", {
-            method: "POST",
-            body: JSON.stringify({
-                username: username,
-                password: password,
-                isAdmin: isAdmin
-            }),
-            headers: {
-                "Content-Type": "application/json; charset=UTF-8"
-            }
-        })
+        let response = await csrfFetch("/api/admin/add/user", "POST", JSON.stringify({
+            username: username,
+            password: password,
+            isAdmin: isAdmin
+        }))
 
         if (response.ok) {
             await getData()

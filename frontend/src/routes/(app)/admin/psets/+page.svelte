@@ -1,6 +1,6 @@
 <script lang="ts">
     import MenuBar from "$lib/menuBar.svelte"
-    import type {ProblemSet} from "$lib/utils"
+    import {csrfFetch, type ProblemSet} from "$lib/utils"
 
     let validRequest = $state(true)
     let message = $state("")
@@ -25,15 +25,9 @@
     async function addPset(event: Event) {
         event.preventDefault()
 
-        let response = await fetch("/api/admin/add/pset", {
-            method: "POST",
-            body: JSON.stringify({
-                name: name
-            }),
-            headers: {
-                "Content-Type": "application/json; charset=UTF-8"
-            }
-        })
+        let response = await csrfFetch("/api/admin/add/pset", "POST", JSON.stringify({
+            name: name
+        }))
 
         if (response.ok) {
             await getData()

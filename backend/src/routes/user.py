@@ -93,11 +93,11 @@ def admin_users():
 def admin_add_user():
     """Adds a new user to the database given its username, password, and admin status"""
 
-    request = flask.request.get_json()
+    data = flask.request.get_json()
 
-    username = request["username"]
-    password = request["password"] 
-    is_admin = request["isAdmin"]
+    username = data["username"]
+    password = data["password"] 
+    is_admin = data["isAdmin"]
 
     db.session.add(User(
         username=username,
@@ -106,4 +106,4 @@ def admin_add_user():
     ))
     db.session.commit()
 
-    return f"Successfully added user '{username}'"
+    return {"username": username}, 201

@@ -2,7 +2,7 @@
     import { goto } from "$app/navigation";
     import { page } from "$app/state";
     import { addToast, ToastType } from "$lib/toastStore.svelte";
-    import type {User} from "$lib/utils"
+    import { csrfFetch, type User } from "$lib/utils"
 
     let username = $state()
     let password = $state()
@@ -11,16 +11,10 @@
     async function login(event: Event) {
         event.preventDefault()
 
-        let response = await fetch("/api/login", {
-            method: "POST",
-            body: JSON.stringify({
-                username: username,
-                password: password
-            }),
-            headers: {
-                "Content-Type": "application/json; charset=UTF-8"
-            }
-        })
+        let response = await csrfFetch("/api/login", "POST", JSON.stringify({
+            username: username,
+            password: password
+        }))
 
         if (!response.ok) {
             const err = await response.json().catch(() => ({}))

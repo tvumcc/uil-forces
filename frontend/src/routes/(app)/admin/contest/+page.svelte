@@ -1,6 +1,6 @@
 <script lang="ts">
     import MenuBar from "$lib/menuBar.svelte"
-    import { toTzIsoString, getTzOffset, type Contest } from "$lib/utils"
+    import { toTzIsoString, getTzOffset, type Contest, csrfFetch } from "$lib/utils"
 
     let params = new URLSearchParams(document.location.search)
     let ID = params.get("id")
@@ -32,21 +32,15 @@
     async function editContest(event: Event) {
         event.preventDefault()
 
-        let response: Response = await fetch("/api/admin/update/contest", {
-            method: "POST",
-            body: JSON.stringify({
-                id: contest!.id,
-                name: contest!.name,
-                startTime: new Date(contest?.startTime + getTzOffset()).toISOString(),
-                endTime: new Date(contest?.endTime + getTzOffset()).toISOString(),
-                showPdf: contest!.showPdf,
-                showLeaderboard: contest?.showLeaderboard,
-                allowedLanguages: contest?.allowedLanguages 
-            }),
-            headers: {
-                "Content-Type": "application/json; charset=UTF-8"
-            }
-        })
+        let response: Response = await csrfFetch("/api/admin/update/contest", "POST", JSON.stringify({
+            id: contest!.id,
+            name: contest!.name,
+            startTime: new Date(contest?.startTime + getTzOffset()).toISOString(),
+            endTime: new Date(contest?.endTime + getTzOffset()).toISOString(),
+            showPdf: contest!.showPdf,
+            showLeaderboard: contest?.showLeaderboard,
+            allowedLanguages: contest?.allowedLanguages 
+        }))
 
         if (response.ok) {
             await getData()
@@ -56,15 +50,9 @@
     async function addProblemSet(event: Event) {
         event.preventDefault()
 
-        let response: Response = await fetch(`/api/admin/contest/${ID}/add/pset`, {
-            method: "POST",
-            body: JSON.stringify({
-                psetName: psetName,
-            }),
-            headers: {
-                "Content-Type": "application/json; charset=UTF-8"
-            }
-        })
+        let response: Response = await csrfFetch(`/api/admin/contest/${ID}/add/pset`, "POST", JSON.stringify({
+            psetName: psetName,
+        }))
 
         if (response.ok) {
             await getData()
@@ -74,16 +62,10 @@
     async function addProblem(event: Event) {
         event.preventDefault()
 
-        let response: Response = await fetch(`/api/admin/contest/${ID}/add/problem`, {
-            method: "POST",
-            body: JSON.stringify({
-                psetName: problemPsetName,
-                problemName: problemName 
-            }),
-            headers: {
-                "Content-Type": "application/json; charset=UTF-8"
-            }
-        })
+        let response: Response = await csrfFetch(`/api/admin/contest/${ID}/add/problem`, "POST", JSON.stringify({
+            psetName: problemPsetName,
+            problemName: problemName 
+        }))
 
         if (response.ok) {
             await getData()
@@ -91,16 +73,10 @@
     }
 
     async function unlinkProblem(problemID: number) {
-        let response: Response = await fetch("/api/admin/contest/unlinkproblem", {
-            method: "POST",
-            body: JSON.stringify({
-                contestID: ID,
-                problemID: problemID
-            }),
-            headers: {
-                "Content-Type": "application/json; charset=UTF-8"
-            }
-        })
+        let response: Response = await csrfFetch("/api/admin/contest/unlinkproblem", "POST", JSON.stringify({
+            contestID: ID,
+            problemID: problemID
+        }))
 
         if (response.ok)  {
             await getData()
@@ -108,16 +84,10 @@
     }
 
     async function updateProblemScores() {
-        let response: Response = await fetch("/api/admin/contest/updateproblems", {
-            method: "POST",
-            body: JSON.stringify({
-                contestID: ID,
-                problems: contest!.problems
-            }),
-            headers: {
-                "Content-Type": "application/json; charset=UTF-8"
-            }
-        })
+        let response: Response = await csrfFetch("/api/admin/contest/updateproblems", "POST", JSON.stringify({
+            contestID: ID,
+            problems: contest!.problems
+        }))
 
         if (response.ok)  {
             await getData()

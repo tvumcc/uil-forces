@@ -1,6 +1,6 @@
 <script lang="ts">
     import MenuBar from "$lib/menuBar.svelte"
-    import type {Settings} from "$lib/utils"
+    import {csrfFetch, type Settings} from "$lib/utils"
 
     let validRequest = $state(true)
     let message = $state("")
@@ -22,15 +22,9 @@
     async function editSettings(event: Event) {
         event.preventDefault()
 
-        let response: Response = await fetch("/api/admin/update/settings", {
-            method: "POST",
-            body: JSON.stringify({
-                docker_grading: settings!.docker_grading
-            }),
-            headers: {
-                "Content-Type": "application/json; charset=UTF-8"
-            }
-        })
+        let response: Response = await csrfFetch("/api/admin/update/settings", "POST", JSON.stringify({
+            docker_grading: settings!.docker_grading
+        }))
 
         if (response.ok) {
             await getData()

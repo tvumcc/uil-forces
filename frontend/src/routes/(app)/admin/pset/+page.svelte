@@ -1,6 +1,6 @@
 <script lang="ts">
     import MenuBar from "$lib/menuBar.svelte"
-    import type {ProblemSet} from "$lib/utils"
+    import {csrfFetch, type ProblemSet} from "$lib/utils"
 
     let params = new URLSearchParams(document.location.search)
     let ID = params.get("id")
@@ -29,17 +29,11 @@
     async function editPset(event: Event) {
         event.preventDefault()
 
-        let response: Response = await fetch("/api/admin/update/pset", {
-            method: "POST",
-            body: JSON.stringify({
-                id: ID,
-                name: pset!.name,
-                gradingTimeout: pset!.gradingTimeout
-            }),
-            headers: {
-                "Content-Type": "application/json; charset=UTF-8"
-            }
-        })
+        let response: Response = await csrfFetch("/api/admin/update/pset", "POST", JSON.stringify({
+            id: ID,
+            name: pset!.name,
+            gradingTimeout: pset!.gradingTimeout
+        }))
 
         if (response.ok) {
             await getData()
@@ -49,16 +43,10 @@
     async function addProblem(event: Event) {
         event.preventDefault()
 
-        let response: Response = await fetch(`/api/admin/pset/add/problem`, {
-            method: "POST",
-            body: JSON.stringify({
-                psetID: pset!.id,
-                problemName: problemName 
-            }),
-            headers: {
-                "Content-Type": "application/json; charset=UTF-8"
-            }
-        })
+        let response: Response = await csrfFetch(`/api/admin/pset/add/problem`, "POST", JSON.stringify({
+            psetID: pset!.id,
+            problemName: problemName 
+        }))
 
         if (response.ok) {
             await getData()
@@ -71,10 +59,7 @@
         let formData = new FormData()
         formData.append("pdf", new Blob([fileData], { type: "application/pdf" }), "pset.pdf")
 
-        let response: Response = await fetch(`/api/admin/pset/${ID}/uploadpdf`, {
-            method: "POST",
-            body: formData
-        })
+        let response: Response = await csrfFetch(`/api/admin/pset/${ID}/uploadpdf`, "POST", formData)
 
         if (response.ok) {
             await getData()
@@ -82,9 +67,7 @@
     }
 
     async function deleteProblem(problemID: number) {
-        let response: Response = await fetch(`/api/admin/problem/${problemID}/delete`, {
-            method: "DELETE"
-        })
+        let response: Response = await csrfFetch(`/api/admin/problem/${problemID}/delete`, "DELETE", JSON.stringify({}))
         if (response.ok) {
             await getData()
         }

@@ -1,6 +1,6 @@
 <script lang="ts">
     import MenuBar from "$lib/menuBar.svelte"
-    import {getTzOffset, type Contest} from "$lib/utils"
+    import {csrfFetch, getTzOffset, type Contest} from "$lib/utils"
 
     let validRequest = $state(true)
     let message = $state("")
@@ -27,17 +27,11 @@
     async function addContest(event: Event) {
         event.preventDefault()
 
-        let response = await fetch("/api/admin/add/contest", {
-            method: "POST",
-            body: JSON.stringify({
-                name: name,
-                startTime: new Date(startTime + getTzOffset()).toISOString(),
-                endTime: new Date(endTime + getTzOffset()).toISOString() 
-            }),
-            headers: {
-                "Content-Type": "application/json; charset=UTF-8"
-            }
-        })
+        let response = await csrfFetch("/api/admin/add/contest", "POST", JSON.stringify({
+            name: name,
+            startTime: new Date(startTime + getTzOffset()).toISOString(),
+            endTime: new Date(endTime + getTzOffset()).toISOString() 
+        }))
 
         if (response.ok) {
             await getData()

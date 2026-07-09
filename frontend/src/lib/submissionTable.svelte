@@ -1,6 +1,6 @@
 <script lang="ts">
     import Status from "$lib/status.svelte"
-    import type {Submission} from "$lib/utils"
+    import {csrfFetch, type Submission} from "$lib/utils"
 
     let {
         submissions, 
@@ -9,9 +9,7 @@
     } = $props()
 
     async function deleteSubmission(id: number) {
-        let response: Response = await fetch(`/api/admin/submission/${id}/delete`, {
-            method: "DELETE"
-        })
+        let response: Response = await csrfFetch(`/api/admin/submission/${id}/delete`, "DELETE", JSON.stringify({}))
         if (response.status === 200) {
             submissions = submissions.filter((submission: Submission) => submission.id !== id)
         } else {
