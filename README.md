@@ -40,6 +40,7 @@ To build this project, you must have Python and npm installed. The project only 
 First, build the frontend by running the following commands:
 
 ```bash
+cd frontend
 npm install
 npm run build
 ```
@@ -48,13 +49,14 @@ Then build the backend:
 
 ```bash
 # Setup virtual environment
+cd backend
 python -m venv .venv
 .venv\Scripts\activate.bat # Windows Only
 source .venv/bin/activate # MacOS & Linux Only
 pip install -r requirements.txt
 ```
 
-From there, the project can be run using `python main.py`, or it can be bundled into an executable:
+From there, the project can be run using `python app.py`, or it can be bundled into an executable:
 
 ```
 pyinstaller main.spec --distpath pyinstaller-dist --workpath pyinstaller-build

@@ -1,0 +1,133 @@
+<script lang="ts">
+    import SubmitForm from "$lib/submitForm.svelte"
+    import MenuBar from "$lib/menuBar.svelte"
+    import SubmissionTable from "$lib/submissionTable.svelte"
+    import Leaderboard from "$lib/leaderboard.svelte"
+    import type {Contest} from "$lib/utils"
+
+    let params = new URLSearchParams(document.location.search)
+    let ID = params.get("id")
+    let validRequest = $state(true)
+    let message = $state("")
+
+    let contest: Contest | undefined = $state()
+    let leaderboard: Leaderboard | undefined = $state()
+    let submissionProblemID = $state(-1)
+
+    $effect(() => {
+        if (submissionProblemID !== -1 && contest!.showPdf) {
+            document.getElementById("pdf-viewer")!.style.display = "flex"
+        } else {
+            document.getElementById("pdf-viewer")!.style.display = "none"
+        }
+    })
+
+    async function reloadLeaderboard() {
+        await leaderboard!.getData()
+    }
+
+    async function getData() {
+        let response = await fetch(`/api/contest/${ID}`)
+        let json = await response.json()
+
+        if (!response.ok) {
+            validRequest = false
+            message = json.description
+        }
+
+        contest = json.contest
+    }
+</script>
+
+<div class="horizontal-split">
+    <div id="pdf-viewer">
+        {#if submissionProblemID !== -1}
+            <embed type="application/pdf" src={`/api/problem/${submissionProblemID}/pdf#toolbar=0&navpanes=0`} width="100%" height="100%">
+        {:else}
+            <p>No Problem Selected</p>
+        {/if}
+    </div>
+    <div class="submit-panel">
+        <MenuBar />
+        <div class="main-container" style="flex: 0 0 auto;">
+            {#await getData()}
+                 <p>Loading...</p>
+            {:then}
+                {#if validRequest && contest !== undefined}
+                    <h1>{contest.name}</h1>
+                    <a href="/api/contest/{ID}/data" target="_blank">Download Student Data</a>
+                    {#if contest.status === "upcoming"}
+                        <p>The contest has not started yet. You cannot submit solutions.</p>
+                    {:else}
+                        {#if contest.status === "past"}
+                            <p>The contest has ended. You can still view submissions and the leaderboard, but you cannot submit solutions.</p>
+                        {:else}
+                            <h2>Submit Code</h2>
+                            <SubmitForm submissionType={"contest"} ID={ID!} problems={contest.problems!} allowedLanguages={contest.allowedLanguages!.split(" ")} reloadSubmissions={getData} {reloadLeaderboard} bind:submissionProblemID/>
+                        {/if}
+
+                        {#if contest.showLeaderboard}
+                            <h2>Leaderboard</h2>
+                            <div class="lb" style="width: 100%; overflow-x: scroll;">
+                                <Leaderboard {ID} problems={contest.problems} bind:this={leaderboard}/>            
+                            </div>
+                            <br>
+                        {/if}
+
+                        {#if contest.status === "past"}
+                            <h2>All Submissions</h2>
+                            <SubmissionTable submissions={contest.submissions} showUsers={true}/>
+                        {:else}
+                            <h2>Your Submissions</h2>
+                            <SubmissionTable submissions={contest.submissions} showUsers={false}/>
+                        {/if}
+                    {/if}
+                {:else}
+                    <p>{message}</p>
+                {/if}
+            {/await}
+        </div>
+    </div>
+</div>
+
+<style>
+    .horizontal-split {
+        display: flex;
+        width: 100%;
+        height: 100%;
+
+        overflow: hidden;
+    }
+
+    .submit-panel {
+        margin: 0;
+        display: flex;
+        align-items: center;
+        flex-direction: column;
+        height: 100vh;
+        overflow-y: auto;
+        flex: 1;
+
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+    }
+    .submit-panel::-webkit-scrollbar {display: none;}
+    
+    #pdf-viewer {
+        background-color: #101828;
+        height: 100vh;
+        display: flex;
+        flex: 1;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+    }
+
+    .lb::-webkit-scrollbar {
+        display: none;
+    }
+    .lb {
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+    }
+</style>
