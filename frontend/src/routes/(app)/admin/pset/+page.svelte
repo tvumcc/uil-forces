@@ -1,5 +1,4 @@
 <script lang="ts">
-    import MenuBar from "$lib/menuBar.svelte"
     import {csrfFetch, type ProblemSet} from "$lib/utils"
 
     let params = new URLSearchParams(document.location.search)
@@ -84,7 +83,6 @@
     })
 </script>
 
-<MenuBar />
 <div class="main-container">
     <h1>Edit Problem Set</h1>
 

@@ -1,5 +1,4 @@
 <script lang="ts">
-    import MenuBar from "$lib/menuBar.svelte"
     import type {Contest} from "$lib/utils"
     import { addToast, ToastType } from "$lib/toastStore.svelte";
     import { goto } from "$app/navigation";
@@ -24,7 +23,6 @@
     }
 </script>
 
-<MenuBar />
 <div class="main-container">
     <h1>Contests</h1>
 

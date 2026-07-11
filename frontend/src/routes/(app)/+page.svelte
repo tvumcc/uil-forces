@@ -1,5 +1,4 @@
 <script lang="ts">
-    import MenuBar from "$lib/menuBar.svelte"
     import type {Contest, User} from "$lib/utils"
     import { onMount } from "svelte";
 
@@ -39,7 +38,6 @@
     })
 </script>
 
-<MenuBar />
 <div class="main-container">
     <h1>Home</h1>
 

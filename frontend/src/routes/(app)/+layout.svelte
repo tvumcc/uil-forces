@@ -1,10 +1,12 @@
 <script lang="ts">
 	import {onMount} from "svelte"
 	import {goto} from "$app/navigation"
+	import type { User } from "$lib/utils"
 
+	import MenuBar from "$lib/menuBar.svelte"
 	import Toast from "$lib/toast.svelte"
 
-	let user = $state(null)
+	let user: User | null = $state(null)
 	let checked = $state(false)
 
 	onMount(async () => {
@@ -14,7 +16,9 @@
 			return 
 		}
 
-		user = await response.json()
+		const data = await response.json()
+
+		user = data.user
 		checked = true
 	})
 
@@ -29,6 +33,7 @@
 </svelte:head>
 
 {#if checked}
+	<MenuBar user={user!}/>
 	{@render children()}
 {/if}
 

@@ -1,6 +1,4 @@
 <script lang="ts">
-    import MenuBar from "$lib/menuBar.svelte"
-    import Toast from "$lib/toast.svelte"
     import {csrfFetch, type User} from "$lib/utils"
     import { addToast, ToastType } from "$lib/toastStore.svelte"
 
@@ -44,8 +42,6 @@
     }
 </script>
 
-<MenuBar />
-<Toast />
 <div class="main-container">
     <h1>Users</h1>
 

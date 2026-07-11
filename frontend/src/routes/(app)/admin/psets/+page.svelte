@@ -1,5 +1,4 @@
 <script lang="ts">
-    import MenuBar from "$lib/menuBar.svelte"
     import {csrfFetch, type ProblemSet} from "$lib/utils"
 
     let validRequest = $state(true)
@@ -35,7 +34,6 @@
     }
 </script>
 
-<MenuBar />
 <div class="main-container">
     <h1>Problem Sets</h1>
     {#await getData()}

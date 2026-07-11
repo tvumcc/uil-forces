@@ -1,6 +1,5 @@
 <script lang="ts">
     import * as ace from "ace-builds"
-    import MenuBar from "$lib/menuBar.svelte"
     import {csrfFetch, type Problem} from "$lib/utils"
 
     let params = new URLSearchParams(document.location.search)
@@ -61,7 +60,6 @@
     }
 </script>
 
-<MenuBar />
 <div class="main-container">
     <h1>Edit Problem</h1>
 

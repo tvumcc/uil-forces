@@ -1,5 +1,4 @@
 <script lang="ts">
-    import MenuBar from "$lib/menuBar.svelte"
     import { toTzIsoString, getTzOffset, type Contest, csrfFetch } from "$lib/utils"
 
     let params = new URLSearchParams(document.location.search)
@@ -95,7 +94,6 @@
     }
 </script>
 
-<MenuBar />
 <div class="main-container">
     <h1>Edit Contest</h1>
     {#await getData()}

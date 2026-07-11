@@ -1,5 +1,4 @@
 <script lang="ts">
-    import MenuBar from "$lib/menuBar.svelte"
     import {csrfFetch, getTzOffset, type Contest} from "$lib/utils"
 
     let validRequest = $state(true)
@@ -39,7 +38,6 @@
     }
 </script>
 
-<MenuBar />
 <div class="main-container">
     <h1>Contests</h1>
 

@@ -1,8 +1,3 @@
-<script lang="ts">
-    import MenuBar from "$lib/menuBar.svelte"
-</script>
-
-<MenuBar />
 <div class="main-container">
     <h1>Admin Home</h1>
     <h3><a href="/admin/settings">Settings</a></h3>

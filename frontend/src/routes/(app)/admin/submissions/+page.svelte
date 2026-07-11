@@ -1,5 +1,4 @@
 <script lang="ts">
-    import MenuBar from "$lib/menuBar.svelte"
     import SubmissionTable from "$lib/submissionTable.svelte";
     import type {Submission} from "$lib/utils"
 
@@ -23,7 +22,6 @@
     }
 </script>
 
-<MenuBar />
 <div class="main-container">
     <h1>All Submissions</h1>
 

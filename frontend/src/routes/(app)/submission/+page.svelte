@@ -1,7 +1,6 @@
 <script lang="ts">
     import * as ace from "ace-builds"
     import Status from "$lib/status.svelte"
-    import MenuBar from "$lib/menuBar.svelte"
     import type { Submission } from "$lib/utils"
     import { addToast, ToastType } from "$lib/toastStore.svelte";
     import { goBack } from "$lib/navigationHistory.svelte";
@@ -89,7 +88,6 @@
     }
 </script>
 
-<MenuBar />
 <div class="main-container">
     <h1>Submission</h1>
     {#await getData()}

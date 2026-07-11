@@ -1,15 +1,13 @@
 <script lang="ts">
     import { goto } from "$app/navigation";
-    import type {User} from "$lib/utils"
+    import type { User } from "$lib/utils"
     import { addToast, ToastType } from "./toastStore.svelte";
 
-    let user: User | undefined = $state()
-
-    async function getData() {
-        let response = await fetch("/api/user")
-        let json = await response.json()
-        user = json.user
+    interface MenuBarProps {
+        user: User
     }
+
+    let {user}: MenuBarProps = $props()
 
     async function logout(event: Event) {
         event.preventDefault()
@@ -33,9 +31,7 @@
         {/if}
     </div>
     <div id="user-info">
-        {#await getData() then}
-            <p id="username">{user!.username}</p>
-        {/await}
+        <p id="username">{user.username}</p>
         <p>|</p>
         <a class="link" href="/" onclick={logout}>Log out</a>
     </div>

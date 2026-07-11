@@ -1,6 +1,5 @@
 <script lang="ts">
     import SubmitForm from "$lib/submitForm.svelte"
-    import MenuBar from "$lib/menuBar.svelte"
     import SubmissionTable from "$lib/submissionTable.svelte"
     import Leaderboard from "$lib/leaderboard.svelte"
     import type {Contest} from "$lib/utils"
@@ -47,78 +46,51 @@
     }
 </script>
 
-<div class="horizontal-split">
-    <div id="pdf-viewer">
-        {#if submissionProblemID !== -1}
-            <embed type="application/pdf" src={`/api/problem/${submissionProblemID}/pdf#toolbar=0&navpanes=0`} width="100%" height="100%">
-        {:else}
-            <p>No Problem Selected</p>
-        {/if}
-    </div>
-    <div class="submit-panel">
-        <MenuBar />
-        <div class="main-container" style="flex: 0 0 auto;">
-            {#await getData()}
-                 <p>Loading...</p>
-            {:then}
-                {#if contest !== undefined}
-                    <h1>{contest.name}</h1>
-                    <a href="/api/contest/{ID}/data" target="_blank">Download Student Data</a>
-                    {#if contest.status === "upcoming"}
-                        <p>The contest has not started yet. You cannot submit solutions.</p>
-                    {:else}
-                        {#if contest.status === "past"}
-                            <p>The contest has ended. You can still view submissions and the leaderboard, but you cannot submit solutions.</p>
-                        {:else}
-                            <h2>Submit Code</h2>
-                            <SubmitForm submissionType={"contest"} ID={ID!} problems={contest.problems!} allowedLanguages={contest.allowedLanguages!.split(" ")} reloadSubmissions={getData} {reloadLeaderboard} bind:submissionProblemID/>
-                        {/if}
-
-                        {#if contest.showLeaderboard}
-                            <h2>Leaderboard</h2>
-                            <div class="lb" style="width: 100%; overflow-x: scroll;">
-                                <Leaderboard {ID} problems={contest.problems} bind:this={leaderboard}/>            
-                            </div>
-                            <br>
-                        {/if}
-
-                        {#if contest.status === "past"}
-                            <h2>All Submissions</h2>
-                            <SubmissionTable submissions={contest.submissions} showUsers={true}/>
-                        {:else}
-                            <h2>Your Submissions</h2>
-                            <SubmissionTable submissions={contest.submissions} showUsers={false}/>
-                        {/if}
-                    {/if}
+<div class="main-container" style="flex: 0 0 auto;">
+    {#await getData()}
+            <p>Loading...</p>
+    {:then}
+        {#if contest !== undefined}
+            <h1>{contest.name}</h1>
+            <a href="/api/contest/{ID}/data" target="_blank">Download Student Data</a>
+            {#if contest.status === "upcoming"}
+                <p>The contest has not started yet. You cannot submit solutions.</p>
+            {:else}
+                {#if contest.status === "past"}
+                    <p>The contest has ended. You can still view submissions and the leaderboard, but you cannot submit solutions.</p>
+                {:else}
+                    <h2>Submit Code</h2>
+                    <SubmitForm submissionType={"contest"} ID={ID!} problems={contest.problems!} allowedLanguages={contest.allowedLanguages!.split(" ")} reloadSubmissions={getData} {reloadLeaderboard} bind:submissionProblemID/>
                 {/if}
-            {/await}
-        </div>
-    </div>
+                <div id="pdf-viewer">
+                    {#if submissionProblemID !== -1}
+                        <embed type="application/pdf" src={`/api/problem/${submissionProblemID}/pdf#toolbar=0&navpanes=0`} width="100%" height="100%">
+                    {:else}
+                        <p>No Problem Selected</p>
+                    {/if}
+                </div>
+
+                {#if contest.showLeaderboard}
+                    <h2>Leaderboard</h2>
+                    <div class="lb" style="width: 100%; overflow-x: scroll;">
+                        <Leaderboard {ID} problems={contest.problems} bind:this={leaderboard}/>            
+                    </div>
+                    <br>
+                {/if}
+
+                {#if contest.status === "past"}
+                    <h2>All Submissions</h2>
+                    <SubmissionTable submissions={contest.submissions} showUsers={true}/>
+                {:else}
+                    <h2>Your Submissions</h2>
+                    <SubmissionTable submissions={contest.submissions} showUsers={false}/>
+                {/if}
+            {/if}
+        {/if}
+    {/await}
 </div>
 
 <style>
-    .horizontal-split {
-        display: flex;
-        width: 100%;
-        height: 100%;
-
-        overflow: hidden;
-    }
-
-    .submit-panel {
-        margin: 0;
-        display: flex;
-        align-items: center;
-        flex-direction: column;
-        height: 100vh;
-        overflow-y: auto;
-        flex: 1;
-
-        scrollbar-width: none;
-        -ms-overflow-style: none;
-    }
-    .submit-panel::-webkit-scrollbar {display: none;}
-    
     #pdf-viewer {
         background-color: #101828;
         height: 100vh;

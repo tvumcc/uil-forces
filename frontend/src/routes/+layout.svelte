@@ -3,7 +3,7 @@
     import { recordNavigation } from '$lib/navigationHistory.svelte';
 
     afterNavigate(({ from }) => {
-        recordNavigation(from?.url.pathname);
+        recordNavigation(from?.url?.pathname);
     });
 
     let { children } = $props();
