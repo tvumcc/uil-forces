@@ -2,12 +2,12 @@
     import * as ace from "ace-builds"
     import Status from "$lib/status.svelte"
     import MenuBar from "$lib/menuBar.svelte"
-    import type {Submission} from "$lib/utils"
+    import type { Submission } from "$lib/utils"
+    import { addToast, ToastType } from "$lib/toastStore.svelte";
+    import { goBack } from "$lib/navigationHistory.svelte";
 
     let params = new URLSearchParams(document.location.search)
     let ID = params.get("id")
-    let validRequest = $state(true)
-    let message = $state("")
 
     let submission: Submission | undefined = $state()
 
@@ -19,14 +19,24 @@
 
     async function getData() {
         let response: Response = await fetch(`/api/submission/${ID}`)
-        let json = await response.json()
+        let data = await response.json()
 
         if (!response.ok) {
-            validRequest = false
-            message = json.description        
+            let error_message
+            if (data.error === "not_found") {
+                error_message = "Submission does not exist"
+            } else if (data.error === "invalid_permission") {
+                error_message = "Submission cannot be viewed at this time"
+            } else {
+                error_message = "Internal Error"
+            }
+
+            addToast(error_message, ToastType.Error)
+            goBack()
+            return
         }
 
-        submission = json.submission
+        submission = data.submission
     }
 
     function fillEditors(node: Node) {
@@ -85,7 +95,7 @@
     {#await getData()}
         <p>Loading...</p> 
     {:then}
-        {#if validRequest && submission !== undefined}
+        {#if submission !== undefined}
             <p>User: {submission.user.username}</p>
             <p>Submit Time: {new Date(submission.submitTime).toLocaleString()}</p>
             <p>Status: <Status statusCode={submission.status} fitText={true}/></p>
@@ -115,8 +125,6 @@
                     <div id="judge-output"></div>
                 {/if}
             </div>
-        {:else}
-            <p>{message}</p>
         {/if}
     {/await}
 </div>

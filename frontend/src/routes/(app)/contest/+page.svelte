@@ -5,7 +5,7 @@
     import Leaderboard from "$lib/leaderboard.svelte"
     import type {Contest} from "$lib/utils"
     import { addToast, ToastType } from "$lib/toastStore.svelte";
-    import { goto } from "$app/navigation";
+    import { goBack } from "$lib/navigationHistory.svelte";
 
     let params = new URLSearchParams(document.location.search)
     let ID = params.get("id")
@@ -39,7 +39,7 @@
             }
 
             addToast(error_message, ToastType.Error)
-            goto("/contests")
+            goBack()
             return
         }
 

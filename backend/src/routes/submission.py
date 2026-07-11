@@ -21,7 +21,7 @@ def submission(id):
 
     submission = db.session.get(Submission, id)
     if submission is None or not submission.valid():
-        flask.abort(404, description="Submission does not exist")
+        return {"error": "not_found"}, 404
 
     user = submission.user
     contest_profile = submission.contest_profile
@@ -30,7 +30,7 @@ def submission(id):
     if not past_contest \
         and not flask_login.current_user.is_admin \
         and flask_login.current_user != user:
-        flask.abort(403, description="Submission cannot be viewed at this time")
+        return {"error": "invalid_permission"}, 403
 
     return {
         "submission": submission.serialize(user=user, admin_view=flask_login.current_user.is_admin)
