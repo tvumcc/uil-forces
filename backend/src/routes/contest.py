@@ -42,7 +42,7 @@ def contest(id):
 
     contest = db.session.get(Contest, id)
     if not contest:
-        flask.abort(404, description="Contest does not exist")
+        return {"error": "not_found"}, 404
     contest_profile = db.session.query(ContestProfile).filter_by(user=flask_login.current_user, contest=contest).first()
     if not contest_profile:
         contest_profile = ContestProfile(user=flask_login.current_user, contest=contest)

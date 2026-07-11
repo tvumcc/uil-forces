@@ -4,11 +4,11 @@
     import SubmissionTable from "$lib/submissionTable.svelte"
     import Leaderboard from "$lib/leaderboard.svelte"
     import type {Contest} from "$lib/utils"
+    import { addToast, ToastType } from "$lib/toastStore.svelte";
+    import { goto } from "$app/navigation";
 
     let params = new URLSearchParams(document.location.search)
     let ID = params.get("id")
-    let validRequest = $state(true)
-    let message = $state("")
 
     let contest: Contest | undefined = $state()
     let leaderboard: Leaderboard | undefined = $state()
@@ -28,14 +28,22 @@
 
     async function getData() {
         let response = await fetch(`/api/contest/${ID}`)
-        let json = await response.json()
+        let data = await response.json()
 
         if (!response.ok) {
-            validRequest = false
-            message = json.description
+            let error_message
+            if (data.error === "not_found") {
+                error_message = "Contest does not exist"
+            } else {
+                error_message = "Internal error"
+            }
+
+            addToast(error_message, ToastType.Error)
+            goto("/contests")
+            return
         }
 
-        contest = json.contest
+        contest = data.contest
     }
 </script>
 
@@ -53,7 +61,7 @@
             {#await getData()}
                  <p>Loading...</p>
             {:then}
-                {#if validRequest && contest !== undefined}
+                {#if contest !== undefined}
                     <h1>{contest.name}</h1>
                     <a href="/api/contest/{ID}/data" target="_blank">Download Student Data</a>
                     {#if contest.status === "upcoming"}
@@ -82,8 +90,6 @@
                             <SubmissionTable submissions={contest.submissions} showUsers={false}/>
                         {/if}
                     {/if}
-                {:else}
-                    <p>{message}</p>
                 {/if}
             {/await}
         </div>

@@ -10,7 +10,7 @@
 	onMount(async () => {
 		const response = await fetch("/api/user")
 		if (response.status === 401) {
-			goto(`/login?next=${encodeURIComponent(window.location.pathname)}`)	
+			goto(`/login?next=${encodeURIComponent(window.location.toString())}`)	
 			return 
 		}
 

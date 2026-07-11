@@ -18,7 +18,7 @@
 
         if (!response.ok) {
             const err = await response.json().catch(() => ({}))
-            addToast(err.error === "invalid_credentials" ? "Invalid credentials" : "Login failed, please try again.", ToastType.Error)
+            addToast(err.error === "invalid_credentials" ? "Incorrect username or password" : "Login failed, please try again.", ToastType.Error)
             return
         }
 
