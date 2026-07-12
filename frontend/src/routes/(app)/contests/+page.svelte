@@ -1,7 +1,8 @@
 <script lang="ts">
-    import type {Contest} from "$lib/utils"
     import { addToast, ToastType } from "$lib/toastStore.svelte";
     import { goto } from "$app/navigation";
+
+    import type { Contest } from "$lib/utils"
 
     let pastContests: Contest[] = $state([])
     let ongoingContests: Contest[] = $state([])

@@ -1,10 +1,12 @@
 <script lang="ts">
+    import { addToast, ToastType } from "$lib/toastStore.svelte";
+    import { goBack } from "$lib/navigationHistory.svelte";
+
+    import type {Contest} from "$lib/utils"
+
     import SubmitForm from "$lib/submitForm.svelte"
     import SubmissionTable from "$lib/submissionTable.svelte"
     import Leaderboard from "$lib/leaderboard.svelte"
-    import type {Contest} from "$lib/utils"
-    import { addToast, ToastType } from "$lib/toastStore.svelte";
-    import { goBack } from "$lib/navigationHistory.svelte";
 
     let params = new URLSearchParams(document.location.search)
     let ID = params.get("id")
@@ -34,7 +36,7 @@
             if (data.error === "not_found") {
                 error_message = "Contest does not exist"
             } else {
-                error_message = "Internal error"
+                error_message = "Failed to load contest page"
             }
 
             addToast(error_message, ToastType.Error)

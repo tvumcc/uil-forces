@@ -1,9 +1,11 @@
 <script lang="ts">
-    import * as ace from "ace-builds"
-    import Status from "$lib/status.svelte"
-    import type { Submission } from "$lib/utils"
     import { addToast, ToastType } from "$lib/toastStore.svelte";
     import { goBack } from "$lib/navigationHistory.svelte";
+    import * as ace from "ace-builds"
+
+    import type { Submission } from "$lib/utils"
+
+    import Status from "$lib/status.svelte"
 
     let params = new URLSearchParams(document.location.search)
     let ID = params.get("id")

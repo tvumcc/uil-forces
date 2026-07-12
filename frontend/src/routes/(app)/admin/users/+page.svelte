@@ -2,10 +2,7 @@
     import {csrfFetch, type User} from "$lib/utils"
     import { addToast, ToastType } from "$lib/toastStore.svelte"
 
-    let validRequest = $state(true)
-    let message = $state("")
-
-    let users: User[] = $state([])
+    let users: User[] | undefined = $state([])
 
     // state for add user section
     let username = $state("")
@@ -17,8 +14,8 @@
         let json = await response.json()
 
         if (!response.ok) {
-            validRequest = false
-            message = json.description
+            addToast("Failed to load user list", ToastType.Error)
+            return
         }
 
         users = json.users
@@ -35,7 +32,7 @@
 
         if (response.ok) {
             await getData()
-            addToast(`Created user ${username}.`)
+            addToast(`Created user ${username}`, ToastType.Success)
         } else {
             addToast(`Failed to create user ${username}`, ToastType.Error)
         }
@@ -48,25 +45,24 @@
     {#await getData()}
         <p>Loading...</p> 
     {:then} 
-        {#if validRequest} 
+        {#if users !== undefined}
             {#each users as user}
                 <a href="/user?id={user["id"]}">{user.username} {user.isAdmin ? "(admin)" : ""}</a>
                 <br>
             {/each}
-
-            <h2>Add User</h2>
-            <form onsubmit={addUser}>
-                <label for="username">Username</label>
-                <input name="username" type="text" bind:value={username}>
-                <label for="password">Password</label>
-                <input name="password" type="text" bind:value={password}>
-                <label for="is_admin">Admin</label>
-                <input name="is_admin" type="checkbox" bind:checked={isAdmin}>
-                <input type="submit" value="Add User">
-            </form>
-
         {:else}
-            <p>{message}</p>
+            <p>User list could not be loaded</p>
         {/if}
+
+        <h2>Add User</h2>
+        <form onsubmit={addUser}>
+            <label for="username">Username</label>
+            <input name="username" type="text" bind:value={username}>
+            <label for="password">Password</label>
+            <input name="password" type="text" bind:value={password}>
+            <label for="is_admin">Admin</label>
+            <input name="is_admin" type="checkbox" bind:checked={isAdmin}>
+            <input type="submit" value="Add User">
+        </form>
     {/await}
 </div>

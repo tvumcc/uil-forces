@@ -194,7 +194,7 @@ def admin_contest(id):
 
     contest = db.session.get(Contest, id)
     if not contest:
-        flask.abort(404, description="Contest does not exist")
+        return {"error": "not_found"}, 404
 
     return {"contest": contest.serialize()}
 
@@ -332,7 +332,7 @@ def admin_add_contest():
     db.session.add(contest)
     db.session.commit()
 
-    return f"Successfully added new contest {contest.id} ({contest.name})"
+    return {"contest", contest.shallow_serialize()}, 201
 
 @app.route("/api/admin/contest/updateproblems", methods=["POST"])
 @admin_required

@@ -1,10 +1,12 @@
 <script lang="ts">
+    import { goto } from "$app/navigation";
+
+    import { addToast, ToastType } from "$lib/toastStore.svelte";
+
     import { toTzIsoString, getTzOffset, type Contest, csrfFetch } from "$lib/utils"
 
     let params = new URLSearchParams(document.location.search)
     let ID = params.get("id")
-    let validRequest = $state(true)
-    let message = $state("")
 
     let contest: Contest | undefined = $state()
 
@@ -14,14 +16,22 @@
 
     async function getData() {
         let response: Response = await fetch(`/api/admin/contest/${ID}`)
-        let json = await response.json()
+        let data = await response.json()
         
         if (!response.ok) {
-            validRequest = false
-            message = json.description
+            let error_message
+            if (data.error === "not_found") {
+                error_message = "Contest does not exist"
+            } else {
+                error_message = "Failed to load contest page"
+            }
+
+            addToast(error_message, ToastType.Error)
+            goto("/admin/contests")
+            return
         }
 
-        contest = json.contest
+        contest = data.contest
         if (contest !== undefined) {
             contest.startTime = toTzIsoString(new Date(contest.startTime))
             contest.endTime = toTzIsoString(new Date(contest.endTime))
@@ -99,7 +109,7 @@
     {#await getData()}
         <p>Loading...</p> 
     {:then} 
-        {#if validRequest && contest !== undefined}
+        {#if contest !== undefined}
             <form onsubmit={editContest}>
                 <table>
                     <tbody>
@@ -178,8 +188,6 @@
                 </table>
                 <input type="submit" value="Add Problem">
             </form>
-        {:else}
-            <p>{message}</p>
         {/if}
     {/await}
 </div>

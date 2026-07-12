@@ -99,11 +99,12 @@ def admin_add_user():
     password = data["password"] 
     is_admin = data["isAdmin"]
 
-    db.session.add(User(
+    user = User(
         username=username,
         password_hash=generate_password_hash(password),
         is_admin=is_admin
-    ))
+    )
+    db.session.add(user)
     db.session.commit()
 
-    return {"username": username}, 201
+    return {"user": user.shallow_serialize()}, 201

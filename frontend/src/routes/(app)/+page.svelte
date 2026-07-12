@@ -1,6 +1,7 @@
 <script lang="ts">
-    import type {Contest, User} from "$lib/utils"
     import { onMount } from "svelte";
+
+    import type { Contest, User } from "$lib/utils"
 
     let loading = $state(true)
 
