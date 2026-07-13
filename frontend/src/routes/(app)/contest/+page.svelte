@@ -15,13 +15,6 @@
     let leaderboard: Leaderboard | undefined = $state()
     let submissionProblemID = $state(-1)
 
-    $effect(() => {
-        if (submissionProblemID !== -1 && contest!.showPdf) {
-            document.getElementById("pdf-viewer")!.style.display = "flex"
-        } else {
-            document.getElementById("pdf-viewer")!.style.display = "none"
-        }
-    })
 
     async function reloadLeaderboard() {
         await leaderboard!.getData()
@@ -64,13 +57,12 @@
                     <h2>Submit Code</h2>
                     <SubmitForm submissionType={"contest"} ID={ID!} problems={contest.problems!} allowedLanguages={contest.allowedLanguages!.split(" ")} reloadSubmissions={getData} {reloadLeaderboard} bind:submissionProblemID/>
                 {/if}
-                <div id="pdf-viewer">
-                    {#if submissionProblemID !== -1}
+
+                {#if contest!.showPdf && contest!.status === "ongoing" && submissionProblemID !== -1}
+                    <div id="pdf-viewer">
                         <embed type="application/pdf" src={`/api/problem/${submissionProblemID}/pdf#toolbar=0&navpanes=0`} width="100%" height="100%">
-                    {:else}
-                        <p>No Problem Selected</p>
-                    {/if}
-                </div>
+                    </div>
+                {/if}
 
                 {#if contest.showLeaderboard}
                     <h2>Leaderboard</h2>

@@ -62,7 +62,7 @@ def admin_problem(id):
         
     problem = db.session.get(Problem, id) 
     if not problem:
-        flask.abort(404, description="Problem does not exist")
+        return {"error": "not_found"}, 404
 
     return {"problem": problem.serialize()}
 
@@ -74,7 +74,7 @@ def admin_update_problem():
     request = flask.request.get_json()
     problem = db.session.get(Problem, request["id"]) 
     if not problem:
-        flask.abort(404, description="Problem does not exist")
+        return {"error": "not_found"}, 404
 
     problem.name = request["name"]
     problem.pages = request["pages"]
@@ -89,7 +89,7 @@ def admin_update_problem():
 
     log.info(f"Problem {problem.id} ({problem.name}) updated by {flask_login.current_user.username}")
 
-    return f"Successfully updated problem {problem.id}"
+    return {"problem": problem.serialize()}
 
 @app.route("/api/admin/problem/<id>/delete", methods=["DELETE"])
 @admin_required

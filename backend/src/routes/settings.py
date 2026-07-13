@@ -16,7 +16,7 @@ def admin_settings():
         if setting.key == "docker_grading":
             out[setting.key] = setting.value.lower() == "true"
 
-    return {"settings": out}
+    return {"settings": out}, 404
 
 @app.route("/api/admin/update/settings", methods=["POST"])
 @admin_required
@@ -35,4 +35,4 @@ def admin_update_settings():
 
     log.info(f"Site-wide settings updated by {flask_login.current_user.username}")
 
-    return "Successfully updated site-wide settings"
+    return {}, 204

@@ -1,32 +1,35 @@
 <script lang="ts">
+    import { goBack } from "$lib/navigationHistory.svelte";
+    import { addToast, ToastType } from "$lib/toastStore.svelte";
     import {csrfFetch, type Settings} from "$lib/utils"
-
-    let validRequest = $state(true)
-    let message = $state("")
 
     let settings: Settings | undefined = $state()
 
     async function getData() {
-        let response: Response = await fetch(`/api/admin/settings`)
-        let json = await response.json()
+        const response: Response = await fetch(`/api/admin/settings`)
+        const data = await response.json()
 
         if (!response.ok) {
-            validRequest = false
-            message = json.description
+            addToast("Failed to retreive settings", ToastType.Error)
+            goBack()
+            return
         }        
 
-        settings = json.settings
+        settings = data.settings
     }
 
     async function editSettings(event: Event) {
         event.preventDefault()
 
-        let response: Response = await csrfFetch("/api/admin/update/settings", "POST", JSON.stringify({
+        const response: Response = await csrfFetch("/api/admin/update/settings", "POST", JSON.stringify({
             docker_grading: settings!.docker_grading
         }))
 
         if (response.ok) {
             await getData()
+            addToast("Updated settings")
+        } else {
+            addToast("Failed to update settings")
         }
     }
 </script>
@@ -37,7 +40,7 @@
     {#await getData()}
         <p>Loading...</p> 
     {:then} 
-        {#if validRequest && settings !== undefined} 
+        {#if settings !== undefined} 
             <form onsubmit={editSettings}>
                 <table>
                     <tbody>
@@ -49,8 +52,6 @@
                 </table>
                 <input type="submit" value="Update Settings">
             </form>
-        {:else}
-            <p>{message}</p>
         {/if}
     {/await}
 

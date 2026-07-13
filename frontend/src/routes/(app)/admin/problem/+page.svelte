@@ -1,11 +1,11 @@
 <script lang="ts">
     import * as ace from "ace-builds"
     import {csrfFetch, type Problem} from "$lib/utils"
+    import { addToast, ToastType } from "$lib/toastStore.svelte";
+    import { goBack } from "$lib/navigationHistory.svelte";
 
     let params = new URLSearchParams(document.location.search)
     let ID = params.get("id")
-    let validRequest = $state(true)
-    let message = $state("")
 
     let problem: Problem | undefined = $state()
 
@@ -15,15 +15,23 @@
     let judgeOutputEditor: ace.Editor
 
     async function getData() {
-        let response: Response = await fetch(`/api/admin/problem/${ID}`)
-        let json = await response.json()
+        const response: Response = await fetch(`/api/admin/problem/${ID}`)
+        const data = await response.json()
 
         if (!response.ok) {
-            validRequest = false
-            message = json.description
+            let error_message
+            if (data.error === "not_found") {
+                error_message = "Problem does not exist"
+            } else {
+                error_message = "Failed to load problem"
+            }
+
+            addToast(error_message, ToastType.Error)
+            goBack()
+            return
         }
 
-        problem = json.problem
+        problem = data.problem
     }
 
     function fillEditors(node: Node) {
@@ -49,13 +57,22 @@
         editor.focus()
     }
 
-    async function editProblem(event: Event) {
+    async function updateProblem(event: Event) {
         event.preventDefault()
 
-        let response: Response = await csrfFetch("/api/admin/update/problem", "POST", JSON.stringify(problem))
+        const response: Response = await csrfFetch("/api/admin/update/problem", "POST", JSON.stringify(problem))
 
         if (response.ok) {
-            await getData()
+            const data = await response.json()
+            problem = data.problem
+            addToast(`Updated problem with ID ${problem!.id}`, ToastType.Success)
+        } else {
+            const data = await response.json().catch(() => ({}))
+            if (data.error === "not_found") {
+                addToast(`Problem with ID ${problem!.id} does not exist`, ToastType.Error)
+            } else {
+                addToast(`Failed to update problem with ID ${problem!.id}`, ToastType.Error)
+            }
         }
     }
 </script>
@@ -66,8 +83,8 @@
     {#await getData()}
         <p>Loading...</p>
     {:then} 
-        {#if validRequest && problem !== undefined}
-            <form onsubmit={editProblem}>
+        {#if problem !== undefined}
+            <form onsubmit={updateProblem}>
                 <table>
                     <tbody>
                         <tr>
@@ -100,8 +117,6 @@
 
                 <input type="submit" value="Update Problem">
             </form>
-        {:else}
-            <p>{message}</p>
         {/if}
     {/await}
 </div>

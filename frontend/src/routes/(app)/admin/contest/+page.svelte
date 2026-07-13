@@ -15,8 +15,8 @@
     let problemName = $state("")
 
     async function getData() {
-        let response: Response = await fetch(`/api/admin/contest/${ID}`)
-        let data = await response.json()
+        const response: Response = await fetch(`/api/admin/contest/${ID}`)
+        const data = await response.json()
         
         if (!response.ok) {
             let error_message
@@ -41,7 +41,7 @@
     async function editContest(event: Event) {
         event.preventDefault()
 
-        let response: Response = await csrfFetch("/api/admin/update/contest", "POST", JSON.stringify({
+        const response: Response = await csrfFetch("/api/admin/update/contest", "POST", JSON.stringify({
             id: contest!.id,
             name: contest!.name,
             startTime: new Date(contest?.startTime + getTzOffset()).toISOString(),
