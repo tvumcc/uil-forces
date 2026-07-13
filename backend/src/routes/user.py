@@ -22,7 +22,7 @@ def login():
     flask_login.login_user(user)
     log.info(f"User '{user.username}' logged in")
 
-    return user.shallow_serialize()
+    return "", 204
 
 @app.route("/api/logout")
 def logout():
@@ -30,7 +30,7 @@ def logout():
 
     flask_login.logout_user()
 
-    return {"success": "logged_out"}
+    return "", 204
 
 @app.route("/api/register", methods=["POST"])
 def register():
@@ -53,7 +53,7 @@ def register():
 
     flask_login.login_user(db.session.get(User, user.id))
 
-    return user.shallow_serialize()
+    return "", 201
 
 @app.route("/api/user")
 @flask_login.login_required
@@ -107,4 +107,4 @@ def admin_add_user():
     db.session.add(user)
     db.session.commit()
 
-    return {"user": user.shallow_serialize()}, 201
+    return "", 201

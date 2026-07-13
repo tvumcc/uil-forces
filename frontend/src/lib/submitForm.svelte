@@ -1,5 +1,6 @@
 <script lang="ts">
     import {type Problem, type ContestProblem, csrfFetch} from "$lib/utils"
+    import { addErrorToast } from "./toastStore.svelte";
 
     interface SubmitFormProps {
         submissionType: string
@@ -32,18 +33,25 @@
 
     async function submitProblem(event: Event) {
         event.preventDefault()
-        let response: Response = await csrfFetch(`/api/${submissionType}/submit`, "POST", JSON.stringify({
+
+        const response: Response = await csrfFetch(`/api/${submissionType}/submit`, "POST", JSON.stringify({
             contestID: ID,
             problemID: submissionProblemID,
             code: fileText,
             language: submissionLanguage 
         }))
-        let json = await response.json()
+
+        if (!response.ok) {
+            await addErrorToast(response, "Failed to submit code")
+            return
+        }
+
+        let data = await response.json()
 
         reloadSubmissions()
         reloadLeaderboard()
 
-        let count = json.estimatedWait
+        let count = data.estimatedWait
         let interval_id = setInterval(async () => {
             if (count > 0) {
                 reloadSubmissions()

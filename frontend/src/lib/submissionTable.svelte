@@ -1,6 +1,7 @@
 <script lang="ts">
     import Status from "$lib/status.svelte"
     import {csrfFetch, type Submission} from "$lib/utils"
+    import { addErrorToast } from "./toastStore.svelte";
 
     let {
         submissions, 
@@ -9,12 +10,14 @@
     } = $props()
 
     async function deleteSubmission(id: number) {
-        let response: Response = await csrfFetch(`/api/admin/submission/${id}/delete`, "DELETE", JSON.stringify({}))
-        if (response.status === 200) {
-            submissions = submissions.filter((submission: Submission) => submission.id !== id)
-        } else {
-            alert("Error deleting submission")
+        const response: Response = await csrfFetch(`/api/admin/submission/${id}/delete`, "DELETE", JSON.stringify({}))
+
+        if (!response.ok) {
+            await addErrorToast(response, "Failed to delete submission")
+            return
         }
+
+        submissions = submissions.filter((submission: Submission) => submission.id !== id)
     }
 </script>
 

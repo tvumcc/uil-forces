@@ -1,7 +1,7 @@
 <script lang="ts">
     import { goto } from "$app/navigation";
     import type { User } from "$lib/utils"
-    import { addToast, ToastType } from "./toastStore.svelte";
+    import { addErrorToast } from "./toastStore.svelte";
 
     interface MenuBarProps {
         user: User
@@ -11,10 +11,12 @@
 
     async function logout(event: Event) {
         event.preventDefault()
-        let response = await fetch("/api/logout")
+
+        const response: Response = await fetch("/api/logout")
 
         if (!response.ok) {
-            addToast("Failed to log out", ToastType.Error) 
+            await addErrorToast(response, "Failed to log out") 
+            return
         }
 
         goto("/login")

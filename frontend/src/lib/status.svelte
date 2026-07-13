@@ -1,10 +1,9 @@
 <script lang="ts">
     let { statusCode, fitText } = $props()
-    let displaySelector = fitText ? "inline-block" : "block"
     let statusStr = ["Pending", "Accepted", "Wrong Answer", "Compile Error", "Runtime Error", "Time Limit Exceeded", "Server Error"]
 </script>
 
-<div class="Status{statusCode}" style="display: {displaySelector};">
+<div class="Status{statusCode}" style="display: {fitText ? "inline-block" : "block"};">
     <b>{ statusStr[statusCode] }</b>
 </div>
 

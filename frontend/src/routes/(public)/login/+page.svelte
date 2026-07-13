@@ -1,29 +1,26 @@
 <script lang="ts">
     import { goto } from "$app/navigation";
     import { page } from "$app/state";
-    import { addToast, ToastType } from "$lib/toastStore.svelte";
-    import { csrfFetch, type User } from "$lib/utils"
+    import { addErrorToast, addToast, ToastType } from "$lib/toastStore.svelte";
+    import { csrfFetch } from "$lib/utils"
 
     let username = $state()
     let password = $state()
-    let invalidLogin = $state(false)
 
     async function login(event: Event) {
         event.preventDefault()
 
-        let response = await csrfFetch("/api/login", "POST", JSON.stringify({
+        const response: Response = await csrfFetch("/api/login", "POST", JSON.stringify({
             username: username,
             password: password
         }))
 
         if (!response.ok) {
-            const err = await response.json().catch(() => ({}))
-            addToast(err.error === "invalid_credentials" ? "Incorrect username or password" : "Login failed, please try again.", ToastType.Error)
+            await addErrorToast(response, "Login failed, please try again")
             return
         }
 
-        const user: User = await response.json()
-        addToast(`Welcome back, ${user.username}`)
+        addToast(`Welcome back, ${username}`, ToastType.Success)
 
         const next = page.url.searchParams.get("next")
         goto(next || "/")
@@ -34,11 +31,6 @@
     <form onsubmit={login}>
         <div class="form-region">
             <h1>UIL Forces</h1>
-        </div>
-        <div class="form-region">
-            {#if invalidLogin}
-                <p>Invalid Login</p>
-            {/if}
         </div>
         <div class="form-region">
             <label for="username">Username:</label>

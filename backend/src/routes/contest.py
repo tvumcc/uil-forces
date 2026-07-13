@@ -42,7 +42,7 @@ def contest(id):
 
     contest = db.session.get(Contest, id)
     if not contest:
-        return {"error": "not_found"}, 404
+        return {"error": "contest_not_found"}, 404
     contest_profile = db.session.query(ContestProfile).filter_by(user=flask_login.current_user, contest=contest).first()
     if not contest_profile:
         contest_profile = ContestProfile(user=flask_login.current_user, contest=contest)
@@ -83,13 +83,13 @@ def submit_contest_problem():
     language = request["language"]
 
     if not problem:
-        flask.abort(404, description="Problem does not exist")
+        return {"error": "problem_not_found"}, 404
     if not contest:
-        flask.abort(404, description="Contest does not exist")
+        return {"error": "contest_not_found"}, 404
     if not contest.is_ongoing():
-        flask.abort(403, description="Contest is not ongoing; submissions are not allowed at this time")
+        return {"error": "contest_not_ongoing"}, 403
     if language not in contest.allowed_languages.split(" "):
-        flask.abort(400, description="Invalid language submitted")
+        return {"error": "invalid_language"}, 400
 
     contest_profile = db.session.query(ContestProfile).filter_by(user=flask_login.current_user, contest=contest).first()
     if not contest_profile:
@@ -127,7 +127,7 @@ def contest_leaderboard(id):
 
     contest = db.session.get(Contest, id)
     if not contest:
-        flask.abort(404, description="Contest does not exist")
+        return {"error": "contest_not_found"}, 404
 
     if contest.show_leaderboard and not contest.is_upcoming():
         contest_profiles = sorted(contest.contest_profiles, key=lambda x: x.score, reverse=True)
@@ -155,7 +155,7 @@ def contest_leaderboard(id):
 def contest_data(id):
     contest = db.session.get(Contest, id)
     if not contest:
-        flask.abort(404, description="Contest does not exist")
+        return {"error": "contest_not_found"}, 404
 
     try:
         dirname = f"contest{contest.id}-student-data"
@@ -194,7 +194,7 @@ def admin_contest(id):
 
     contest = db.session.get(Contest, id)
     if not contest:
-        return {"error": "not_found"}, 404
+        return {"error": "contest_not_found"}, 404
 
     return {"contest": contest.serialize()}
 
@@ -210,16 +210,16 @@ def admin_contest_add_problem(id):
     contest = db.session.get(Contest, id)
     pset = db.session.query(ProblemSet).filter_by(name=pset_name).first()
     if not contest:
-        flask.abort(404, description="Contest does not exist")
+        return {"error": "contest_not_found"}, 404
     if not pset:
-        flask.abort(404, description="Problem set does not exist")
+        return {"error": "pset_not_found"}, 404
     problem = db.session.query(Problem).filter_by(pset=pset, name=problem_name).first()
     if not problem:
-        flask.abort(404, description="Problem does not exist")
+        return {"error": "problem_not_found"}, 404
 
     for p in contest.problem_links:
         if p.problem == problem:
-            flask.abort(400, description=f"Problem {p.problem.id} ({p.problem.name}) is already linked to contest {id} ({contest.name})")
+            return {"error": "problem_already_linked"}, 400
 
     problem_link = ContestProblemAssociation(problem=problem)
     db.session.add(problem_link)
@@ -228,7 +228,7 @@ def admin_contest_add_problem(id):
     db.session.add(contest)
     db.session.commit()
 
-    return f"Successfully linked problem {problem.id} ({problem.name}) to contest {id} ({contest.name})"
+    return "", 204
 
 @app.route("/api/admin/contest/<id>/add/pset", methods=["POST"])
 @admin_required
@@ -241,7 +241,7 @@ def admin_contest_add_pset(id):
     contest = db.session.get(Contest, id)
     pset = db.session.query(ProblemSet).filter_by(name=pset_name).first()
     if not pset:
-        flask.abort(404, description="Problem set does not exist")
+        return {"error": "pset_not_found"}, 404
 
     for problem in pset.problems:
         if not problem in contest.problems():
@@ -252,7 +252,7 @@ def admin_contest_add_pset(id):
     db.session.add(contest)
     db.session.commit()
 
-    return f"Successfully added problem set {pset.id} ({pset.name}) to contest {contest.id} ({contest.name})"
+    return "", 204
 
 @app.route("/api/admin/contest/unlinkproblem", methods=["POST"])
 @admin_required
@@ -267,9 +267,9 @@ def admin_contest_unlink_problem():
     problem = db.session.get(Problem, problem_id)
 
     if not contest:
-        flask.abort(404, description="Contest does not exist")
+        return {"error": "contest_not_found"}, 404
     if not problem:
-        flask.abort(404, description="Problem does not exist")
+        return {"error": "problem_not_found"}, 404
 
     problem_link_to_remove = None
     for problem_link in contest.problem_links:
@@ -278,13 +278,13 @@ def admin_contest_unlink_problem():
             break
 
     if not problem_link_to_remove:
-        flask.abort(400, description=f"Problem {problem.id} ({problem.name}) is not linked to contest {contest.id} ({contest.name})")
+        return {"error": "problem_not_linked"}, 400
 
     db.session.delete(problem_link_to_remove)
     db.session.add(contest)
     db.session.commit()
 
-    return f"Successfully unlinked problem {problem.id} ({problem.name}) from contest {contest.id} ({contest.name})"
+    return "", 204
 
 @app.route("/api/admin/update/contest", methods=["POST"])
 @admin_required
@@ -311,7 +311,7 @@ def admin_update_contest():
     db.session.add(contest)
     db.session.commit()
 
-    return f"Successfully updated contest {contest.id} ({contest.name})"
+    return "", 204
 
 @app.route("/api/admin/add/contest", methods=["POST"])
 @admin_required
@@ -332,7 +332,7 @@ def admin_add_contest():
     db.session.add(contest)
     db.session.commit()
 
-    return {"contest", contest.shallow_serialize()}, 201
+    return "", 201
 
 @app.route("/api/admin/contest/updateproblems", methods=["POST"])
 @admin_required
@@ -345,7 +345,7 @@ def admin_update_contest_problems():
 
     contest: Contest = db.session.get(Contest, contest_id)
     if not contest:
-        flask.abort(404, description="Contest does not exist")
+        return {"error": "contest_not_found"}, 404
 
     for problem in problems:
         problem_link = db.session.query(ContestProblemAssociation).filter_by(contest_id=contest.id, problem_id=problem["problem"]["id"]).first()
@@ -359,5 +359,5 @@ def admin_update_contest_problems():
         db.session.add(contest_profile)
 
     db.session.commit()
-    
-    return f"Successfully updated problem scoring for contest {contest.id} ({contest.name})"
+
+    return "", 204

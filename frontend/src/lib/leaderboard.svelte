@@ -1,14 +1,20 @@
 <script lang="ts">
     import { onMount } from "svelte"
     import type {LeaderboardEntry} from "$lib/utils"
+    import { addErrorToast } from "./toastStore.svelte";
 
     let {ID, problems} = $props()
     let leaderboard: LeaderboardEntry[] = $state([])
 
     export async function getData() {
-        let response: Response = await fetch(`/api/contest/${ID}/leaderboard`)
-        let json = await response.json()
-        leaderboard = json.leaderboard
+        const response: Response = await fetch(`/api/contest/${ID}/leaderboard`)
+
+        if (!response.ok) {
+            await addErrorToast(response, "Failed to load contest leaderboard")
+        }
+
+        const data = await response.json()
+        leaderboard = data.leaderboard
     }
 
     onMount(getData)

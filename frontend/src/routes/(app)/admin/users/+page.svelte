@@ -1,6 +1,7 @@
 <script lang="ts">
     import {csrfFetch, type User} from "$lib/utils"
-    import { addToast, ToastType } from "$lib/toastStore.svelte"
+    import { addErrorToast, addToast, ToastType } from "$lib/toastStore.svelte"
+    import { goBack } from "$lib/navigationHistory.svelte";
 
     let users: User[] | undefined = $state([])
 
@@ -10,15 +11,16 @@
     let isAdmin = $state(false)
 
     async function getData() {
-        let response: Response = await fetch("/api/admin/users")
-        let json = await response.json()
+        const response: Response = await fetch("/api/admin/users")
 
         if (!response.ok) {
-            addToast("Failed to load user list", ToastType.Error)
+            await addErrorToast(response, "Failed to load user list")
+            goBack()
             return
         }
 
-        users = json.users
+        const data = await response.json()
+        users = data.users
     }
 
     async function addUser(event: Event) {
@@ -34,7 +36,7 @@
             await getData()
             addToast(`Created user ${username}`, ToastType.Success)
         } else {
-            addToast(`Failed to create user ${username}`, ToastType.Error)
+            await addErrorToast(response, "Failed to create user")
         }
     }
 </script>

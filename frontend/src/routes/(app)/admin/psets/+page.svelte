@@ -1,35 +1,37 @@
 <script lang="ts">
+    import { goBack } from "$lib/navigationHistory.svelte";
+    import { addErrorToast, addToast, ToastType } from "$lib/toastStore.svelte";
     import {csrfFetch, type ProblemSet} from "$lib/utils"
-
-    let validRequest = $state(true)
-    let message = $state("")
 
     let psets: ProblemSet[] = $state([]) 
 
-    // state for add pset section
-    let name = $state()
+    let name: string = $state("")
 
     async function getData() {
-        let response: Response = await fetch("/api/admin/psets")
-        let json = await response.json()
+        const response: Response = await fetch("/api/admin/psets")
 
         if (!response.ok) {
-            validRequest = false
-            message = json.description
+            await addErrorToast(response, "Failed to load problem set list")
+            goBack()
+            return
         }
 
-        psets = json.psets
+        const data = await response.json()
+        psets = data.psets
     }
 
     async function addPset(event: Event) {
         event.preventDefault()
 
-        let response = await csrfFetch("/api/admin/add/pset", "POST", JSON.stringify({
+        const response: Response = await csrfFetch("/api/admin/add/pset", "POST", JSON.stringify({
             name: name
         }))
 
         if (response.ok) {
             await getData()
+            addToast(`Created new problem set ${name}`, ToastType.Success)
+        } else {
+            await addErrorToast(response, `Failed to create problem set ${name}`)
         }
     }
 </script>
@@ -39,20 +41,16 @@
     {#await getData()}
         <p>Loading...</p> 
     {:then} 
-        {#if validRequest}
-            {#each psets as pset}
-                <a href="/admin/pset?id={pset.id}">{pset.name}</a>
-                <br>
-            {/each}
+        {#each psets as pset}
+            <a href="/admin/pset?id={pset.id}">{pset.name}</a>
+            <br>
+        {/each}
 
-            <h2>Add Problem Set</h2>
-            <form onsubmit={addPset}>
-                <label for="name">Name</label>
-                <input name="name" type="text" bind:value={name}>
-                <input type="submit" value="Add Problem Set">
-            </form>
-        {:else}
-            <p>{message}</p>
-        {/if}
+        <h2>Add Problem Set</h2>
+        <form onsubmit={addPset}>
+            <label for="name">Name</label>
+            <input name="name" type="text" bind:value={name}>
+            <input type="submit" value="Add Problem Set">
+        </form>
     {/await}
 </div>

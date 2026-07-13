@@ -1,7 +1,7 @@
 <script lang="ts">
     import { goto } from "$app/navigation";
 
-    import { addToast, ToastType } from "$lib/toastStore.svelte";
+    import { addErrorToast, addToast, ToastType } from "$lib/toastStore.svelte";
 
     import { toTzIsoString, getTzOffset, type Contest, csrfFetch } from "$lib/utils"
 
@@ -16,21 +16,14 @@
 
     async function getData() {
         const response: Response = await fetch(`/api/admin/contest/${ID}`)
-        const data = await response.json()
         
         if (!response.ok) {
-            let error_message
-            if (data.error === "not_found") {
-                error_message = "Contest does not exist"
-            } else {
-                error_message = "Failed to load contest page"
-            }
-
-            addToast(error_message, ToastType.Error)
+            await addErrorToast(response, "Failed to load contest")
             goto("/admin/contests")
             return
         }
 
+        const data = await response.json()
         contest = data.contest
         if (contest !== undefined) {
             contest.startTime = toTzIsoString(new Date(contest.startTime))
@@ -53,53 +46,68 @@
 
         if (response.ok) {
             await getData()
+            addToast("Updated contest", ToastType.Success)
+        } else {
+            await addErrorToast(response, "Failed to update contest")
         }
     }
 
     async function addProblemSet(event: Event) {
         event.preventDefault()
 
-        let response: Response = await csrfFetch(`/api/admin/contest/${ID}/add/pset`, "POST", JSON.stringify({
+        const response: Response = await csrfFetch(`/api/admin/contest/${ID}/add/pset`, "POST", JSON.stringify({
             psetName: psetName,
         }))
 
         if (response.ok) {
             await getData()
+            addToast("Added problem set to contest", ToastType.Success)
+        } else {
+            await addErrorToast(response, "Failed to add problem set to contest")
         }
     }
 
     async function addProblem(event: Event) {
         event.preventDefault()
 
-        let response: Response = await csrfFetch(`/api/admin/contest/${ID}/add/problem`, "POST", JSON.stringify({
+        const response: Response = await csrfFetch(`/api/admin/contest/${ID}/add/problem`, "POST", JSON.stringify({
             psetName: problemPsetName,
             problemName: problemName 
         }))
 
         if (response.ok) {
             await getData()
+            addToast("Added problem to contest", ToastType.Success)
+        } else {
+            await addErrorToast(response, "Failed to add problem to contest")
         }
     }
 
     async function unlinkProblem(problemID: number) {
-        let response: Response = await csrfFetch("/api/admin/contest/unlinkproblem", "POST", JSON.stringify({
+        const response: Response = await csrfFetch("/api/admin/contest/unlinkproblem", "POST", JSON.stringify({
             contestID: ID,
             problemID: problemID
         }))
 
         if (response.ok)  {
             await getData()
+            addToast("Removed problem from contest", ToastType.Success)
+        } else {
+            await addErrorToast(response, "Failed to remove problem from contest")
         }
     }
 
     async function updateProblemScores() {
-        let response: Response = await csrfFetch("/api/admin/contest/updateproblems", "POST", JSON.stringify({
+        const response: Response = await csrfFetch("/api/admin/contest/updateproblems", "POST", JSON.stringify({
             contestID: ID,
             problems: contest!.problems
         }))
 
         if (response.ok)  {
             await getData()
+            addToast("Updated problem scoring and refreshed user scores", ToastType.Success)
+        } else {
+            await addErrorToast(response, "Failed to update problem scoring")
         }
     }
 </script>

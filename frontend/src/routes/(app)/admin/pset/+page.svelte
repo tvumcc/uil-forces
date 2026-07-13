@@ -1,10 +1,10 @@
 <script lang="ts">
+    import { goBack } from "$lib/navigationHistory.svelte";
+    import { addErrorToast, addToast, ToastType } from "$lib/toastStore.svelte";
     import {csrfFetch, type ProblemSet} from "$lib/utils"
 
     let params = new URLSearchParams(document.location.search)
     let ID = params.get("id")
-    let validRequest = $state(true)
-    let message = $state("")
 
     let pset: ProblemSet | undefined = $state()
 
@@ -14,21 +14,22 @@
     let fileData: ArrayBuffer = $state(new ArrayBuffer(0))
 
     async function getData() {
-        let response: Response = await fetch(`/api/admin/pset/${ID}`)
-        let json = await response.json()
+        const response: Response = await fetch(`/api/admin/pset/${ID}`)
 
         if (!response.ok) {
-            validRequest = false
-            message = json.description
+            await addErrorToast(response, "Failed to load problem set")
+            goBack()
+            return
         }
 
-        pset = json.pset
+        const data = await response.json()
+        pset = data.pset
     }
 
     async function editPset(event: Event) {
         event.preventDefault()
 
-        let response: Response = await csrfFetch("/api/admin/update/pset", "POST", JSON.stringify({
+        const response: Response = await csrfFetch("/api/admin/update/pset", "POST", JSON.stringify({
             id: ID,
             name: pset!.name,
             gradingTimeout: pset!.gradingTimeout
@@ -36,19 +37,25 @@
 
         if (response.ok) {
             await getData()
+            addToast("Updated problem set", ToastType.Success)
+        } else {
+            await addErrorToast(response, "Failed to update problem set")
         }
     }
 
     async function addProblem(event: Event) {
         event.preventDefault()
 
-        let response: Response = await csrfFetch(`/api/admin/pset/add/problem`, "POST", JSON.stringify({
+        const response: Response = await csrfFetch(`/api/admin/pset/add/problem`, "POST", JSON.stringify({
             psetID: pset!.id,
             problemName: problemName 
         }))
 
         if (response.ok) {
             await getData()
+            addToast("Added new problem to problem set", ToastType.Success)
+        } else {
+            await addErrorToast(response, "Failed to add new problem")
         }
     }
 
@@ -62,6 +69,9 @@
 
         if (response.ok) {
             await getData()
+            addToast("Uploaded PDF file", ToastType.Success)
+        } else {
+            await addErrorToast(response, "Failed to upload PDF file")
         }
     }
 
@@ -69,6 +79,9 @@
         let response: Response = await csrfFetch(`/api/admin/problem/${problemID}/delete`, "DELETE", JSON.stringify({}))
         if (response.ok) {
             await getData()
+            addToast("Deleted problem", ToastType.Success)
+        } else {
+            await addErrorToast(response, "Failed to delete problem")
         }
     }
 
@@ -89,7 +102,7 @@
     {#await getData()}
         <p>Loading...</p> 
     {:then} 
-        {#if validRequest && pset !== undefined} 
+        {#if pset !== undefined} 
             <form onsubmit={editPset}>
                 <label for="name">Name</label>
                 <input name="name" type="text" bind:value={pset.name}>
@@ -132,8 +145,6 @@
                 <input name="problem-name" type="text" bind:value={problemName}>
                 <input type="submit" value="Add Problem">
             </form>
-        {:else}
-            <p>{message}</p>
         {/if}
     {/await}
 </div>

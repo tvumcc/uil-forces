@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { addToast, ToastType } from "$lib/toastStore.svelte";
+    import { addErrorToast, addToast, ToastType } from "$lib/toastStore.svelte";
     import { goBack } from "$lib/navigationHistory.svelte";
     import * as ace from "ace-builds"
 
@@ -19,24 +19,15 @@
     let judgeOutputEditor: ace.Editor
 
     async function getData() {
-        let response: Response = await fetch(`/api/submission/${ID}`)
-        let data = await response.json()
+        const response: Response = await fetch(`/api/submission/${ID}`)
 
         if (!response.ok) {
-            let error_message
-            if (data.error === "not_found") {
-                error_message = "Submission does not exist"
-            } else if (data.error === "invalid_permission") {
-                error_message = "Submission cannot be viewed at this time"
-            } else {
-                error_message = "Internal Error"
-            }
-
-            addToast(error_message, ToastType.Error)
+            await addErrorToast(response, "Failed to load submission")
             goBack()
             return
         }
 
+        const data = await response.json()
         submission = data.submission
     }
 

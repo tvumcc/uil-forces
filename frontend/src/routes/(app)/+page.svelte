@@ -1,42 +1,33 @@
 <script lang="ts">
-    import { onMount } from "svelte";
-
+    import { addErrorToast } from "$lib/toastStore.svelte";
     import type { Contest, User } from "$lib/utils"
-
-    let loading = $state(true)
-
-    let validRequest = $state(true)
-    let message = $state("")
 
     let ongoingContests: Contest[] = $state([])
     let upcomingContests: Contest[] = $state([])
     let userLeaderboard: [User, number][] = $state([])
 
     async function getData() {
-        let response: Response = await fetch("/api/contests")
-        let json = await response.json()
+        const response: Response = await fetch("/api/contests")
 
         if (!response.ok) {
-            validRequest = false
-            message = json.description
+            await addErrorToast(response, "Failed to load contests")
+        } else {
+            const data = await response.json()
+            ongoingContests = data.ongoing
+            upcomingContests = data.upcoming
         }
 
-        ongoingContests = json.ongoing
-        upcomingContests = json.upcoming
 
-        let leaderboardResponse: Response = await fetch("/api/users/leaderboard")
-        let leaderboardJson = await leaderboardResponse.json()
+        const leaderboardResponse: Response = await fetch("/api/users/leaderboard")
 
-        for (let i = 0; i < leaderboardJson.length; i++) {
-            userLeaderboard.push([leaderboardJson[i].user, leaderboardJson[i].problemsSolved])
+        if (!response.ok) {
+            await addErrorToast(response, "Failed to load leaderboard")
+        } else {
+            const leaderboardData = await leaderboardResponse.json()
+            for (let i = 0; i < leaderboardData.length; i++)
+                userLeaderboard.push([leaderboardData[i].user, leaderboardData[i].problemsSolved])
         }
-
-        loading = false
     }
-
-    onMount(() => {
-        getData()
-    })
 </script>
 
 <div class="main-container">
@@ -45,9 +36,9 @@
     <p>Welcome to UIL Forces Beta!</p>
     <p>Visit the <a href="https://github.com/tvumcc/uil-forces">GitHub repository</a> to report bugs and contribute to development.</p>
 
-    {#if loading}
+    {#await getData()}
         <p>Loading...</p>
-    {:else if validRequest} 
+    {:then} 
         <h2>Leaderboard</h2>
         <table>
             <thead>
@@ -82,7 +73,5 @@
                 <a href="/contest?id={contest.id}">{contest.name}</a><br>
             {/each}
         {/if}
-    {:else}
-        <p>{message}</p>
-    {/if}
+    {/await}
 </div>

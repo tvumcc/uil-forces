@@ -21,7 +21,7 @@ def submission(id):
 
     submission = db.session.get(Submission, id)
     if submission is None or not submission.valid():
-        return {"error": "not_found"}, 404
+        return {"error": "pset_not_found"}, 404
 
     user = submission.user
     contest_profile = submission.contest_profile
@@ -30,7 +30,7 @@ def submission(id):
     if not past_contest \
         and not flask_login.current_user.is_admin \
         and flask_login.current_user != user:
-        return {"error": "invalid_permission"}, 403
+        return {"error": "submission_view_restricted"}, 403
 
     return {
         "submission": submission.serialize(user=user, admin_view=flask_login.current_user.is_admin)
@@ -66,11 +66,11 @@ def admin_submission_delete(id):
 
     submission = db.session.get(Submission, id)
     if not submission:
-        return flask.abort(404, description="Submission does not exist")
+        return {"error": "submission_not_found"}, 404
 
     db.session.delete(submission)
     db.session.commit()
 
     log.info(f"Submission {id} deleted by {flask_login.current_user.username}")
 
-    return f"Successfully deleted submission {id}"
+    return "", 204

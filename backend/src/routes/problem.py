@@ -15,7 +15,7 @@ def problem_pdf(id):
 
     problem = db.session.get(Problem, id)
     if not problem:
-        flask.abort(404)
+        return {"error": "problem_not_found"}, 404
 
     # Only allow access to the problem's PDF during an ongoing contest with PDFs enabled
     problem_ongoing = False
@@ -29,7 +29,7 @@ def problem_pdf(id):
             pages = [int(x)-1 for x in problem.pages.split()]
 
             if not os.path.exists(pdf_path) or len(pages) == 0:
-                flask.abort(404)
+                return {"error": "pdf_not_found"}, 404
 
             reader = pypdf.PdfReader(pdf_path)
             writer = pypdf.PdfWriter()
@@ -44,7 +44,7 @@ def problem_pdf(id):
             response = flask.send_from_directory(os.path.join(runtime_dir, "pdfs"), f"problem{id}.pdf")
             return response
         else:
-            return f"PDF for problem {id} cannot be accessed at this time", 403
+            return {"error": "pdf_restricted"}, 403
     finally:
         try: os.remove(temp_pdf)
         except: pass
@@ -62,7 +62,7 @@ def admin_problem(id):
         
     problem = db.session.get(Problem, id) 
     if not problem:
-        return {"error": "not_found"}, 404
+        return {"error": "problem_not_found"}, 404
 
     return {"problem": problem.serialize()}
 
@@ -74,7 +74,7 @@ def admin_update_problem():
     request = flask.request.get_json()
     problem = db.session.get(Problem, request["id"]) 
     if not problem:
-        return {"error": "not_found"}, 404
+        return {"error": "problem_not_found"}, 404
 
     problem.name = request["name"]
     problem.pages = request["pages"]
@@ -89,7 +89,7 @@ def admin_update_problem():
 
     log.info(f"Problem {problem.id} ({problem.name}) updated by {flask_login.current_user.username}")
 
-    return {"problem": problem.serialize()}
+    return "", 204
 
 @app.route("/api/admin/problem/<id>/delete", methods=["DELETE"])
 @admin_required
@@ -98,9 +98,9 @@ def admin_delete_problem(id):
 
     problem = db.session.get(Problem, id) 
     if not problem:
-        return flask.abort(404, description="Problem does not exist")
+        return {"error": "problem_not_found"}
 
     db.session.delete(problem)
     db.session.commit()
 
-    return f"Successfully deleted problem {id}"
+    return "", 204

@@ -1,20 +1,20 @@
 <script lang="ts">
     import { goBack } from "$lib/navigationHistory.svelte";
-    import { addToast, ToastType } from "$lib/toastStore.svelte";
+    import { addErrorToast, addToast, ToastType } from "$lib/toastStore.svelte";
     import {csrfFetch, type Settings} from "$lib/utils"
 
     let settings: Settings | undefined = $state()
 
     async function getData() {
         const response: Response = await fetch(`/api/admin/settings`)
-        const data = await response.json()
 
         if (!response.ok) {
-            addToast("Failed to retreive settings", ToastType.Error)
+            await addErrorToast(response, "Failed to retrieve settings")
             goBack()
             return
         }        
 
+        const data = await response.json()
         settings = data.settings
     }
 
@@ -27,9 +27,9 @@
 
         if (response.ok) {
             await getData()
-            addToast("Updated settings")
+            addToast("Updated settings", ToastType.Success)
         } else {
-            addToast("Failed to update settings")
+            await addErrorToast(response, "Failed to update settings")
         }
     }
 </script>

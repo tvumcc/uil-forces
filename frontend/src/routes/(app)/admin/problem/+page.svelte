@@ -1,7 +1,7 @@
 <script lang="ts">
     import * as ace from "ace-builds"
     import {csrfFetch, type Problem} from "$lib/utils"
-    import { addToast, ToastType } from "$lib/toastStore.svelte";
+    import { addToast, addErrorToast, ToastType } from "$lib/toastStore.svelte";
     import { goBack } from "$lib/navigationHistory.svelte";
 
     let params = new URLSearchParams(document.location.search)
@@ -16,21 +16,14 @@
 
     async function getData() {
         const response: Response = await fetch(`/api/admin/problem/${ID}`)
-        const data = await response.json()
 
         if (!response.ok) {
-            let error_message
-            if (data.error === "not_found") {
-                error_message = "Problem does not exist"
-            } else {
-                error_message = "Failed to load problem"
-            }
-
-            addToast(error_message, ToastType.Error)
+            await addErrorToast(response, "Failed to load problem")
             goBack()
             return
         }
 
+        const data = await response.json()
         problem = data.problem
     }
 
@@ -63,16 +56,10 @@
         const response: Response = await csrfFetch("/api/admin/update/problem", "POST", JSON.stringify(problem))
 
         if (response.ok) {
-            const data = await response.json()
-            problem = data.problem
-            addToast(`Updated problem with ID ${problem!.id}`, ToastType.Success)
+            await getData()
+            addToast(`Updated problem`, ToastType.Success)
         } else {
-            const data = await response.json().catch(() => ({}))
-            if (data.error === "not_found") {
-                addToast(`Problem with ID ${problem!.id} does not exist`, ToastType.Error)
-            } else {
-                addToast(`Failed to update problem with ID ${problem!.id}`, ToastType.Error)
-            }
+            await addErrorToast(response, "Failed to update problem")
         }
     }
 </script>

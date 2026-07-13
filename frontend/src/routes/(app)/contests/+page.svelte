@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { addToast, ToastType } from "$lib/toastStore.svelte";
+    import { addErrorToast } from "$lib/toastStore.svelte";
     import { goto } from "$app/navigation";
 
     import type { Contest } from "$lib/utils"
@@ -9,15 +9,15 @@
     let upcomingContests: Contest[] = $state([])
 
     async function getData() {
-        let response: Response = await fetch("/api/contests")
-        let data = await response.json()
+        const response: Response = await fetch("/api/contests")
 
         if (!response.ok) {
-            addToast("Internal Error", ToastType.Error)
+            await addErrorToast(response, "Failed to load contests")
             goto("/")
             return
         }
 
+        const data = await response.json()
         pastContests = data.past
         ongoingContests = data.ongoing
         upcomingContests = data.upcoming

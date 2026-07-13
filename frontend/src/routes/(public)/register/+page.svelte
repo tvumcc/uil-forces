@@ -1,7 +1,7 @@
 <script lang="ts">
     import { goto } from "$app/navigation";
-    import { addToast, ToastType } from "$lib/toastStore.svelte"
-    import { csrfFetch, type User } from "$lib/utils";
+    import { addErrorToast, addToast, ToastType } from "$lib/toastStore.svelte"
+    import { csrfFetch } from "$lib/utils";
 
     let username = $state()
     let password = $state()
@@ -9,20 +9,17 @@
     async function register(event: Event) {
         event.preventDefault()
 
-        let response = await csrfFetch("/api/register", "POST", JSON.stringify({
+        const response: Response = await csrfFetch("/api/register", "POST", JSON.stringify({
             username: username,
             password: password
         }))
 
         if (!response.ok) {
-            const err = await response.json().catch(() => ({}))
-            addToast(err.error === "user_exists" ? "A user with that username already exists" : "User registration failed, please try again.", ToastType.Error)
+            await addErrorToast(response, "User registration failed, please try again")
             return
         }
 
-        const user: User = await response.json()
-        addToast(`Welcome, ${user.username}`)
-
+        addToast(`Welcome, ${username}`, ToastType.Success)
         goto("/")
     }
 </script>

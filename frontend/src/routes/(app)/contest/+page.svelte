@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { addToast, ToastType } from "$lib/toastStore.svelte";
+    import { addErrorToast, addToast, ToastType } from "$lib/toastStore.svelte";
     import { goBack } from "$lib/navigationHistory.svelte";
 
     import type {Contest} from "$lib/utils"
@@ -21,22 +21,15 @@
     }
 
     async function getData() {
-        let response = await fetch(`/api/contest/${ID}`)
-        let data = await response.json()
+        const response: Response = await fetch(`/api/contest/${ID}`)
 
         if (!response.ok) {
-            let error_message
-            if (data.error === "not_found") {
-                error_message = "Contest does not exist"
-            } else {
-                error_message = "Failed to load contest page"
-            }
-
-            addToast(error_message, ToastType.Error)
+            await addErrorToast(response, "Failed to load contest page")
             goBack()
             return
         }
 
+        const data = await response.json()
         contest = data.contest
     }
 </script>
