@@ -6,7 +6,7 @@ import os
 
 from main import app, runtime_dir
 from src.models.orm import *
-from src.utils import log, admin_required
+from src.utils import log, admin_required, valid_name
 
 @app.route("/api/problem/<id>/pdf")
 @flask_login.login_required
@@ -83,6 +83,9 @@ def admin_update_problem():
     problem.student_input = request["studentInput"]
     problem.judge_input = request["judgeInput"]
     problem.judge_output = request["judgeOutput"]
+
+    if not valid_name(problem.name):
+        return {"error": "invalid_name"}, 400
 
     db.session.add(problem)
     db.session.commit()

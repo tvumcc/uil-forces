@@ -5,7 +5,7 @@ import os
 from main import app, runtime_dir
 from src.models.orm import *
 from src.setup import *
-from src.utils import log, admin_required
+from src.utils import admin_required, valid_name
 
 # Admin API
 
@@ -24,6 +24,7 @@ def admin_pset(id):
     pset = db.session.get(ProblemSet, id)
     if not pset:
         return {"error": "pset_not_found"}, 404
+
     return {"pset": pset.serialize()}
 
 @app.route("/api/admin/update/pset", methods=["POST"])
@@ -35,6 +36,11 @@ def admin_update_pset():
     id = request["id"]
     name = request["name"]
     grading_timeout = request["gradingTimeout"]
+
+    if not valid_name(name):
+        return {"error": "invalid_name"}, 400
+    if db.session.query(ProblemSet).filter_by(name=name).first() is not None:
+        return {"error": "pset_exists"}, 409
 
     pset = db.session.get(ProblemSet, id)
     pset.name = name
@@ -53,6 +59,11 @@ def admin_add_pset():
     request = flask.request.get_json()
 
     name = request["name"]
+
+    if not valid_name(name):
+        return {"error": "invalid_name"}, 400
+    if db.session.query(ProblemSet).filter_by(name=name).first() is not None:
+        return {"error": "pset_exists"}, 409
 
     pset = ProblemSet(name=name)
     db.session.add(pset)
@@ -73,6 +84,10 @@ def admin_pset_add_problem():
     pset = db.session.get(ProblemSet, pset_id)
     if not pset:
         return {"error": "pset_not_found"}, 404
+    if not valid_name(problem_name):
+        return {"error": "invalid_name"}, 400
+    if db.session.query(Problem).filter_by(name=problem_name, pset=pset).first() is not None:
+        return {"error": "problem_exists_in_pset"}, 409
 
     problem = Problem(name=problem_name, pset=pset)
     db.session.add(problem)

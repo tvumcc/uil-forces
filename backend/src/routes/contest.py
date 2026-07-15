@@ -10,7 +10,7 @@ import shutil
 from main import app
 from src.models.orm import *
 from src.judge import Status, assign_status
-from src.utils import admin_required
+from src.utils import admin_required, valid_name
 
 @app.route("/api/contests")
 @flask_login.login_required
@@ -300,6 +300,11 @@ def admin_update_contest():
     show_leaderboard = request["showLeaderboard"]
     allowed_languages = " ".join(str(request["allowedLanguages"]).split())
 
+    if not valid_name(name):
+        return {"error": "invalid_name"}, 400
+    if db.session.query(Contest).filter_by(name=name).first() is not None:
+        return {"error": "contest_exists"}, 409
+
     contest = db.session.get(Contest, id)
     contest.name = name
     contest.start_time = datetime.datetime.fromisoformat(start_time)
@@ -323,6 +328,11 @@ def admin_add_contest():
     name = request["name"]
     start_time = datetime.datetime.fromisoformat(request["startTime"])
     end_time = datetime.datetime.fromisoformat(request["endTime"])
+
+    if not valid_name(name):
+        return {"error": "invalid_name"}, 400
+    if db.session.query(Contest).filter_by(name=name).first() is not None:
+        return {"error": "contest_exists"}, 409
 
     contest = Contest(
         name=name,
@@ -350,9 +360,12 @@ def admin_update_contest_problems():
     for problem in problems:
         problem_link = db.session.query(ContestProblemAssociation).filter_by(contest_id=contest.id, problem_id=problem["problem"]["id"]).first()
         if problem_link:
-            problem_link.correct_score = problem["correctScore"]
-            problem_link.incorrect_penalty = problem["incorrectPenalty"]
-            db.session.add(problem_link)
+            try:
+                problem_link.correct_score = int(problem["correctScore"])
+                problem_link.incorrect_penalty = int(problem["incorrectPenalty"])
+                db.session.add(problem_link)
+            except:
+                return {"error": "invalid_scoring"}, 400
 
     for contest_profile in contest.contest_profiles:
         contest_profile.calculate_score()

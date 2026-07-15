@@ -22,8 +22,16 @@ let errorCodeToMessageMap: Map<string, string> = new Map([
     ["pdf_not_found", "PDF file does not exist"],
 
     ["user_exists", "A user with that username already exists"],
+    ["pset_exists", "A problem set with that name already exists"],
+    ["contest_exists", "A contest with that name already exists"],
+    ["problem_exists_in_pset", "A problem with that name already exists in this problem set"],
+
+    ["invalid_username", "Usernames must consist of 3 to 25 alphanumeric characters or underscores"],
+    ["invalid_name", "Name must be between 3 to 50 characters"],
+    ["invalid_scoring", "Scoring must consist of integers"],
     ["invalid_credentials", "Incorrect username or password"],
     ["invalid_file_type", "Invalid file type"],
+
     ["pdf_restricted", "Access to this PDF file is restricted"],
     ["problem_already_linked", "Problem already linked to contest"],
     ["problem_not_linked", "Problem not linked to contest"],

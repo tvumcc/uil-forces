@@ -1,6 +1,8 @@
-import functools
 import flask
 import flask_login
+
+import functools
+import re
 import logging
 
 log = logging.getLogger(__name__)
@@ -23,3 +25,11 @@ def admin_required(f):
             return {"error", "not_admin"}, 403
         return f(*args, **kwargs)
     return decorated_function
+
+username_pattern = re.compile("\\w{3,25}")
+
+def valid_username(username: str):
+    return username_pattern.match(username)
+
+def valid_name(name: str):
+    return len(name) >= 3 and len(name) <= 50

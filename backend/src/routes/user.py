@@ -4,7 +4,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 
 from main import app
 from src.models.orm import *
-from src.utils import log, admin_required
+from src.utils import log, admin_required, valid_username
 
 @app.route("/api/login", methods=["POST"])
 def login():
@@ -40,6 +40,8 @@ def register():
     username = str(request["username"])
     password = str(request["password"])
 
+    if not valid_username(username):
+        return {"error": "invalid_username"}, 400
     if db.session.query(User).filter_by(username=username).first() is not None:
         return {"error": "user_exists"}, 409
 
@@ -98,6 +100,11 @@ def admin_add_user():
     username = data["username"]
     password = data["password"] 
     is_admin = data["isAdmin"]
+
+    if not valid_username(username):
+        return {"error": "invalid_username"}, 400
+    if db.session.query(User).filter_by(username=username).first() is not None:
+        return {"error": "user_exists"}, 409
 
     user = User(
         username=username,
