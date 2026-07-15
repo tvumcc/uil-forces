@@ -59,7 +59,7 @@ def setup_submission_for_grading(submission: Submission) -> str:
 
     return submission_dir
 
-def assign_status(submission, contest_profile, docker=False):
+def assign_status(submission: Submission, contest_profile: ContestProfile, docker=False):
     """
     Calls the appropriate function to grade the given submission using Docker or a compiler/interpreter on PATH
     After the submission has been graded, if a contest profile was supplied, its score will be recalculated
@@ -67,16 +67,22 @@ def assign_status(submission, contest_profile, docker=False):
 
     from main import app
     with app.app_context():
+        if contest_profile is None:
+            raise Exception("Cannot assign status to submission: contest profile does not exist")
+
+        contest_problem_link = db.session.query(ContestProblemAssociation).filter_by(contest_id=contest_profile.contest_id, problem_id=submission.problem_id).first()
+
         if submission.status == Status.Pending.value:
             if docker:
-                status, submission.output = grade_submission_docker(submission, submission.problem.pset.grading_timeout)
+                status, submission.output = grade_submission_docker(submission, contest_problem_link.grading_timeout)
             else:
-                status, submission.output = grade_submission(submission, submission.problem.pset.grading_timeout)
+                status, submission.output = grade_submission(submission, contest_problem_link.grading_timeout)
+
             submission.status = status.value
-            if contest_profile is not None:
-                contest_profile = db.session.merge(contest_profile)
-                contest_profile.calculate_score()
+            contest_profile = db.session.merge(contest_profile)
+            contest_profile.calculate_score()
             submission = db.session.merge(submission)
+
             db.session.add(submission)
             db.session.commit()
 

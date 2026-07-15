@@ -20,6 +20,7 @@ class ContestProblemAssociation(Base):
 
     correct_score:     Mapped[int] = mapped_column(default=60)
     incorrect_penalty: Mapped[int] = mapped_column(default=5)
+    grading_timeout:   Mapped[float] = mapped_column(default=5.0)
 
     contest: Mapped["Contest"] = relationship(back_populates="problem_links")
     problem: Mapped["Problem"] = relationship(back_populates="contest_links")
@@ -68,8 +69,6 @@ class ProblemSet(db.Model):
 
     name:     Mapped[str]  = mapped_column(unique=True)
 
-    grading_timeout: Mapped[float]  = mapped_column(default=5.0)
-
     problems: Mapped[List["Problem"]] = relationship(back_populates="pset")
 
     def get_pdf_name(self):
@@ -84,7 +83,6 @@ class ProblemSet(db.Model):
         return {
             "id": self.id,
             "name": self.name,
-            "gradingTimeout": self.grading_timeout
         }
 
 class Problem(db.Model):
@@ -225,7 +223,8 @@ class Contest(db.Model):
             "problems": [{
                 "problem": problem.shallow_serialize(),
                 "correctScore": next((pl.correct_score for pl in self.problem_links if pl.problem_id == problem.id), 60),
-                "incorrectPenalty": next((pl.incorrect_penalty for pl in self.problem_links if pl.problem_id == problem.id), 5)   
+                "incorrectPenalty": next((pl.incorrect_penalty for pl in self.problem_links if pl.problem_id == problem.id), 5),
+                "gradingTimeout": next((pl.grading_timeout for pl in self.problem_links if pl.problem_id == problem.id), 5)   
             } for problem in self.problems()],
             "contestProfiles": [contest_profile.shallow_serialize() for contest_profile in sorted(self.contest_profiles, key=lambda x: x.score)]
         }

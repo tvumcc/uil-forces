@@ -36,7 +36,7 @@ if __name__ == "__main__":
                 app.run(debug=False, host="0.0.0.0", port=5000)
                 terminating_action = True
         elif action == "2":
-            setup.setup()
+            setup()
             print("Successfully completed setup.")
         elif action == "3":
             terminating_action = True

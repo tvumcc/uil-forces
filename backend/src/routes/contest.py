@@ -300,12 +300,13 @@ def admin_update_contest():
     show_leaderboard = request["showLeaderboard"]
     allowed_languages = " ".join(str(request["allowedLanguages"]).split())
 
+    contest = db.session.get(Contest, id)
+
     if not valid_name(name):
         return {"error": "invalid_name"}, 400
-    if db.session.query(Contest).filter_by(name=name).first() is not None:
+    if contest.name != name and db.session.query(Contest).filter_by(name=name).first() is not None:
         return {"error": "contest_exists"}, 409
 
-    contest = db.session.get(Contest, id)
     contest.name = name
     contest.start_time = datetime.datetime.fromisoformat(start_time)
     contest.end_time = datetime.datetime.fromisoformat(end_time)
@@ -363,9 +364,16 @@ def admin_update_contest_problems():
             try:
                 problem_link.correct_score = int(problem["correctScore"])
                 problem_link.incorrect_penalty = int(problem["incorrectPenalty"])
-                db.session.add(problem_link)
             except:
                 return {"error": "invalid_scoring"}, 400
+
+            try:
+                problem_link.grading_timeout = float(problem["gradingTimeout"])
+                if problem_link.grading_timeout <= 0.0: raise
+            except:
+                return {"error": "invalid_timeout"}, 400
+
+            db.session.add(problem_link)
 
     for contest_profile in contest.contest_profiles:
         contest_profile.calculate_score()

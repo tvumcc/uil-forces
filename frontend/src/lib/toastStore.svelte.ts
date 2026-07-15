@@ -28,7 +28,8 @@ let errorCodeToMessageMap: Map<string, string> = new Map([
 
     ["invalid_username", "Usernames must consist of 3 to 25 alphanumeric characters or underscores"],
     ["invalid_name", "Name must be between 3 to 50 characters"],
-    ["invalid_scoring", "Scoring must consist of integers"],
+    ["invalid_scoring", "Scoring must consist of integer values"],
+    ["invalid_timeout", "Timeout must consist of real number values greater than 0"],
     ["invalid_credentials", "Incorrect username or password"],
     ["invalid_file_type", "Invalid file type"],
 

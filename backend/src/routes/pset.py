@@ -35,16 +35,15 @@ def admin_update_pset():
     request = flask.request.get_json()
     id = request["id"]
     name = request["name"]
-    grading_timeout = request["gradingTimeout"]
+
+    pset = db.session.get(ProblemSet, id)
 
     if not valid_name(name):
         return {"error": "invalid_name"}, 400
-    if db.session.query(ProblemSet).filter_by(name=name).first() is not None:
+    if pset.name != name and db.session.query(ProblemSet).filter_by(name=name).first() is not None:
         return {"error": "pset_exists"}, 409
 
-    pset = db.session.get(ProblemSet, id)
     pset.name = name
-    pset.grading_timeout = grading_timeout
 
     db.session.add(pset)
     db.session.commit()

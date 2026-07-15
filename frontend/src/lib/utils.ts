@@ -60,6 +60,7 @@ export interface ContestProblem {
     problem: Problem
     correctScore: number
     incorrectPenalty: number
+    gradingTimeout: number
 }
 
 export interface User {
@@ -111,7 +112,6 @@ export interface Submission {
 export interface ProblemSet {
     id: number
     name: string
-    gradingTimeout: number
     problems?: Problem[]
     submissions?: Submission[]
 }

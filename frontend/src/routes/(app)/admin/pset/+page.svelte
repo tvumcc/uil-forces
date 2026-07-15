@@ -32,7 +32,6 @@
         const response: Response = await csrfFetch("/api/admin/update/pset", "POST", JSON.stringify({
             id: ID,
             name: pset!.name,
-            gradingTimeout: pset!.gradingTimeout
         }))
 
         if (response.ok) {
@@ -106,9 +105,6 @@
             <form onsubmit={editPset}>
                 <label for="name">Name</label>
                 <input name="name" type="text" bind:value={pset.name}>
-                <br>
-                <label for="timeout">Grading Timeout (seconds)</label>
-                <input name="timeout" type="number" step="any" bind:value={pset.gradingTimeout}>
                 <br>
                 <input type="submit" value="Update Problem Set">
             </form>

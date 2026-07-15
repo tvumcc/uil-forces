@@ -51,7 +51,7 @@
             endTime: newEndTime,
             showPdf: contest!.showPdf,
             showLeaderboard: contest!.showLeaderboard,
-            allowedLanguages: contest!.allowedLanguages 
+            allowedLanguages: contest!.allowedLanguages
         }))
 
         if (response.ok) {
@@ -169,6 +169,7 @@
                     <th>Name</th>
                     <th>Score</th>
                     <th>Penalty</th>
+                    <th>Timeout (s)</th>
                     <th>Action</th>
                 </tr>
             </thead>
@@ -178,6 +179,7 @@
                     <td>{problem.problem.name}</td>
                     <td><input type="text" bind:value={problem.correctScore}></td>
                     <td><input type="text" bind:value={problem.incorrectPenalty}></td>
+                    <td><input type="text" bind:value={problem.gradingTimeout}></td>
                     <td><button onclick={async ()=>{await unlinkProblem(problem.problem.id)}}>Remove</button></td>
                 </tr>
             {/each}
