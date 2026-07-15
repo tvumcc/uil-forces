@@ -14,8 +14,7 @@ export function toTzIsoString(date: Date): string {
         '-' + pad(date.getMonth() + 1) +
         '-' + pad(date.getDate()) +
         'T' + pad(date.getHours()) +
-        ':' + pad(date.getMinutes()) +
-        ':' + pad(date.getSeconds())
+        ':' + pad(date.getMinutes())
 }
 
 

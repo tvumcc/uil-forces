@@ -26,10 +26,20 @@
     async function addContest(event: Event) {
         event.preventDefault()
 
+        let newStartTime
+        let newEndTime
+        try {
+            newStartTime = new Date(startTime + getTzOffset()).toISOString()
+            newEndTime = new Date(endTime + getTzOffset()).toISOString()
+        } catch {
+            addToast("Failed to create contest: invalid date(s)", ToastType.Error)
+            return
+        }
+
         const response: Response = await csrfFetch("/api/admin/add/contest", "POST", JSON.stringify({
             name: name,
-            startTime: new Date(startTime + getTzOffset()).toISOString(),
-            endTime: new Date(endTime + getTzOffset()).toISOString() 
+            startTime: newStartTime,
+            endTime: newEndTime 
         }))
 
         if (response.ok) {

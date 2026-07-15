@@ -34,14 +34,24 @@
     async function editContest(event: Event) {
         event.preventDefault()
 
+        let newStartTime
+        let newEndTime
+        try {
+            newStartTime = new Date(contest!.startTime + getTzOffset()).toISOString()
+            newEndTime = new Date(contest!.endTime + getTzOffset()).toISOString()
+        } catch {
+            addToast("Failed to update contest: invalid date(s)", ToastType.Error)
+            return
+        }
+
         const response: Response = await csrfFetch("/api/admin/update/contest", "POST", JSON.stringify({
             id: contest!.id,
             name: contest!.name,
-            startTime: new Date(contest?.startTime + getTzOffset()).toISOString(),
-            endTime: new Date(contest?.endTime + getTzOffset()).toISOString(),
+            startTime: newStartTime,
+            endTime: newEndTime,
             showPdf: contest!.showPdf,
-            showLeaderboard: contest?.showLeaderboard,
-            allowedLanguages: contest?.allowedLanguages 
+            showLeaderboard: contest!.showLeaderboard,
+            allowedLanguages: contest!.allowedLanguages 
         }))
 
         if (response.ok) {
@@ -128,10 +138,12 @@
                         <tr>
                             <td><label for="start-time">Start Time</label></td>
                             <td><input name="start-time" type="datetime-local" bind:value={contest.startTime} class="full-width"></td>
+                            <td><button type="button" onclick={() => {contest!.startTime = toTzIsoString(new Date())}}>Start Now</button></td>
                         </tr>
                         <tr>
                             <td><label for="end-time">End Time</label></td>
                             <td><input name="end-time" type="datetime-local" bind:value={contest.endTime} class="full-width"></td>
+                            <td><button type="button" onclick={() => {contest!.endTime = toTzIsoString(new Date())}}>End Now</button></td>
                         </tr>
                         <tr>
                             <td><label for="allowed-languages">Allowed Languages (space separated)</label></td>
