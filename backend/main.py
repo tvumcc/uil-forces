@@ -1,89 +1,57 @@
-import flask
-import flask_login
-import flask_wtf
-from sqlalchemy import event
-from sqlalchemy.engine import Engine
-from werkzeug.exceptions import HTTPException
+from waitress import serve
 
-import os, sys
+import os
 
 from src.models.orm import *
 from src.setup import *
+from src.utils import log, get_all_local_ips
+from src.app import app
 
-@event.listens_for(Engine, "connect")
-def set_sqlite_pragma(dbapi_connection, connection_record):
-    cursor = dbapi_connection.cursor()
-    cursor.execute("PRAGMA foreign_keys=ON")
-    cursor.close()
-
-def resource_path(relative_path):
-    if hasattr(sys, '_MEIPASS'):
-        base_path = sys._MEIPASS
+def setup(setup_path = "setup"):
+    if init_new_db():
+        if not os.path.exists(setup_path):
+            print(f"Setup directory './{setup_path}' does not exist! Aborting...")
+        else:
+            import_from_directory(setup_path)
     else:
-        base_path = os.path.abspath(".")
-    return os.path.join(base_path, relative_path)
+        merge = "merge"
+        while merge.lower() not in ["", "y", "n"]:
+            merge = input("Would like to merge the new setup config into the database? Nothing will be deleted, only added. (Y/n)")
+            if merge.lower() in ["", "y"]:
+                import_from_directory(setup_path)
+            elif merge.lower() == "n":
+                break 
 
-if hasattr(sys, '_MEIPASS'):
-    runtime_dir = os.path.dirname(sys.executable)
-else:
-    runtime_dir = os.path.abspath(".")
+if __name__ == "__main__":
+    print("UIL Forces")
+    print("Possible actions:")
+    print("1. Run server")
+    print("2. Start server setup")
+    print("3. Quit")
 
-DIST_DIR = resource_path("dist")
+    terminating_action = False
+    while not terminating_action:
+        action = input("Please specify an action: ")
+        if action == "1":
+            if not os.path.exists("main.db"):
+                print("A database does not yet exist for this instance. Select '2. Start server setup' to create it.")
+            else:
+                port = 5000
+                ips = get_all_local_ips()
+                print("Server started, access it at:")
+                print(f"- Local:   http://127.0.0.1:{port}")
+                if ips:
+                    for ip in ips:
+                        print(f"- Network: \x1b[1;4;33mhttp://{ip}:{port}\x1b[0m (Ctrl + Left Click to open)")
+                else:
+                    print("\t(No network interfaces detected)")
 
-app = flask.Flask(__name__, static_folder=None)
-
-secret_path = os.path.join(runtime_dir, "secret.txt")
-try:
-    app.secret_key = open(secret_path, "r").read().strip()
-except:
-    print("No secret key found. In the root directory, create a file named 'secret.txt' containing the secret key.")
-    exit()
-
-db_path = os.path.join(runtime_dir, "main.db")
-app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{db_path}"
-
-db.init_app(app)
-
-from src.routes.user import *
-from src.routes.problem import *
-from src.routes.contest import *
-from src.routes.pset import *
-from src.routes.submission import *
-from src.routes.settings import *
-
-login_manager = flask_login.LoginManager()
-login_manager.init_app(app)
-
-@login_manager.unauthorized_handler
-def unauthorized():
-    return flask.jsonify({"error": "unauthorized"}), 401
-
-@login_manager.user_loader
-def load_user(id):
-    return db.session.get(User, id)
-
-@app.errorhandler(HTTPException)
-def error_handler(e):
-    return {
-        "error": e.name, 
-        "description": e.description
-    }, e.code
-
-@app.route("/", defaults={"path": ""})
-@app.route("/<path:path>")
-def spa_shell(path):
-    full_path = os.path.join(DIST_DIR, path)
-    if path and os.path.isfile(full_path):
-        return flask.send_from_directory(DIST_DIR, path)
-    return flask.send_from_directory(DIST_DIR, "index.html")
-
-csrf = flask_wtf.CSRFProtect()
-csrf.init_app(app)
-
-@app.route("/api/csrf-token", methods=["GET"])
-def csrf_token():
-    return {"csrfToken": flask_wtf.csrf.generate_csrf()}
-
-@app.errorhandler(flask_wtf.csrf.CSRFError)
-def handle_csrf_error(e):
-    return {"error": "csrf_invalid", "description": e.description}, 400
+                serve(app, host="0.0.0.0", port=5000, threads=8)
+                terminating_action = True
+        elif action == "2":
+            setup()
+            print("Successfully completed setup.")
+        elif action == "3":
+            terminating_action = True
+        else:
+            print("Invalid action.")

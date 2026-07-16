@@ -2,7 +2,7 @@ import flask
 import flask_login
 from werkzeug.security import generate_password_hash, check_password_hash
 
-from main import app
+from src.app import app
 from src.models.orm import *
 from src.utils import log, admin_required, valid_username
 

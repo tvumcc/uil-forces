@@ -1,7 +1,7 @@
 import flask
 import flask_login
 
-from main import app
+from src.app import app
 from src.models.orm import *
 from src.utils import log, admin_required
 

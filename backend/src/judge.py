@@ -65,7 +65,7 @@ def assign_status(submission: Submission, contest_profile: ContestProfile, docke
     After the submission has been graded, if a contest profile was supplied, its score will be recalculated
     """
 
-    from main import app
+    from src.app import app
     with app.app_context():
         if contest_profile is None:
             raise Exception("Cannot assign status to submission: contest profile does not exist")

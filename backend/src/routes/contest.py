@@ -7,7 +7,7 @@ from datetime import timezone
 import os
 import shutil
 
-from main import app
+from src.app import app
 from src.models.orm import *
 from src.judge import Status, assign_status
 from src.utils import admin_required, valid_name

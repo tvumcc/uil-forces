@@ -39,7 +39,7 @@ def init_new_db():
 def import_from_directory(import_dir):
     pset_count = 0
 
-    from main import app
+    from src.app import app
 
     with app.app_context():
         with open(os.path.join(import_dir, setup_file_name), "r") as setup_file:

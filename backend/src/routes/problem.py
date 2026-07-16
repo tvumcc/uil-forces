@@ -4,7 +4,7 @@ import pypdf
 
 import os
 
-from main import app, runtime_dir
+from src.app import app, runtime_dir
 from src.models.orm import *
 from src.utils import log, admin_required, valid_name
 
