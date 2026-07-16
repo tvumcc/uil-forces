@@ -1,7 +1,10 @@
+from waitress import serve
+
 import os
 
 from src.models.orm import *
 from src.setup import *
+from src.utils import log, get_all_local_ips
 from main import app
 
 def setup(setup_path = "setup"):
@@ -33,7 +36,17 @@ if __name__ == "__main__":
             if not os.path.exists("main.db"):
                 print("A database does not yet exist for this instance. Select '2. Start server setup' to create it.")
             else:
-                app.run(debug=False, host="0.0.0.0", port=5000)
+                port = 5000
+                ips = get_all_local_ips()
+                print("Server started, access it at:")
+                print(f"- Local:   http://127.0.0.1:{port}")
+                if ips:
+                    for ip in ips:
+                        print(f"- Network: \x1b[1;4;33mhttp://{ip}:{port}\x1b[0m (Ctrl + Left Click to open)")
+                else:
+                    print("\t(No network interfaces detected)")
+
+                serve(app, host="0.0.0.0", port=5000, threads=8)
                 terminating_action = True
         elif action == "2":
             setup()

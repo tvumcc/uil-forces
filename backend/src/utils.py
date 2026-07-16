@@ -4,18 +4,27 @@ import flask_login
 import functools
 import re
 import logging
+import socket
 
-log = logging.getLogger(__name__)
-console_handler = logging.StreamHandler()
-formatter = logging.Formatter(
-    "[{asctime}] {funcName} - {levelname}: {message}",
-    style="{",
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
     datefmt="%Y/%m/%d %H:%M:%S",
 )
 
-log.addHandler(console_handler)
-console_handler.setFormatter(formatter)
+waitress_log = logging.getLogger("waitress")
+waitress_log.setLevel(logging.INFO)
+
+log = logging.getLogger("UIL Forces")
 log.setLevel(logging.INFO)
+
+def get_all_local_ips():
+    hostname = socket.gethostname()
+    try:
+        ips = socket.gethostbyname_ex(hostname)[2]
+        return [ip for ip in ips if not ip.startswith("127.")]
+    except socket.gaierror:
+        return []
 
 def admin_required(f):
     @functools.wraps(f)
