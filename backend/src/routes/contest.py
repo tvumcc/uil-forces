@@ -1,5 +1,6 @@
 import flask
 import flask_login
+from sqlalchemy import desc
 
 import threading
 import datetime
@@ -97,6 +98,15 @@ def submit_contest_problem():
         db.session.add(contest_profile)
         db.session.commit()
 
+    submission_cooldown_seconds = 5
+    latest_submission = db.session.query(Submission).filter_by(user=flask_login.current_user).order_by(desc(Submission.submit_time)).first()
+
+    if latest_submission is not None:
+        last_time = latest_submission.submit_time.replace(tzinfo=timezone.utc)
+        curr_time = datetime.datetime.now(timezone.utc)
+        if (curr_time - last_time).total_seconds() <= 5:
+            return {"error": "submission_cooldown_ongoing"}, 429
+
     submission = Submission(
         problem=problem,
         contest_profile=contest_profile,
@@ -114,9 +124,7 @@ def submit_contest_problem():
     thread.daemon = True
     thread.start()
 
-    return {
-        "submission": submission.shallow_serialize()
-    }
+    return {"submission": submission.shallow_serialize()}
 
 @app.route("/api/contest/<id>/leaderboard")
 @flask_login.login_required

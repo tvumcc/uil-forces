@@ -33,6 +33,7 @@ let errorCodeToMessageMap: Map<string, string> = new Map([
     ["invalid_credentials", "Incorrect username or password"],
     ["invalid_file_type", "Invalid file type"],
 
+    ["submission_cooldown_ongoing", "Please wait at least 5 seconds in between submissions"],
     ["pdf_restricted", "Access to this PDF file is restricted"],
     ["problem_already_linked", "Problem already linked to contest"],
     ["problem_not_linked", "Problem not linked to contest"],
