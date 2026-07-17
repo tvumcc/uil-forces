@@ -1,6 +1,7 @@
 <script lang="ts">
+    import { statusStr } from "$lib/utils"
+
     let { statusCode, fitText } = $props()
-    let statusStr = ["Pending", "Accepted", "Wrong Answer", "Compile Error", "Runtime Error", "Time Limit Exceeded", "Server Error"]
 </script>
 
 <div class="Status{statusCode}" style="display: {fitText ? "inline-block" : "block"};">

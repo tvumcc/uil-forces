@@ -110,14 +110,12 @@ def submit_contest_problem():
     db.session.add(submission)
     db.session.commit()
 
-    thread = threading.Thread(target=assign_status, args=[submission, contest_profile], kwargs={"docker": Settings.docker_grading_enabled()})
+    thread = threading.Thread(target=assign_status, args=[submission.id, contest_profile.id], kwargs={"docker": Settings.docker_grading_enabled()})
     thread.daemon = True
     thread.start()
 
-    submissions = contest_profile.valid_submissions()
     return {
-        "estimatedWait" : 15,
-        "submissions": [submission.shallow_serialize() for submission in submissions]
+        "submission": submission.shallow_serialize()
     }
 
 @app.route("/api/contest/<id>/leaderboard")

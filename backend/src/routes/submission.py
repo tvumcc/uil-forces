@@ -1,9 +1,12 @@
 import flask
 import flask_login
 
+import json
+
 from src.app import app
 from src.models.orm import *
 from src.utils import log, admin_required
+from src.judge import get_submission_event, submission_events, Status
 
 @app.route("/api/submission/<id>")
 @flask_login.login_required
@@ -35,6 +38,31 @@ def submission(id):
     return {
         "submission": submission.serialize(user=user, admin_view=flask_login.current_user.is_admin)
     }
+
+@app.route("/api/submission/<int:submission_id>/stream")
+@flask_login.login_required
+def submission_stream(submission_id: int):
+    def event_stream():
+        with app.app_context():
+            submission = db.session.get(Submission, submission_id)
+            if submission is None:
+                yield f"event: error\ndata: {json.dumps({"error": "submission_not_found"})}\n\n"
+                return
+            db.session.expire(submission)
+
+            event = get_submission_event(submission_id)
+            event.wait(timeout=30)
+
+            submission = db.session.get(Submission, submission_id)
+            if submission is None:
+                yield f"event: error\ndata: {json.dumps({"error": "judge_error"})}\n\n"
+                return
+
+            yield f"event: done\ndata: {json.dumps({"problemName": submission.problem.name, "status": submission.status})}\n\n"
+
+            del submission_events[submission_id]
+
+    return flask.Response(event_stream(), mimetype="text/event-stream")
 
 
 

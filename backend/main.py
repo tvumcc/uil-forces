@@ -46,7 +46,7 @@ if __name__ == "__main__":
                 else:
                     print("\t(No network interfaces detected)")
 
-                serve(app, host="0.0.0.0", port=5000, threads=8)
+                serve(app, host="0.0.0.0", port=5000, threads=10)
                 terminating_action = True
         elif action == "2":
             setup()

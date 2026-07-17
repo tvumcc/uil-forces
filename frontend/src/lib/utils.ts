@@ -17,6 +17,7 @@ export function toTzIsoString(date: Date): string {
         ':' + pad(date.getMinutes())
 }
 
+export const statusStr = ["Pending", "Accepted", "Wrong Answer", "Compile Error", "Runtime Error", "Time Limit Exceeded", "Server Error"]
 
 let csrfToken: string | null = null
 

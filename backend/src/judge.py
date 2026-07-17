@@ -3,9 +3,12 @@ import shutil
 import subprocess
 import enum
 import re
+import threading
 
 from src.models.orm import *
 from src.utils import *
+
+submission_events: dict[int, threading.Event] = {}
 
 class Status(enum.Enum):
     Pending = 0
@@ -39,6 +42,18 @@ def get_submission_file_name(submission: Submission):
         case _:
             return None
 
+def get_submission_event(submission_id: int) -> threading.Event:
+    if not submission_id in submission_events:
+        submission_events[submission_id] = threading.Event()
+    return submission_events[submission_id]
+
+def delete_submission_event(submission_id: int):
+    del submission_events[submission_id]
+
+def mark_submission_complete(submission_id: int):
+    event = get_submission_event(submission_id)
+    event.set()
+
 def setup_submission_for_grading(submission: Submission) -> str:
     """Helper function to prepare a directory for grading the given submission"""
 
@@ -59,7 +74,7 @@ def setup_submission_for_grading(submission: Submission) -> str:
 
     return submission_dir
 
-def assign_status(submission: Submission, contest_profile: ContestProfile, docker=False):
+def assign_status(submission_id: int, contest_profile_id: int, docker=False):
     """
     Calls the appropriate function to grade the given submission using Docker or a compiler/interpreter on PATH
     After the submission has been graded, if a contest profile was supplied, its score will be recalculated
@@ -67,6 +82,9 @@ def assign_status(submission: Submission, contest_profile: ContestProfile, docke
 
     from src.app import app
     with app.app_context():
+        submission = db.session.get(Submission, submission_id)
+        contest_profile = db.session.get(ContestProfile, contest_profile_id)
+
         if contest_profile is None:
             raise Exception("Cannot assign status to submission: contest profile does not exist")
 
@@ -85,6 +103,8 @@ def assign_status(submission: Submission, contest_profile: ContestProfile, docke
 
             db.session.add(submission)
             db.session.commit()
+
+            mark_submission_complete(submission.id)
 
 def grade_submission(submission: Submission, timeout: float = 5.0):
     """

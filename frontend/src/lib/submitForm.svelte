@@ -1,6 +1,7 @@
 <script lang="ts">
-    import {type Problem, type ContestProblem, csrfFetch} from "$lib/utils"
-    import { addErrorToast } from "./toastStore.svelte";
+    import {type Problem, type ContestProblem, csrfFetch, statusStr} from "$lib/utils"
+    import { onDestroy, onMount } from "svelte";
+    import { addErrorToast, addToast, ToastType } from "./toastStore.svelte";
 
     interface SubmitFormProps {
         submissionType: string
@@ -31,6 +32,8 @@
     let fileText = $state("")
     let submissionLanguage = $state("Java")
 
+    let cleanup: (() => void) | null = null
+
     async function submitProblem(event: Event) {
         event.preventDefault()
 
@@ -48,19 +51,34 @@
 
         let data = await response.json()
 
+        addToast(`Your submission for ${data.submission.problem.name} is in the judge queue`, ToastType.Info)
+
         reloadSubmissions()
         reloadLeaderboard()
 
-        let count = data.estimatedWait
-        let interval_id = setInterval(async () => {
-            if (count > 0) {
-                reloadSubmissions()
-                reloadLeaderboard()
-                count--
-            } else {
-                clearInterval(interval_id)
+        cleanup = watchSubmission(data.submission.id)
+    }
+
+    function watchSubmission(submissionID: number) {
+        const source = new EventSource(`/api/submission/${submissionID}/stream`)
+
+        source.addEventListener("done", (e) => {
+            let data = JSON.parse(e.data)
+
+            addToast(`Judge verdict for ${data.problemName}: ${statusStr[data.status]}`, ToastType.Info)
+            reloadSubmissions()
+            reloadLeaderboard()
+            source.close()
+        });
+
+        source.addEventListener("error", (e) => {
+            if (e instanceof MessageEvent && e.data) {
+                addToast("Failed to retrieve verdict. Please refresh your page.", ToastType.Error)
             }
-        }, 1000)
+            source.close()
+        })
+
+        return () => source.close()
     }
 
     async function loadFileFromInput(event: Event) {
@@ -75,6 +93,10 @@
     function clearFileInput(event: Event) {
         (event.currentTarget as HTMLInputElement).value = ""
     }
+
+    onDestroy(() => {
+        if (cleanup) cleanup()
+    })
 </script>
 
 <form onsubmit={submitProblem}>
