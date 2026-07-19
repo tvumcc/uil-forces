@@ -6,7 +6,7 @@ import json
 from src.app import app
 from src.models.orm import *
 from src.utils import log, admin_required
-from src.judge import get_submission_event, submission_events, enqueue_submission
+from src.judge import get_submission_event, delete_submission_event, enqueue_submission
 
 @app.route("/api/submission/<id>")
 @flask_login.login_required
@@ -60,7 +60,7 @@ def submission_stream(submission_id: int):
 
             yield f"event: done\ndata: {json.dumps({"problemName": submission.problem.name, "status": submission.status})}\n\n"
 
-            del submission_events[submission_id]
+            delete_submission_event(submission_id)
 
     return flask.Response(event_stream(), mimetype="text/event-stream")
 

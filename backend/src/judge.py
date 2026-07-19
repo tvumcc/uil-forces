@@ -5,12 +5,14 @@ import enum
 import re
 import threading
 import psutil
+import uuid
 from concurrent.futures import ThreadPoolExecutor
 
 from src.models.orm import *
 from src.utils import *
 
 submission_events: dict[int, threading.Event] = {}
+submission_events_lock = threading.Lock()
 grading_pool = ThreadPoolExecutor(max_workers=4, thread_name_prefix="grader")
 
 class Status(enum.Enum):
@@ -46,12 +48,14 @@ def get_submission_file_name(submission: Submission):
             return None
 
 def get_submission_event(submission_id: int) -> threading.Event:
-    if not submission_id in submission_events:
-        submission_events[submission_id] = threading.Event()
-    return submission_events[submission_id]
+    with submission_events_lock:
+        if not submission_id in submission_events:
+            submission_events[submission_id] = threading.Event()
+        return submission_events[submission_id]
 
 def delete_submission_event(submission_id: int):
-    del submission_events[submission_id]
+    with submission_events_lock:
+        submission_events.pop(submission_id, None)
 
 def mark_submission_complete(submission_id: int):
     event = get_submission_event(submission_id)
@@ -108,8 +112,10 @@ def assign_status(submission_id: int, regrade: bool, docker: bool):
                         status, submission.output = grade_submission_docker(submission, contest_problem_link.grading_timeout)
                     else:
                         status, submission.output = grade_submission(submission, contest_problem_link.grading_timeout)
-                except:
+                except Exception as e:
+                    log.error(f"Unhandled exception grading submission {submission_id}: {e}")
                     status = Status.ErrorServer
+                    submission.output = ""
 
                 submission.status = status.value
                 contest_profile = db.session.merge(contest_profile)
@@ -125,11 +131,13 @@ def assign_status(submission_id: int, regrade: bool, docker: bool):
             log.error(e)
             db.session.rollback() 
 
-def kill_process_tree(pid, known_descendants: set[int] = frozenset()):
+def kill_process_tree(pid, known_descendants: set[int] | None = None): 
     """
     Kill the process itself plus any descendants seen at any point during its lifetime,
     including ones reparented away before the parent process was killed
     """
+    if known_descendants is None:
+        known_descendants = set()
 
     try:
         parent = psutil.Process(pid)
@@ -225,7 +233,7 @@ def grade_submission(submission: Submission, timeout: float = 5.0):
             )
 
             if compile_status.returncode != 0:
-                return (Status.ErrorCompile, compile_status.stderr.decode("utf-8"))
+                return (Status.ErrorCompile, compile_status.stderr.decode("utf-8", errors="replace"))
         
         # Running
         language_run_command = {
@@ -261,7 +269,7 @@ def grade_submission(submission: Submission, timeout: float = 5.0):
         except subprocess.TimeoutExpired as e:
             return (Status.TimeLimitExceeded, "")
         except Exception as e:
-            print(e)
+            log.error(f"Unexpected error grading submission {submission.id}: {e}")
             return (Status.ErrorServer, "")
     finally:
         try: 
@@ -278,64 +286,92 @@ def grade_submission_docker(submission: Submission, timeout: float = 5.0):
     """
 
     filename = get_submission_file_name(submission)
-    submission_folder_name = get_submission_folder_name(submission.id)
+    container_name = f"{get_submission_folder_name(submission.id)}-{uuid.uuid4().hex[:8]}"
     submission_dir = setup_submission_for_grading(submission)
     container_id = ""
     use_stdin = submission.problem.use_stdin
 
     language_image = {
-        "Java":   "openjdk:21",
-        "Python": "alpine:3.14",
+        "Java":   "eclipse-temurin:21-jdk",
+        "Python": "python:3.14-alpine",
     }
 
     try:
-        # Compilation
-        container_id = subprocess.check_output(f"docker run -d --name {submission_folder_name} --memory=512m --mount type=bind,src={submission_dir},dst=/user/src/app -w /user/src/app {language_image[submission.language]} tail -f /dev/null".split()).decode("utf-8")
+        # Container creation
+        try:
+            container_id = subprocess.check_output(
+                [
+                    "docker", "run", "-d", "--rm", "--name", container_name,
+                    "--memory=512m", "--cpus=1", "--pids-limit=100", "--network=none",
+                    "--security-opt=no-new-privileges",
+                    "-v", f"{submission_dir}:/user/src/app:Z",
+                    "-w", "/user/src/app",
+                    language_image[submission.language], "tail", "-f", "/dev/null",
+                ],
+                timeout=30,
+            ).decode("utf-8").strip()
+        except (subprocess.CalledProcessError, subprocess.TimeoutExpired) as e:
+            log.error(f"Failed to start grading container for submission {submission.id}: {e}")
+            return (Status.ErrorServer, "")
 
+        # Compilation
         language_compile_command = {
-            "Java":   f'docker exec {container_id} javac'.split() + [f'{filename}'],
-            "Python": f"docker exec {container_id} apk add python3".split(),
+            "Java":   f'docker exec -w /user/src/app {container_id} javac'.split() + [filename],
         }
 
-        compile_status = subprocess.run(
-            language_compile_command[submission.language], 
-            capture_output=True,
-            cwd=submission_dir
-        )
-
-        if compile_status.returncode != 0:
-            return (Status.ErrorCompile, compile_status.stderr.decode("utf-8"))
+        if submission.language in language_compile_command:
+            compile_status = subprocess.run(
+                language_compile_command[submission.language], 
+                capture_output=True,
+                cwd=submission_dir,
+                timeout=30,
+            )
+            if compile_status.returncode != 0:
+                return (Status.ErrorCompile, compile_status.stderr.decode("utf-8", errors="replace"))
 
         # Running
         language_run_command = {
-            "Java":   f'docker exec -i {container_id} timeout {timeout} java'.split() + [f'{os.path.splitext(filename)[0]}'],
-            "Python": f'docker exec {container_id} timeout {timeout} python3'.split() + [f'{filename}'],
+            "Java":   f'docker exec -w /user/src/app -i {container_id} timeout -k 1 {timeout} java'.split() + [os.path.splitext(filename)[0]],
+            "Python": f'docker exec -w /user/src/app -i {container_id} timeout -k 1 {timeout} python3'.split() + [filename],
         }
 
         try:
             if use_stdin:
                 with open(os.path.join(submission_dir, submission.problem.input_file_name), "rb") as f:
-                    run_status = subprocess.run(language_run_command[submission.language], stdin=f, capture_output=True)
+                    run_status = subprocess.run(
+                        language_run_command[submission.language],
+                        stdin=f,
+                        capture_output=True,
+                        timeout=timeout + 5,
+                    )
             else:
-                run_status = subprocess.run(language_run_command[submission.language], capture_output=True)
+                run_status = subprocess.run(
+                    language_run_command[submission.language], 
+                    capture_output=True,
+                    timeout=timeout + 5,
+                )
 
-            if run_status.returncode == 124 or run_status.returncode == 143:
-                raise subprocess.TimeoutExpired("", "")
-            if run_status.returncode == 1 or run_status.returncode == 139:
-                raise subprocess.CalledProcessError(1, "", stderr=run_status.stderr)
+            if run_status.returncode in (124, 137, 143):
+                raise subprocess.TimeoutExpired(language_run_command[submission.language], timeout)
+            if run_status.returncode != 0:
+                return (Status.ErrorRuntime, run_status.stderr.decode("utf-8", errors="replace"))
 
-            submission_output = normalize_output(run_status.stdout.decode("utf-8"))
+            submission_output = normalize_output(run_status.stdout.decode("utf-8", errors="replace"))
             judge_output = normalize_output(submission.problem.judge_output)
             return (Status.Accepted if submission_output == judge_output else Status.WrongAnswer, submission_output)
         except subprocess.TimeoutExpired as e:
             return (Status.TimeLimitExceeded, "")
-        except subprocess.CalledProcessError as e:
-            return (Status.ErrorRuntime, e.stderr.decode("utf-8"))
         except Exception as e:
-            log.error(e)
+            log.error(f"Unexpected error grading submission {submission.id}: {e}")
             return (Status.ErrorServer, "")
     finally:
-        try: shutil.rmtree(submission_dir)
-        except: pass
-        subprocess.run(f"docker stop -t 0 {container_id}".split())
-        subprocess.run(f"docker rm {container_id}".split())
+        if container_id:
+            try:
+                subprocess.run(["docker", "stop", "-t", "0", container_id], timeout=10, capture_output=True)
+            except Exception:
+                pass
+
+        try: 
+            shutil.rmtree(submission_dir)
+        except:
+            pass
