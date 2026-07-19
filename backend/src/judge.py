@@ -4,6 +4,7 @@ import subprocess
 import enum
 import re
 import threading
+import psutil
 from concurrent.futures import ThreadPoolExecutor
 
 from src.models.orm import *
@@ -124,6 +125,80 @@ def assign_status(submission_id: int, regrade: bool, docker: bool):
             log.error(e)
             db.session.rollback() 
 
+def kill_process_tree(pid, known_descendants: set[int] = frozenset()):
+    """
+    Kill the process itself plus any descendants seen at any point during its lifetime,
+    including ones reparented away before the parent process was killed
+    """
+
+    try:
+        parent = psutil.Process(pid)
+        for child in parent.children(recursive=True):
+            known_descendants.add(child.pid)
+        try:
+            parent.kill()
+        except psutil.NoSuchProcess:
+            pass
+    except psutil.NoSuchProcess:
+        pass
+
+    for pid in known_descendants:
+        try:
+            psutil.Process(pid).kill()
+        except psutil.NoSuchProcess:
+            pass
+
+def run_and_capture(cmd, timeout, cwd, stdin_file=None):
+    """
+    Runs code with standard input (if enabled) and returns the contents of standard error and output and the return code.
+    Guaranteed process-tree cleanup on every exit path (success, timeout, or error).
+
+    Returns a tuple of the form (returncode, stdout_bytes, stderr_bytes)
+    Raises subprocess.TimeoutExpired if the timeout is hit.
+    """
+
+    proc = subprocess.Popen(
+        cmd,
+        cwd=cwd,
+        stdin=stdin_file if stdin_file is not None else subprocess.DEVNULL,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE
+    )
+
+    known_descendants: set[int] = set()
+    stop_watching = threading.Event()
+
+    def watch_descendants():
+        """
+        Continuously snapshot the process tree while the parent is alive, so we
+        still know about children even after they get reparented away on exit.
+        """
+
+        try:
+            parent = psutil.Process(proc.pid)
+        except psutil.NoSuchProcess:
+            return
+        while not stop_watching.is_set():
+            try:
+                for child in parent.children(recursive=True):
+                    known_descendants.add(child.pid)
+            except psutil.NoSuchProcess:
+                pass
+            stop_watching.wait(0.1)
+
+    watcher = threading.Thread(target=watch_descendants, daemon=True)
+    watcher.start()
+ 
+    try:
+        stdout, stderr = proc.communicate(timeout=timeout)
+        return proc.returncode, stdout, stderr
+    except subprocess.TimeoutExpired:
+        raise
+    finally:
+        stop_watching.set()
+        watcher.join(timeout=1) 
+        kill_process_tree(proc.pid, known_descendants)
+
 def grade_submission(submission: Submission, timeout: float = 5.0):
     """
     Compiles (if necessary) and runs the code for the given submission using a local compiler/interpreter on PATH.
@@ -160,38 +235,39 @@ def grade_submission(submission: Submission, timeout: float = 5.0):
 
         try:
             if use_stdin:
-                with open(os.path.join(submission_dir, submission.problem.input_file_name), "rb") as f:
-                    run_status = subprocess.run(
-                        language_run_command[submission.language], 
-                        capture_output=True, 
-                        timeout=timeout, 
+                input_path = os.path.join(submission_dir, submission.problem.input_file_name)
+                with open(input_path, "rb") as f:
+                    return_code, stdout, stderr = run_and_capture(
+                        language_run_command[submission.language],
+                        timeout=timeout,
                         cwd=submission_dir,
-                        check=True,
-                        stdin=f
+                        stdin_file=f
                     )
             else:
-                run_status = subprocess.run(
-                    language_run_command[submission.language], 
-                    capture_output=True, 
-                    timeout=timeout, 
+                return_code, stdout, stderr = run_and_capture(
+                    language_run_command[submission.language],
+                    timeout=timeout,
                     cwd=submission_dir,
-                    check=True,
                 )
 
+
+            if return_code != 0:
+                return (Status.ErrorRuntime, stderr.decode("utf-8", errors="replace")) 
+
             # Check Output
-            submission_output = normalize_output(run_status.stdout.decode("utf-8"))
+            submission_output = normalize_output(stdout.decode("utf-8", errors="replace"))
             judge_output = normalize_output(submission.problem.judge_output)
             return (Status.Accepted if submission_output == judge_output else Status.WrongAnswer, submission_output)
         except subprocess.TimeoutExpired as e:
             return (Status.TimeLimitExceeded, "")
-        except subprocess.CalledProcessError as e:
-            return (Status.ErrorRuntime, e.stdout.decode("utf-8")) 
         except Exception as e:
             print(e)
             return (Status.ErrorServer, "")
     finally:
-        try: shutil.rmtree(submission_dir)
-        except: pass
+        try: 
+            shutil.rmtree(submission_dir)
+        except: 
+            pass
 
 def grade_submission_docker(submission: Submission, timeout: float = 5.0):
     """
