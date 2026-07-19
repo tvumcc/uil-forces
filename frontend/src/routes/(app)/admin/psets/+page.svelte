@@ -23,9 +23,9 @@
     async function addPset(event: Event) {
         event.preventDefault()
 
-        const response: Response = await csrfFetch("/api/admin/add/pset", "POST", JSON.stringify({
+        const response: Response = await csrfFetch("/api/admin/pset/add", "POST", {
             name: name
-        }))
+        })
 
         if (response.ok) {
             await getData()

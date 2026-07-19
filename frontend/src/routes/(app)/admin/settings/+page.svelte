@@ -21,9 +21,9 @@
     async function editSettings(event: Event) {
         event.preventDefault()
 
-        const response: Response = await csrfFetch("/api/admin/update/settings", "POST", JSON.stringify({
+        const response: Response = await csrfFetch("/api/admin/settings/update", "POST", {
             docker_grading: settings!.docker_grading
-        }))
+        })
 
         if (response.ok) {
             await getData()

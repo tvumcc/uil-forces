@@ -44,7 +44,7 @@
             return
         }
 
-        const response: Response = await csrfFetch("/api/admin/update/contest", "POST", JSON.stringify({
+        const response: Response = await csrfFetch("/api/admin/contest/update", "POST", {
             id: contest!.id,
             name: contest!.name,
             startTime: newStartTime,
@@ -52,7 +52,7 @@
             showPdf: contest!.showPdf,
             showLeaderboard: contest!.showLeaderboard,
             allowedLanguages: contest!.allowedLanguages
-        }))
+        })
 
         if (response.ok) {
             await getData()
@@ -65,9 +65,9 @@
     async function addProblemSet(event: Event) {
         event.preventDefault()
 
-        const response: Response = await csrfFetch(`/api/admin/contest/${ID}/add/pset`, "POST", JSON.stringify({
+        const response: Response = await csrfFetch(`/api/admin/contest/${ID}/add/pset`, "POST", {
             psetName: psetName,
-        }))
+        })
 
         if (response.ok) {
             await getData()
@@ -80,10 +80,10 @@
     async function addProblem(event: Event) {
         event.preventDefault()
 
-        const response: Response = await csrfFetch(`/api/admin/contest/${ID}/add/problem`, "POST", JSON.stringify({
+        const response: Response = await csrfFetch(`/api/admin/contest/${ID}/add/problem`, "POST", {
             psetName: problemPsetName,
             problemName: problemName 
-        }))
+        })
 
         if (response.ok) {
             await getData()
@@ -94,10 +94,10 @@
     }
 
     async function unlinkProblem(problemID: number) {
-        const response: Response = await csrfFetch("/api/admin/contest/unlinkproblem", "POST", JSON.stringify({
+        const response: Response = await csrfFetch("/api/admin/contest/unlinkproblem", "POST", {
             contestID: ID,
             problemID: problemID
-        }))
+        })
 
         if (response.ok)  {
             await getData()
@@ -108,10 +108,10 @@
     }
 
     async function updateProblemScores() {
-        const response: Response = await csrfFetch("/api/admin/contest/updateproblems", "POST", JSON.stringify({
+        const response: Response = await csrfFetch("/api/admin/contest/updateproblems", "POST", {
             contestID: ID,
             problems: contest!.problems
-        }))
+        })
 
         if (response.ok)  {
             await getData()

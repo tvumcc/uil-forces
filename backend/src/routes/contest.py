@@ -290,7 +290,7 @@ def admin_contest_unlink_problem():
 
     return "", 204
 
-@app.route("/api/admin/update/contest", methods=["POST"])
+@app.route("/api/admin/contest/update", methods=["POST"])
 @admin_required
 def admin_update_contest():
     """Updates the specified contest with the provided new values"""
@@ -323,7 +323,7 @@ def admin_update_contest():
 
     return "", 204
 
-@app.route("/api/admin/add/contest", methods=["POST"])
+@app.route("/api/admin/contest/add", methods=["POST"])
 @admin_required
 def admin_add_contest():
     """Creates a new contest with a name, start time, and end time"""

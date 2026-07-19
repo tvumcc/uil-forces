@@ -35,7 +35,7 @@ def problem_pdf(id):
             writer = pypdf.PdfWriter()
 
             for page in pages:
-                if page > 0 and page <= len(reader.pages):
+                if page >= 0 and page <= len(reader.pages):
                     writer.add_page(reader.pages[page])
 
             temp_pdf = os.path.join(runtime_dir, "pdfs", f"problem{id}.pdf")
@@ -66,7 +66,7 @@ def admin_problem(id):
 
     return {"problem": problem.serialize()}
 
-@app.route("/api/admin/update/problem", methods=["POST"])
+@app.route("/api/admin/problem/update", methods=["POST"])
 @admin_required
 def admin_update_problem():
     """Updates the specified problem with the provided new values"""

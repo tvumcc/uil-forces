@@ -30,16 +30,17 @@ async function getCsrfToken() {
     return csrfToken
 }
 
-export async function csrfFetch(url: string, method: string, body: any) {
-    let token = await getCsrfToken()
+export async function csrfFetch(url: string, method: string, body?: any) {
+    const token = await getCsrfToken()
+    const isFormData = body instanceof FormData
 
     return fetch(url, {
-        method: method,
+        method,
         headers: {
-            "Content-Type": "application/json; charset=UTF-8",
             "X-CSRFToken": token!,
+            ...(isFormData ? {} : {"Content-Type": "application/json; charset=UTF-8"}),
         },
-        body: body,
+        body: isFormData ? body : JSON.stringify(body),
     })
 }
 

@@ -29,10 +29,10 @@
     async function editPset(event: Event) {
         event.preventDefault()
 
-        const response: Response = await csrfFetch("/api/admin/update/pset", "POST", JSON.stringify({
+        const response: Response = await csrfFetch("/api/admin/pset/update", "POST", {
             id: ID,
             name: pset!.name,
-        }))
+        })
 
         if (response.ok) {
             await getData()
@@ -45,10 +45,10 @@
     async function addProblem(event: Event) {
         event.preventDefault()
 
-        const response: Response = await csrfFetch(`/api/admin/pset/add/problem`, "POST", JSON.stringify({
+        const response: Response = await csrfFetch(`/api/admin/pset/add/problem`, "POST", {
             psetID: pset!.id,
             problemName: problemName 
-        }))
+        })
 
         if (response.ok) {
             await getData()
@@ -75,7 +75,7 @@
     }
 
     async function deleteProblem(problemID: number) {
-        let response: Response = await csrfFetch(`/api/admin/problem/${problemID}/delete`, "DELETE", JSON.stringify({}))
+        let response: Response = await csrfFetch(`/api/admin/problem/${problemID}/delete`, "DELETE")
         if (response.ok) {
             await getData()
             addToast("Deleted problem", ToastType.Success)

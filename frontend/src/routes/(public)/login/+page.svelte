@@ -10,10 +10,10 @@
     async function login(event: Event) {
         event.preventDefault()
 
-        const response: Response = await csrfFetch("/api/login", "POST", JSON.stringify({
+        const response: Response = await csrfFetch("/api/login", "POST", {
             username: username,
             password: password
-        }))
+        })
 
         if (!response.ok) {
             await addErrorToast(response, "Login failed, please try again")

@@ -10,7 +10,7 @@
     } = $props()
 
     async function deleteSubmission(id: number) {
-        const response: Response = await csrfFetch(`/api/admin/submission/${id}/delete`, "DELETE", JSON.stringify({}))
+        const response: Response = await csrfFetch(`/api/admin/submission/${id}/delete`, "DELETE")
 
         if (!response.ok) {
             await addErrorToast(response, "Failed to delete submission")
@@ -21,7 +21,7 @@
     }
 
     async function regradeSubmission(id: number) {
-        const response: Response = await csrfFetch(`/api/admin/submission/${id}/regrade`, "POST", JSON.stringify({}))
+        const response: Response = await csrfFetch(`/api/admin/submission/${id}/regrade`, "POST")
 
         if (!response.ok) {
             await addErrorToast(response, "Failed to regrade submission")

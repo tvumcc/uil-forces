@@ -9,10 +9,10 @@
     async function register(event: Event) {
         event.preventDefault()
 
-        const response: Response = await csrfFetch("/api/register", "POST", JSON.stringify({
+        const response: Response = await csrfFetch("/api/register", "POST", {
             username: username,
             password: password
-        }))
+        })
 
         if (!response.ok) {
             await addErrorToast(response, "User registration failed, please try again")

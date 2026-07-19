@@ -90,7 +90,7 @@ def admin_users():
 
     return {"users": [user.shallow_serialize() for user in db.session.query(User).all()]}
 
-@app.route("/api/admin/add/user", methods=["POST"])
+@app.route("/api/admin/user/add", methods=["POST"])
 @admin_required
 def admin_add_user():
     """Adds a new user to the database given its username, password, and admin status"""

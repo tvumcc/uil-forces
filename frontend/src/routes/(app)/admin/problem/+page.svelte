@@ -57,7 +57,7 @@
         problem!.judgeInput = judgeInputEditor.getValue()
         problem!.judgeOutput = judgeOutputEditor.getValue()
 
-        const response: Response = await csrfFetch("/api/admin/update/problem", "POST", JSON.stringify(problem))
+        const response: Response = await csrfFetch("/api/admin/problem/update", "POST", problem)
 
         if (response.ok) {
             await getData()

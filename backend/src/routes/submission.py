@@ -39,28 +39,28 @@ def submission(id):
         "submission": submission.serialize(user=user, admin_view=flask_login.current_user.is_admin)
     }
 
-@app.route("/api/submission/<int:submission_id>/stream")
+@app.route("/api/submission/<int:id>/stream")
 @flask_login.login_required
-def submission_stream(submission_id: int):
+def submission_stream(id):
     def event_stream():
         with app.app_context():
-            submission = db.session.get(Submission, submission_id)
+            submission = db.session.get(Submission, id)
             if submission is None:
                 yield f"event: error\ndata: {json.dumps({"error": "submission_not_found"})}\n\n"
                 return
             db.session.expire(submission)
 
-            event = get_submission_event(submission_id)
+            event = get_submission_event(id)
             event.wait(timeout=30)
 
-            submission = db.session.get(Submission, submission_id)
+            submission = db.session.get(Submission, id)
             if submission is None:
                 yield f"event: error\ndata: {json.dumps({"error": "judge_error"})}\n\n"
                 return
 
             yield f"event: done\ndata: {json.dumps({"problemName": submission.problem.name, "status": submission.status})}\n\n"
 
-            delete_submission_event(submission_id)
+            delete_submission_event(id)
 
     return flask.Response(event_stream(), mimetype="text/event-stream")
 
@@ -103,11 +103,11 @@ def admin_submission_delete(id):
 
     return "", 204
 
-@app.route("/api/admin/submission/<submission_id>/regrade", methods=["POST"])
+@app.route("/api/admin/submission/<id>/regrade", methods=["POST"])
 @admin_required
-def admin_submission_regrade(submission_id):
+def admin_submission_regrade(id):
     """Reruns the grader on the specified submission"""
 
-    enqueue_submission(submission_id, regrade=True)
+    enqueue_submission(id, regrade=True)
 
     return "", 204

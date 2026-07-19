@@ -37,12 +37,12 @@
     async function submitProblem(event: Event) {
         event.preventDefault()
 
-        const response: Response = await csrfFetch(`/api/${submissionType}/submit`, "POST", JSON.stringify({
+        const response: Response = await csrfFetch(`/api/${submissionType}/submit`, "POST", {
             contestID: ID,
             problemID: submissionProblemID,
             code: fileText,
             language: submissionLanguage 
-        }))
+        })
 
         if (!response.ok) {
             await addErrorToast(response, "Failed to submit code")

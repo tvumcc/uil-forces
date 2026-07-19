@@ -36,11 +36,11 @@
             return
         }
 
-        const response: Response = await csrfFetch("/api/admin/add/contest", "POST", JSON.stringify({
+        const response: Response = await csrfFetch("/api/admin/contest/add", "POST", {
             name: name,
             startTime: newStartTime,
             endTime: newEndTime 
-        }))
+        })
 
         if (response.ok) {
             await getData()

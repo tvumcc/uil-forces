@@ -27,7 +27,7 @@ def admin_pset(id):
 
     return {"pset": pset.serialize()}
 
-@app.route("/api/admin/update/pset", methods=["POST"])
+@app.route("/api/admin/pset/update", methods=["POST"])
 @admin_required
 def admin_update_pset():
     """Updates the specified problem set with the provided new values"""
@@ -50,7 +50,7 @@ def admin_update_pset():
 
     return "", 204
 
-@app.route("/api/admin/add/pset", methods=["POST"])
+@app.route("/api/admin/pset/add", methods=["POST"])
 @admin_required
 def admin_add_pset():
     """Creates an empty problem set with just a name and adds it to the database"""
@@ -112,6 +112,7 @@ def admin_pset_pdf(id):
 def admin_pset_upload_pdf(id):
     """Uploads a new PDF to replace the one currently attached to the specified problem set"""
 
+    print(flask.request.files)
     file = flask.request.files["pdf"]
     pset =  db.session.get(ProblemSet, id)
     if not pset:

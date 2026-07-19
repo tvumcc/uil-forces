@@ -26,11 +26,11 @@
     async function addUser(event: Event) {
         event.preventDefault()
 
-        let response = await csrfFetch("/api/admin/add/user", "POST", JSON.stringify({
+        let response = await csrfFetch("/api/admin/user/add", "POST", {
             username: username,
             password: password,
             isAdmin: isAdmin
-        }))
+        })
 
         if (response.ok) {
             await getData()

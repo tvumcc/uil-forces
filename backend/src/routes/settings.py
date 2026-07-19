@@ -18,7 +18,7 @@ def admin_settings():
 
     return {"settings": out}
 
-@app.route("/api/admin/update/settings", methods=["POST"])
+@app.route("/api/admin/settings/update", methods=["POST"])
 @admin_required
 def admin_update_settings():
     """Updates the site-wide settings with new values"""
