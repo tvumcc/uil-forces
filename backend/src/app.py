@@ -5,7 +5,8 @@ from sqlalchemy import event
 from sqlalchemy.engine import Engine
 from werkzeug.exceptions import HTTPException
 
-import os, sys
+import os, sys, logging
+from logging.handlers import TimedRotatingFileHandler
 
 from src.models.orm import *
 from src.setup import *
@@ -27,6 +28,32 @@ if hasattr(sys, '_MEIPASS'):
     runtime_dir = os.path.dirname(sys.executable)
 else:
     runtime_dir = os.path.abspath(".")
+
+logs_dir = os.path.join(runtime_dir, "logs")
+os.makedirs(logs_dir, exist_ok=True)
+log_path = os.path.join(logs_dir, "app.log")
+
+formatter = logging.Formatter(
+    "%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+    datefmt="%Y/%m/%d %H:%M:%S",
+)
+
+file_handler = TimedRotatingFileHandler(
+    log_path,
+    when="midnight",
+    interval=1,
+    backupCount=50, # keep 50 days of contest history
+    encoding="utf-8",
+)
+file_handler.setFormatter(formatter)
+
+console_handler = logging.StreamHandler()
+console_handler.setFormatter(formatter)
+
+logging.basicConfig(
+    level=logging.INFO,
+    handlers=[console_handler, file_handler],
+)
 
 DIST_DIR = resource_path("dist")
 

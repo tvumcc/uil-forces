@@ -6,12 +6,6 @@ import re
 import logging
 import socket
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
-    datefmt="%Y/%m/%d %H:%M:%S",
-)
-
 waitress_log = logging.getLogger("waitress")
 waitress_log.setLevel(logging.INFO)
 

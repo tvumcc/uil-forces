@@ -38,3 +38,5 @@ main
 .vscode
 backend/dist
 .svelte-kit
+*.log
+logs

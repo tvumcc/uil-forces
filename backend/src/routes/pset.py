@@ -112,7 +112,6 @@ def admin_pset_pdf(id):
 def admin_pset_upload_pdf(id):
     """Uploads a new PDF to replace the one currently attached to the specified problem set"""
 
-    print(flask.request.files)
     file = flask.request.files["pdf"]
     pset =  db.session.get(ProblemSet, id)
     if not pset:
