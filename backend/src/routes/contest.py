@@ -10,7 +10,7 @@ import shutil
 
 from src.app import app
 from src.models.orm import *
-from src.judge import Status, assign_status
+from src.judge import Status, enqueue_submission 
 from src.utils import admin_required, valid_name
 
 @app.route("/api/contests")
@@ -104,7 +104,7 @@ def submit_contest_problem():
     if latest_submission is not None:
         last_time = latest_submission.submit_time.replace(tzinfo=timezone.utc)
         curr_time = datetime.datetime.now(timezone.utc)
-        if (curr_time - last_time).total_seconds() <= 5:
+        if (curr_time - last_time).total_seconds() <= submission_cooldown_seconds:
             return {"error": "submission_cooldown_ongoing"}, 429
 
     submission = Submission(
@@ -120,9 +120,7 @@ def submit_contest_problem():
     db.session.add(submission)
     db.session.commit()
 
-    thread = threading.Thread(target=assign_status, args=[submission.id, contest_profile.id], kwargs={"docker": Settings.docker_grading_enabled()})
-    thread.daemon = True
-    thread.start()
+    enqueue_submission(submission.id, contest_profile.id)
 
     return {"submission": submission.shallow_serialize()}
 

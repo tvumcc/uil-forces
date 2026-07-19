@@ -4,11 +4,13 @@ import subprocess
 import enum
 import re
 import threading
+from concurrent.futures import ThreadPoolExecutor
 
 from src.models.orm import *
 from src.utils import *
 
 submission_events: dict[int, threading.Event] = {}
+grading_pool = ThreadPoolExecutor(max_workers=4, thread_name_prefix="grader")
 
 class Status(enum.Enum):
     Pending = 0
@@ -74,7 +76,10 @@ def setup_submission_for_grading(submission: Submission) -> str:
 
     return submission_dir
 
-def assign_status(submission_id: int, contest_profile_id: int, docker=False):
+def enqueue_submission(submission_id: int, regrade: bool = False):
+    grading_pool.submit(assign_status, submission_id, regrade, Settings.docker_grading_enabled())
+
+def assign_status(submission_id: int, regrade: bool, docker: bool):
     """
     Calls the appropriate function to grade the given submission using Docker or a compiler/interpreter on PATH
     After the submission has been graded, if a contest profile was supplied, its score will be recalculated
@@ -82,29 +87,42 @@ def assign_status(submission_id: int, contest_profile_id: int, docker=False):
 
     from src.app import app
     with app.app_context():
-        submission = db.session.get(Submission, submission_id)
-        contest_profile = db.session.get(ContestProfile, contest_profile_id)
+        try:
+            submission = db.session.get(Submission, submission_id)
+            if submission is None:
+                raise Exception(f"Cannot grade submission: submission with ID {submission_id} not found")
 
-        if contest_profile is None:
-            raise Exception("Cannot assign status to submission: contest profile does not exist")
+            contest_profile_id = submission.contest_profile_id
+            contest_profile = db.session.get(ContestProfile, contest_profile_id)
+            if contest_profile is None:
+                raise Exception(f"Cannot grade submission: contest profile with ID {contest_profile_id} not found")
 
-        contest_problem_link = db.session.query(ContestProblemAssociation).filter_by(contest_id=contest_profile.contest_id, problem_id=submission.problem_id).first()
+            contest_problem_link = db.session.query(ContestProblemAssociation).filter_by(contest_id=contest_profile.contest_id, problem_id=submission.problem_id).first()
+            if contest_problem_link is None:
+                raise Exception(f"Cannot grade submission: link between contest with ID {contest_profile.contest_id} and problem with ID {submission.problem_id} not found")
 
-        if submission.status == Status.Pending.value:
-            if docker:
-                status, submission.output = grade_submission_docker(submission, contest_problem_link.grading_timeout)
-            else:
-                status, submission.output = grade_submission(submission, contest_problem_link.grading_timeout)
+            if submission.status == Status.Pending.value or regrade:
+                try:
+                    if docker:
+                        status, submission.output = grade_submission_docker(submission, contest_problem_link.grading_timeout)
+                    else:
+                        status, submission.output = grade_submission(submission, contest_problem_link.grading_timeout)
+                except:
+                    status = Status.ErrorServer
 
-            submission.status = status.value
-            contest_profile = db.session.merge(contest_profile)
-            contest_profile.calculate_score()
-            submission = db.session.merge(submission)
+                submission.status = status.value
+                contest_profile = db.session.merge(contest_profile)
+                contest_profile.calculate_score()
+                submission = db.session.merge(submission)
 
-            db.session.add(submission)
-            db.session.commit()
+                db.session.add(submission)
+                db.session.commit()
+                mark_submission_complete(submission.id)
 
-            mark_submission_complete(submission.id)
+                log.info(f"Finished grading submission {submission.id} for {contest_profile.user.username}")
+        except Exception as e:
+            log.error(e)
+            db.session.rollback() 
 
 def grade_submission(submission: Submission, timeout: float = 5.0):
     """

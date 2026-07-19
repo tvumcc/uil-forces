@@ -6,7 +6,7 @@ import json
 from src.app import app
 from src.models.orm import *
 from src.utils import log, admin_required
-from src.judge import get_submission_event, submission_events, Status
+from src.judge import get_submission_event, submission_events, enqueue_submission
 
 @app.route("/api/submission/<id>")
 @flask_login.login_required
@@ -100,5 +100,14 @@ def admin_submission_delete(id):
     db.session.commit()
 
     log.info(f"Submission {id} deleted by {flask_login.current_user.username}")
+
+    return "", 204
+
+@app.route("/api/admin/submission/<submission_id>/regrade", methods=["POST"])
+@admin_required
+def admin_submission_regrade(submission_id):
+    """Reruns the grader on the specified submission"""
+
+    enqueue_submission(submission_id, regrade=True)
 
     return "", 204

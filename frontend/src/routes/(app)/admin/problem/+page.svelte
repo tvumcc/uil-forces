@@ -53,6 +53,10 @@
     async function updateProblem(event: Event) {
         event.preventDefault()
 
+        problem!.studentInput = studentInputEditor.getValue()
+        problem!.judgeInput = judgeInputEditor.getValue()
+        problem!.judgeOutput = judgeOutputEditor.getValue()
+
         const response: Response = await csrfFetch("/api/admin/update/problem", "POST", JSON.stringify(problem))
 
         if (response.ok) {

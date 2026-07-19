@@ -1,18 +1,18 @@
 <script lang="ts">
+    import { page } from "$app/state"
     import { goBack } from "$lib/navigationHistory.svelte";
     import SubmissionTable from "$lib/submissionTable.svelte";
     import { addErrorToast } from "$lib/toastStore.svelte";
     import type {Submission} from "$lib/utils"
 
-    let params = new URLSearchParams(document.location.search)
-    let page = $state(params.get("page") ?? "1")
+    let pageNum: number = $derived(Number(page.url.searchParams.get("page") ?? "1"))
 
     let submissions: Submission[] = $state([])
 
     async function getData() {
-        const response: Response = await fetch(`/api/admin/submissions/${page}`)
+        const response: Response = await fetch(`/api/admin/submissions/${pageNum}`)
 
-        if (!response.json) {
+        if (!response.ok) {
             await addErrorToast(response, "Failed to load submissions list")
             goBack()
             return
@@ -29,13 +29,13 @@
     {#await getData()}
         <p>Loading...</p> 
     {:then} 
-        {#if page != "1"}
-            <a href={`/admin/submissions?page=${Number(page) - 1}`}>Previous Page</a>
+        {#if pageNum > 1}
+            <a href={`/admin/submissions?page=${pageNum - 1}`}>Previous Page</a>
         {/if}
-        <p>Page {page}</p>
+        <p>Page {pageNum}</p>
         {#if submissions.length === 20}
-            <a href={`/admin/submissions?page=${Number(page) + 1}`}>Next Page</a>
+            <a href={`/admin/submissions?page=${pageNum + 1}`}>Next Page</a>
         {/if}
-        <SubmissionTable {submissions} showUsers={true} showDelete={true}/>
+        <SubmissionTable {submissions} showUsers={true} showActions={true}/>
     {/await}
 </div>

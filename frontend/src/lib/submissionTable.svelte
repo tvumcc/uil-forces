@@ -1,12 +1,12 @@
 <script lang="ts">
     import Status from "$lib/status.svelte"
     import {csrfFetch, type Submission} from "$lib/utils"
-    import { addErrorToast } from "./toastStore.svelte";
+    import { addErrorToast, addToast, ToastType } from "./toastStore.svelte";
 
     let {
         submissions, 
         showUsers,
-        showDelete = false
+        showActions = false
     } = $props()
 
     async function deleteSubmission(id: number) {
@@ -18,6 +18,17 @@
         }
 
         submissions = submissions.filter((submission: Submission) => submission.id !== id)
+    }
+
+    async function regradeSubmission(id: number) {
+        const response: Response = await csrfFetch(`/api/admin/submission/${id}/regrade`, "POST", JSON.stringify({}))
+
+        if (!response.ok) {
+            await addErrorToast(response, "Failed to regrade submission")
+            return
+        }
+
+        addToast(`Regrade of submission ${id} is queued, refresh page to view result`, ToastType.Info)
     }
 </script>
 
@@ -33,8 +44,9 @@
                 <th>Language</th>
                 <th>Status</th>
                 <th>Code</th>
-                {#if showDelete}
-                    <th>Action</th>
+                {#if showActions}
+                    <th>Delete</th>
+                    <th>Regrade</th>
                 {/if}
             </tr>
         </thead>
@@ -49,8 +61,9 @@
                     <td>{submission.language}</td>
                     <td style="width: 175px;"><Status statusCode={submission.status} fitText={false}/></td>
                     <td style="width: 80px;"><a href="/submission?id={submission.id}">View Code</a></td>
-                    {#if showDelete}
+                    {#if showActions}
                         <td style="width: 80px;"><button onclick={() => deleteSubmission(submission.id)}>Delete</button></td>
+                        <td style="width: 80px;"><button onclick={() => regradeSubmission(submission.id)}>Regrade</button></td>
                     {/if}
                 </tr>
             {/each}

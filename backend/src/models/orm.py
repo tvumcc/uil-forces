@@ -273,7 +273,7 @@ class ContestProfile(db.Model):
                     
             if submission.status == 1:
                 problem_status_list[problem_idx][1] += 1
-            elif submission.status != 0:
+            elif submission.status != 0 and submission.status != 6: # not pending or server error
                 problem_status_list[problem_idx][2] += 1
 
         return problem_status_list
