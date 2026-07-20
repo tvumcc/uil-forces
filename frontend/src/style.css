@@ -1,11 +1,6 @@
-h1 {
-    margin: 0;
-}
-
-a {
-    color: #00d492;
-}
-
+/* ==========================================================================
+   Base
+   ========================================================================== */
 body {
     background-color: #030712;
     color: white;
@@ -18,31 +13,24 @@ body {
     flex-direction: column;
 }
 
+h1 {
+    margin: 0;
+}
+
+a {
+    color: #00d492;
+}
+
 label {
     font-size: 12px;
     letter-spacing: 0.5px;
     color: #64748b;
 }
 
-th {
-    color: #64748b;
-    font-weight: normal;
-    text-transform: uppercase;
-    font-size: 11px;
-    letter-spacing: 0.5px;
-    text-align: left;
-    padding: 8px 10px;
-    border-bottom: 1px solid #1e293b;
-    white-space: nowrap;
-}
 
-td {
-    padding: 9px 10px;
-    border-bottom: 1px solid #131d2e;
-    text-align: left;
-    white-space: nowrap;
-}
-
+/* ==========================================================================
+   Page Containers
+   ========================================================================== */
 .main-container {
     box-sizing: border-box;
     background-color: #101828;
@@ -56,6 +44,10 @@ td {
 .main-container.wide {
     max-width: 1400px;
 }
+.main-container.narrow {
+    width: 90%;
+    max-width: 380px;
+}
 
 .hero {
     margin-bottom: 30px;
@@ -66,32 +58,54 @@ td {
     font-size: 32px;
     letter-spacing: -0.5px;
 }
+.hero.centered {
+    text-align: center;
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
 .subtitle {
     color: #94a3b8;
     margin: 6px 0 0 0;
 }
-.dim {
-    color: #64748b;
-}
 
+
+/* ==========================================================================
+   Panels
+   ========================================================================== */
 .panel {
     background-color: #0b1220;
     border: 1px solid #1e293b;
     border-radius: 8px;
     padding: 18px;
 }
+.panel.spaced {
+    margin-top: 16px;
+}
+
 .panel-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 16px;
 }
-.panel.spaced {
-    margin-top: 16px;
-}
 @media (max-width: 700px) {
     .panel-grid { grid-template-columns: 1fr; }
 }
 
+.section-header {
+    font-size: 15px;
+    letter-spacing: 1px;
+    margin: 0 0 12px 0;
+    color: #e2e8f0;
+}
+.section-header.spaced {
+    margin-top: 22px;
+}
+
+
+/* ==========================================================================
+   Loading Skeleton
+   ========================================================================== */
 .skeleton {
     min-height: 160px;
     background: linear-gradient(90deg, #0b1220 0%, #131d2e 50%, #0b1220 100%);
@@ -106,17 +120,10 @@ td {
     100% { background-position: -200% 0; }
 }
 
-.section-header {
-    font-size: 15px;
-    letter-spacing: 1px;
-    margin: 0 0 12px 0;
-    color: #e2e8f0;
-}
 
-.section-header.spaced {
-    margin-top: 22px;
-}
-
+/* ==========================================================================
+   Lists
+   ========================================================================== */
 .contest-list {
     list-style: none;
     margin: 0;
@@ -138,17 +145,59 @@ td {
     justify-content: space-between;
 }
 
+
+/* ==========================================================================
+   Tables
+   ========================================================================== */
+th {
+    color: #64748b;
+    font-weight: normal;
+    text-transform: uppercase;
+    font-size: 11px;
+    letter-spacing: 0.5px;
+    text-align: left;
+    padding: 8px 10px;
+    border-bottom: 1px solid #1e293b;
+    white-space: nowrap;
+}
+
+td {
+    padding: 9px 10px;
+    border-bottom: 1px solid #131d2e;
+    text-align: left;
+    white-space: nowrap;
+}
+
+
+/* ==========================================================================
+   Typography Helpers
+   ========================================================================== */
+.dim {
+    color: #64748b;
+}
 .mono {
     font-variant-numeric: tabular-nums;
 }
-
+.mono-time {
+    color: #cbd5e1;
+    font-variant-numeric: tabular-nums;
+}
 .empty-state {
     color: #64748b;
     font-size: 14px;
     margin: 0;
     padding: 6px 0;
 }
+.countdown {
+    margin: 4px 0 0 0;
+    font-size: 12px;
+    color: #64748b;
+}
 
+
+/* ==========================================================================
+   Forms
+   ========================================================================== */
 input[type="text"],
 input[type="password"],
 input[type="datetime-local"] {
@@ -216,63 +265,22 @@ input[type="datetime-local"]:focus {
     height: 15px;
 }
 
-.btn {
-    border: none;
-    background-color: #0f1a2e;
-    color: white;
-    border-radius: 6px;
-    padding: 8px 16px;
-    font-family: inherit;
+.full-width {
+    width: 100%;
+    align-self: stretch;
+    text-align: center;
+}
+
+.register-link {
+    text-align: center;
     font-size: 13px;
-    cursor: pointer;
-    align-self: flex-start;
-    transition: opacity 0.15s ease;
-}
-.btn:hover {
-    opacity: 0.85;
-}
-@media (prefers-reduced-motion: reduce) {
-    .btn { transition: none; }
-}
-.btn-primary {
-    background-color: #00d492;
-    color: #030712;
-    font-weight: bold;
-}
-.btn-primary:hover {
-    opacity: 0.85;
+    margin: 4px 0 0 0;
 }
 
-.spaced-btn {
-    margin-top: 14px;
-}
 
-.btn-danger-outline {
-    color: #f87171;
-    border: 1px solid;
-    border-color: #0f1a2e;
-}
-.btn-danger-outline:hover {
-    border-color: #f87171;
-}
-
-.btn-danger {
-    background-color: #f87171;
-    border-color: #f87171;
-    color: #030712;
-    font-weight: bold;
-}
-.btn-danger:hover {
-    opacity: 0.85;
-    color: #030712;
-}
-
-.confirm-text {
-    font-size: 12px;
-    color: #f87171;
-    margin-right: 4px;
-}
-
+/* ==========================================================================
+   File Upload
+   ========================================================================== */
 .file-row {
     display: flex;
     align-items: center;
@@ -307,6 +315,63 @@ input[type="datetime-local"]:focus {
     cursor: pointer;
 }
 
+
+/* ==========================================================================
+   Buttons
+   ========================================================================== */
+.btn {
+    border: none;
+    background-color: #0f1a2e;
+    color: white;
+    border-radius: 6px;
+    padding: 8px 16px;
+    font-family: inherit;
+    font-size: 13px;
+    cursor: pointer;
+    align-self: flex-start;
+    transition: opacity 0.15s ease;
+}
+.btn:hover {
+    opacity: 0.85;
+}
+@media (prefers-reduced-motion: reduce) {
+    .btn { transition: none; }
+}
+
+.btn-primary {
+    background-color: #00d492;
+    color: #030712;
+    font-weight: bold;
+}
+.btn-primary:hover {
+    opacity: 0.85;
+}
+
+.btn-danger {
+    background-color: #f87171;
+    border-color: #f87171;
+    color: #030712;
+    font-weight: bold;
+}
+.btn-danger:hover {
+    opacity: 0.85;
+    color: #030712;
+}
+
+.btn-danger-outline {
+    color: #f87171;
+    border: 1px solid;
+    border-color: #0f1a2e;
+}
+.btn-danger-outline:hover {
+    border-color: #f87171;
+}
+
+.spaced-btn {
+    margin-top: 14px;
+}
+
+/* Legacy alias — see note at bottom of file */
 .submit-button {
     background-color: #00d492;
     color: #030712;
@@ -331,6 +396,20 @@ input[type="datetime-local"]:focus {
     .submit-button { transition: none; }
 }
 
+
+/* ==========================================================================
+   Confirmation / Danger States
+   ========================================================================== */
+.confirm-text {
+    font-size: 12px;
+    color: #f87171;
+    margin-right: 4px;
+}
+
+
+/* ==========================================================================
+   Badges
+   ========================================================================== */
 .badge-admin {
     font-size: 11px;
     padding: 2px 10px;
@@ -339,37 +418,4 @@ input[type="datetime-local"]:focus {
     letter-spacing: 0.5px;
     background-color: rgba(245, 196, 81, 0.15);
     color: #f5c451;
-}
-
-.main-container.narrow {
-    width: 90%;
-    max-width: 380px;
-}
-
-.hero.centered {
-    text-align: center;
-    border-bottom: none;
-    padding-bottom: 0;
-}
-
-.full-width {
-    width: 100%;
-    align-self: stretch;
-    text-align: center;
-}
-
-.register-link {
-    text-align: center;
-    font-size: 13px;
-    margin: 4px 0 0 0;
-}
-
-.countdown {
-    margin: 4px 0 0 0;
-    font-size: 12px;
-    color: #64748b;
-}
-.mono-time {
-    color: #cbd5e1;
-    font-variant-numeric: tabular-nums;
 }
