@@ -132,26 +132,4 @@
     .cell-empty {
         color: #334155;
     }
-
-    .empty-state {
-        color: #64748b;
-        font-size: 14px;
-        margin: 0;
-        padding: 10px 0;
-    }
-
-    .skeleton {
-        min-height: 100px;
-        border-radius: 6px;
-        background: linear-gradient(90deg, #0b1220 0%, #131d2e 50%, #0b1220 100%);
-        background-size: 200% 100%;
-        animation: shimmer 1.4s ease-in-out infinite;
-    }
-    @media (prefers-reduced-motion: reduce) {
-        .skeleton { animation: none; }
-    }
-    @keyframes shimmer {
-        0% { background-position: 200% 0; }
-        100% { background-position: -200% 0; }
-    }
 </style>

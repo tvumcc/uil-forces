@@ -64,7 +64,7 @@ def admin_problem(id):
     if not problem:
         return {"error": "problem_not_found"}, 404
 
-    return {"problem": problem.serialize()}
+    return {"problem": problem.serialize(), "pset": problem.pset.shallow_serialize()}
 
 @app.route("/api/admin/problem/update", methods=["POST"])
 @admin_required

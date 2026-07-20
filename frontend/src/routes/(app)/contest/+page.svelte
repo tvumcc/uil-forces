@@ -43,7 +43,7 @@
             <div class="title-row">
                 <h1>{contest.name}</h1>
             </div>
-            <a class="download-link" href="/api/contest/{ID}/data" target="_blank">↓ Download Student Data</a>
+            <a class="download-link" href="/api/contest/{ID}/data" target="_blank">Download Student Data Files</a>
         </header>
 
         {#if contest.status === "upcoming"}
@@ -117,29 +117,6 @@
         display: inline-block;
         margin-top: 8px;
         font-size: 13px;
-    }
-
-    .panel {
-        background-color: #0b1220;
-        border: 1px solid #1e293b;
-        border-radius: 8px;
-        padding: 18px;
-    }
-    .panel.spaced {
-        margin-top: 16px;
-    }
-    .skeleton {
-        min-height: 140px;
-        background: linear-gradient(90deg, #0b1220 0%, #131d2e 50%, #0b1220 100%);
-        background-size: 200% 100%;
-        animation: shimmer 1.4s ease-in-out infinite;
-    }
-    @media (prefers-reduced-motion: reduce) {
-        .skeleton { animation: none; }
-    }
-    @keyframes shimmer {
-        0% { background-position: 200% 0; }
-        100% { background-position: -200% 0; }
     }
 
     .notice {

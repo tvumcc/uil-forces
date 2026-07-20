@@ -1,16 +1,18 @@
 <script lang="ts">
+    import { onMount } from "svelte";
+    import { page } from "$app/state";
     import { goBack } from "$lib/navigationHistory.svelte";
     import { addErrorToast, addToast, ToastType } from "$lib/toastStore.svelte";
-    import {csrfFetch, type ProblemSet} from "$lib/utils"
+    import { csrfFetch, type ProblemSet } from "$lib/utils"
 
-    let params = new URLSearchParams(document.location.search)
-    let ID = params.get("id")
-
+    let ID = page.url.searchParams.get("id")
     let pset: ProblemSet | undefined = $state()
+    let loading = $state(true)
 
     let problemName = $state("")
+    let confirmingDeleteID: number | null = $state(null)
 
-    let files: FileList = $state()!
+    let files: FileList | undefined = $state()
     let fileData: ArrayBuffer = $state(new ArrayBuffer(0))
 
     async function getData() {
@@ -24,6 +26,7 @@
 
         const data = await response.json()
         pset = data.pset
+        loading = false
     }
 
     async function editPset(event: Event) {
@@ -47,12 +50,13 @@
 
         const response: Response = await csrfFetch(`/api/admin/pset/add/problem`, "POST", {
             psetID: pset!.id,
-            problemName: problemName 
+            problemName: problemName
         })
 
         if (response.ok) {
             await getData()
             addToast("Added new problem to problem set", ToastType.Success)
+            problemName = ""
         } else {
             await addErrorToast(response, "Failed to add new problem")
         }
@@ -69,6 +73,7 @@
         if (response.ok) {
             await getData()
             addToast("Uploaded PDF file", ToastType.Success)
+            files = undefined
         } else {
             await addErrorToast(response, "Failed to upload PDF file")
         }
@@ -76,6 +81,7 @@
 
     async function deleteProblem(problemID: number) {
         let response: Response = await csrfFetch(`/api/admin/problem/${problemID}/delete`, "DELETE")
+        confirmingDeleteID = null
         if (response.ok) {
             await getData()
             addToast("Deleted problem", ToastType.Success)
@@ -86,74 +92,104 @@
 
     $effect(() => {
         (async () => {
-            if (files) {
-                for (let file of files) {
-                    fileData = await file.arrayBuffer()
-                }
+            if (files && files.length > 0) {
+                fileData = await files[0].arrayBuffer()
             }
         })()
+    })
+
+    onMount(() => {
+        getData()
     })
 </script>
 
 <div class="main-container">
-    <h1>Edit Problem Set</h1>
+    {#if loading}
+        <div class="panel skeleton"></div>
+    {:else if pset !== undefined}
+        <header class="hero">
+            <h1>{pset.name}</h1>
+        </header>
 
-    {#await getData()}
-        <p>Loading...</p> 
-    {:then} 
-        {#if pset !== undefined} 
-            <form onsubmit={editPset}>
-                <label for="name">Name</label>
-                <input name="name" type="text" bind:value={pset.name}>
-                <br>
-                <input type="submit" value="Update Problem Set">
+        <section class="panel">
+            <h2 class="section-header">Edit Details</h2>
+            <form class="stacked-form" onsubmit={editPset}>
+                <div class="field">
+                    <label for="name">Name</label>
+                    <input name="name" type="text" bind:value={pset.name}>
+                </div>
+                <button type="submit" class="btn btn-primary">Update Problem Set</button>
             </form>
+        </section>
 
-            <h2>PDF</h2>
-            <a href="/api/admin/pset/{ID}/pdf" target="_blank">Download Current PDF</a>
-            <form onsubmit={uploadPDF}>
-                <label for="pdf-upload">Upload New Pset PDF</label>
-                <input name="pdf-upload" type="file" bind:files>
-                <input type="submit" value="Upload PDF">
+        <section class="panel spaced">
+            <h2 class="section-header">Edit PDF</h2>
+            <a class="pdf-link" href="/api/admin/pset/{ID}/pdf" target="_blank">Download Current PDF</a>
+            <form class="stacked-form spaced-form" onsubmit={uploadPDF}>
+                <div class="file-row">
+                    <label class="file-button" for="pdf-upload">
+                        {files && files.length > 0 ? files[0].name : "Choose PDF"}
+                        <input id="pdf-upload" name="pdf-upload" type="file" accept="application/pdf" bind:files>
+                    </label>
+                    <button type="submit" class="submit-button" disabled={!files || files.length === 0}>Upload</button>
+                </div>
             </form>
+        </section>
 
-            <h2>Problems</h2>
-            <table>
-            <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-            <tbody>
-            {#each pset.problems as problem}
-                <tr class="pb-row">
-                    <td><a href="/admin/problem?id={problem.id}">{problem.name}</a></td>
-                    <td><button onclick={() => deleteProblem(problem.id)}>Delete</button></td>
-                </tr>
-            {/each}
-            </tbody>
-            </table>
+        <section class="panel spaced">
+            <h2 class="section-header">Edit Problems</h2>
+            {#if pset.problems && pset.problems.length > 0}
+                <table>
+                    <thead>
+                        <tr>
+                            <th>name</th>
+                            <th class="actions-col">action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {#each pset.problems as problem}
+                            <tr>
+                                <td><a href="/admin/problem?id={problem.id}">{problem.name}</a></td>
+                                <td class="actions-cell">
+                                    {#if confirmingDeleteID === problem.id}
+                                        <span class="confirm-text">Delete?</span>
+                                        <button class="btn btn-danger" onclick={() => deleteProblem(problem.id)}>Yes</button>
+                                        <button class="btn" onclick={() => confirmingDeleteID = null}>No</button>
+                                    {:else}
+                                        <button class="btn btn-danger-outline" onclick={() => confirmingDeleteID = problem.id}>Delete</button>
+                                    {/if}
+                                </td>
+                            </tr>
+                        {/each}
+                    </tbody>
+                </table>
+            {:else}
+                <p class="empty-state">No problems in this set yet.</p>
+            {/if}
+        </section>
 
-            <h2>Add Problem</h2>
-            <form onsubmit={addProblem}>
-                <label for="problem-name">Problem Name</label>
-                <input name="problem-name" type="text" bind:value={problemName}>
-                <input type="submit" value="Add Problem">
+        <section class="panel spaced">
+            <h2 class="section-header">Create New Problem</h2>
+            <form class="stacked-form" onsubmit={addProblem}>
+                <div class="field">
+                    <label for="problem-name">Problem Name</label>
+                    <input name="problem-name" type="text" bind:value={problemName}>
+                </div>
+                <button type="submit" class="btn btn-primary">Create Problem</button>
             </form>
-        {/if}
-    {/await}
+        </section>
+    {/if}
 </div>
 
 <style>
-    table {
-        border-collapse: collapse;
+    .pdf-link {
+        display: inline-block;
+        font-size: 13px;
+        margin-bottom: 14px;
     }
-
-    .pb-row td {
-        border: 1px gray solid;
-        margin: 0;
-        padding: 8px;
-        text-align: left;
+    .spaced-form {
+        flex-direction: row;
+        align-items: center;
+        max-width: none;
     }
 </style>

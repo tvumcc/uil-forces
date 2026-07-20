@@ -17,7 +17,7 @@
 <div class="main-container">
     <header class="hero">
         <h1>Admin Home</h1>
-        <p class="subtitle">Manage contests, problem sets, users, and site settings</p>
+        <p class="subtitle">Manage contests, problem sets, users, submissions, and settings</p>
     </header>
 
     <div class="admin-grid">

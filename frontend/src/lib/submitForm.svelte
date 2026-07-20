@@ -153,24 +153,6 @@
         gap: 14px;
     }
 
-    .field-row {
-        display: flex;
-        gap: 14px;
-        flex-wrap: wrap;
-    }
-
-    .field {
-        display: flex;
-        flex-direction: column;
-        gap: 5px;
-    }
-
-    label {
-        font-size: 12px;
-        letter-spacing: 0.5px;
-        color: #64748b;
-    }
-
     select {
         background-color: #0f1a2e;
         color: white;
@@ -184,63 +166,5 @@
     select:focus {
         outline: none;
         border-color: #00d492;
-    }
-
-    .file-row {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        flex-wrap: wrap;
-    }
-
-    .file-button {
-        position: relative;
-        display: inline-flex;
-        align-items: center;
-        background-color: #0f1a2e;
-        border: 1px dashed #334155;
-        border-radius: 6px;
-        padding: 9px 14px;
-        font-size: 14px;
-        color: #94a3b8;
-        cursor: pointer;
-        transition: border-color 0.15s ease, color 0.15s ease;
-    }
-    .file-button:hover {
-        border-color: #00d492;
-        color: #e2e8f0;
-    }
-    @media (prefers-reduced-motion: reduce) {
-        .file-button { transition: none; }
-    }
-    .file-button input[type="file"] {
-        position: absolute;
-        inset: 0;
-        opacity: 0;
-        cursor: pointer;
-    }
-
-    .submit-button {
-        background-color: #00d492;
-        color: #030712;
-        border: none;
-        border-radius: 6px;
-        padding: 9px 20px;
-        font-family: inherit;
-        font-size: 14px;
-        font-weight: bold;
-        cursor: pointer;
-        transition: opacity 0.15s ease;
-    }
-    .submit-button:hover:not(:disabled) {
-        opacity: 0.85;
-    }
-    .submit-button:disabled {
-        background-color: #1e293b;
-        color: #64748b;
-        cursor: not-allowed;
-    }
-    @media (prefers-reduced-motion: reduce) {
-        .submit-button { transition: none; }
     }
 </style>

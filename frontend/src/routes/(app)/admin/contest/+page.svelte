@@ -185,7 +185,7 @@
         </section>
 
         <div class="panel-grid spaced">
-            <section class="panel">
+            <section class="panel spaced">
                 <h2 class="section-header">Add Problem</h2>
                 <form class="stacked-form" onsubmit={addProblem}>
                     <div class="field">
@@ -200,7 +200,7 @@
                 </form>
             </section>
 
-            <section class="panel">
+            <section class="panel spaced">
                 <h2 class="section-header">Add Problem Set</h2>
                 <form class="stacked-form" onsubmit={addProblemSet}>
                     <div class="field">
@@ -222,7 +222,7 @@
                             <th>score</th>
                             <th>penalty</th>
                             <th>grading timeout (seconds)</th>
-                            <th class="actions-col">action</th>
+                            <th>action</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -232,11 +232,11 @@
                                 <td><input class="cell-input" type="text" bind:value={problem.correctScore}></td>
                                 <td><input class="cell-input" type="text" bind:value={problem.incorrectPenalty}></td>
                                 <td><input class="cell-input" type="text" bind:value={problem.gradingTimeout}></td>
-                                <td class="actions-cell">
+                                <td>
                                     {#if confirmingUnlinkID === problem.problem.id}
                                         <span class="confirm-text">Remove?</span>
-                                        <button class="btn btn-danger" onclick={() => unlinkProblem(problem.problem.id)}>yes</button>
-                                        <button class="btn" onclick={() => confirmingUnlinkID = null}>no</button>
+                                        <button class="btn btn-danger" onclick={() => unlinkProblem(problem.problem.id)}>Yes</button>
+                                        <button class="btn" onclick={() => confirmingUnlinkID = null}>No</button>
                                     {:else}
                                         <button class="btn btn-danger-outline" onclick={() => confirmingUnlinkID = problem.problem.id}>Remove</button>
                                     {/if}
@@ -255,108 +255,6 @@
 </div>
 
 <style>
-    .panel.spaced {
-        margin-top: 16px;
-    }
-    .skeleton {
-        min-height: 200px;
-        background: linear-gradient(90deg, #0b1220 0%, #131d2e 50%, #0b1220 100%);
-        background-size: 200% 100%;
-        animation: shimmer 1.4s ease-in-out infinite;
-    }
-    @media (prefers-reduced-motion: reduce) {
-        .skeleton { animation: none; }
-    }
-    @keyframes shimmer {
-        0% { background-position: 200% 0; }
-        100% { background-position: -200% 0; }
-    }
-
-    .section-header {
-        font-size: 15px;
-        letter-spacing: 1px;
-        margin: 0 0 14px 0;
-        color: #e2e8f0;
-    }
-
-    .panel-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 16px;
-    }
-    .panel-grid.spaced {
-        margin-top: 16px;
-    }
-    @media (max-width: 700px) {
-        .panel-grid { grid-template-columns: 1fr; }
-    }
-
-    .stacked-form {
-        display: flex;
-        flex-direction: column;
-        gap: 14px;
-        max-width: 480px;
-    }
-
-    .field {
-        display: flex;
-        flex-direction: column;
-        gap: 5px;
-    }
-
-    label {
-        font-size: 12px;
-        letter-spacing: 0.5px;
-        color: #64748b;
-    }
-
-    input[type="text"],
-    input[type="datetime-local"] {
-        background-color: #0f1a2e;
-        color: white;
-        border: 1px solid #1e293b;
-        border-radius: 6px;
-        padding: 8px 10px;
-        font-family: inherit;
-        font-size: 14px;
-        width: 100%;
-        box-sizing: border-box;
-    }
-    input[type="text"]:focus,
-    input[type="datetime-local"]:focus {
-        outline: none;
-        border-color: #00d492;
-    }
-
-    .input-with-button {
-        display: flex;
-        gap: 8px;
-    }
-    .input-with-button input {
-        flex: 1;
-    }
-
-    .checkbox-row {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-    }
-    .checkbox-field {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        font-size: 13px;
-        color: #cbd5e1;
-        text-transform: none;
-        letter-spacing: normal;
-        cursor: pointer;
-    }
-    .checkbox-field input {
-        accent-color: #00d492;
-        width: 15px;
-        height: 15px;
-    }
-
     .problem-table {
         width: 100%;
         border-collapse: collapse;
@@ -389,82 +287,5 @@
     .cell-input:focus {
         outline: none;
         border-color: #00d492;
-    }
-
-    .actions-col { text-align: right; }
-    .actions-cell {
-        text-align: right;
-        white-space: nowrap;
-    }
-
-    .empty-state {
-        color: #64748b;
-        font-size: 14px;
-        margin: 0;
-        padding: 6px 0;
-    }
-
-    .spaced-btn {
-        margin-top: 14px;
-    }
-
-    .btn {
-        background-color: #0f1a2e;
-        color: #cbd5e1;
-        border: 1px solid #1e293b;
-        border-radius: 6px;
-        padding: 7px 14px;
-        font-family: inherit;
-        font-size: 13px;
-        cursor: pointer;
-        margin-left: 6px;
-        transition: border-color 0.15s ease, color 0.15s ease;
-    }
-    .btn:first-child {
-        margin-left: 0;
-    }
-    .btn:hover {
-        border-color: #00d492;
-        color: white;
-    }
-    @media (prefers-reduced-motion: reduce) {
-        .btn { transition: none; }
-    }
-
-    .btn-primary {
-        background-color: #00d492;
-        color: #030712;
-        border: none;
-        font-weight: bold;
-        margin-left: 0;
-    }
-    .btn-primary:hover {
-        opacity: 0.85;
-        color: #030712;
-    }
-
-    .btn-danger-outline {
-        color: #f87171;
-    }
-    .btn-danger-outline:hover {
-        border-color: #f87171;
-        color: #f87171;
-    }
-
-    .btn-danger {
-        background-color: #f87171;
-        border-color: #f87171;
-        color: #030712;
-        font-weight: bold;
-    }
-    .btn-danger:hover {
-        opacity: 0.85;
-        color: #030712;
-    }
-
-    .confirm-text {
-        font-size: 12px;
-        color: #f87171;
-        margin-right: 4px;
     }
 </style>

@@ -70,7 +70,7 @@
         <p class="subtitle">A platform for UIL Computer Science programming contests</p>
         <p class="subtitle">
             <a href="https://github.com/tvumcc/uil-forces">GitHub</a>
-            <span class="dim">— report bugs or contribute to development</span>
+            <span class="dim">— report bugs/issues or contribute to development</span>
         </p>
     </header>
 
@@ -152,28 +152,6 @@
 </div>
 
 <style>
-    .panel-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 20px;
-    }
-    @media (max-width: 700px) {
-        .panel-grid { grid-template-columns: 1fr; }
-    }
-    @media (prefers-reduced-motion: reduce) {
-        .skeleton { animation: none; }
-    }
-    @keyframes shimmer {
-        0% { background-position: 200% 0; }
-        100% { background-position: -200% 0; }
-    }
-
-    .empty-state {
-        color: #64748b;
-        font-size: 14px;
-        padding: 10px 0;
-    }
-
     .leaderboard {
         width: 100%;
         border-collapse: collapse;
@@ -203,16 +181,5 @@
     tr.top-three td:nth-child(2) {
         color: white;
         font-weight: bold;
-    }
-
-    .contest-list li {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 0px 0;
-        border-bottom: 1px solid #131d2e;
-    }
-    .contest-list li:last-child {
-        border-bottom: none;
     }
 </style>

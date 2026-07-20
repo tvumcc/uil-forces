@@ -132,29 +132,8 @@
 </div>
 
 <style>
-    .panel.spaced {
-        margin-top: 16px;
-    }
-    @media (prefers-reduced-motion: reduce) {
-        .skeleton { animation: none; }
-    }
-    @keyframes shimmer {
-        0% { background-position: 200% 0; }
-        100% { background-position: -200% 0; }
-    }
-
-    .empty-state {
-        color: #64748b;
-        font-size: 14px;
-        margin: 0;
-    }
-
     .contest-list li {
-        padding: 10px 0;
-        border-bottom: 1px solid #131d2e;
-    }
-    .contest-list li:last-child {
-        border-bottom: none;
+        display: block;
     }
     .contest-row {
         display: flex;

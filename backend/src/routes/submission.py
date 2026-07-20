@@ -75,7 +75,7 @@ def submission_stream(id):
 def admin_submissions_paged(page):
     """Returns a 1-indexed page out of all of the submissions in the database"""
 
-    per_page = 20
+    per_page = 50
     submissions = db.session.query(Submission).order_by(Submission.submit_time.desc()).limit(per_page).offset((int(page) - 1) * per_page).all()
 
     submissions_json = []
