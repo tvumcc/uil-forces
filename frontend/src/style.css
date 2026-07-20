@@ -28,3 +28,55 @@ body {
     max-width: 1000px;
     min-height: 30vh;
 }
+
+.hero {
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #1e293b;
+}
+.hero h1 {
+    font-size: 32px;
+    letter-spacing: -0.5px;
+}
+.subtitle {
+    color: #94a3b8;
+    margin: 6px 0 0 0;
+}
+.dim {
+    color: #64748b;
+}
+
+.panel {
+    background-color: #0b1220;
+    border: 1px solid #1e293b;
+    border-radius: 8px;
+    padding: 18px;
+}
+
+.skeleton {
+    min-height: 180px;
+    background: linear-gradient(90deg, #0b1220 0%, #131d2e 50%, #0b1220 100%);
+    background-size: 200% 100%;
+    animation: shimmer 1.4s ease-in-out infinite;
+}
+
+.section-header {
+    font-size: 15px;
+    letter-spacing: 1px;
+    margin: 0 0 12px 0;
+    color: #e2e8f0;
+}
+
+.section-header.spaced {
+    margin-top: 22px;
+}
+
+.contest-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.mono {
+    font-variant-numeric: tabular-nums;
+}

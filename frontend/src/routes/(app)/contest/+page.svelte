@@ -1,20 +1,18 @@
 <script lang="ts">
-    import { addErrorToast, addToast, ToastType } from "$lib/toastStore.svelte";
+    import { onMount } from "svelte";
+    import { page } from "$app/state";
+    import { addErrorToast } from "$lib/toastStore.svelte";
     import { goBack } from "$lib/navigationHistory.svelte";
-
-    import type {Contest} from "$lib/utils"
-
+    import type { Contest } from "$lib/utils"
     import SubmitForm from "$lib/submitForm.svelte"
     import SubmissionTable from "$lib/submissionTable.svelte"
-    import Leaderboard from "$lib/leaderboard.svelte"
+    import LeaderboardComponent from "$lib/leaderboard.svelte"
 
-    let params = new URLSearchParams(document.location.search)
-    let ID = params.get("id")
-
+    let ID = page.url.searchParams.get("id")
     let contest: Contest | undefined = $state()
-    let leaderboard: Leaderboard | undefined = $state()
+    let leaderboard: LeaderboardComponent | undefined = $state()
     let submissionProblemID = $state(-1)
-
+    let loading = $state(true)
 
     async function reloadLeaderboard() {
         await leaderboard!.getData()
@@ -22,77 +20,153 @@
 
     async function getData() {
         const response: Response = await fetch(`/api/contest/${ID}`)
-
         if (!response.ok) {
             await addErrorToast(response, "Failed to load contest page")
             goBack()
             return
         }
-
         const data = await response.json()
         contest = data.contest
+        loading = false
     }
+
+    onMount(() => {
+        getData()
+    })
 </script>
 
-<div class="main-container" style="flex: 0 0 auto;">
-    {#await getData()}
-            <p>Loading...</p>
-    {:then}
-        {#if contest !== undefined}
-            <h1>{contest.name}</h1>
-            <a href="/api/contest/{ID}/data" target="_blank">Download Student Data</a>
-            {#if contest.status === "upcoming"}
-                <p>The contest has not started yet. You cannot submit solutions.</p>
+<div class="main-container">
+    {#if loading}
+        <div class="panel skeleton"></div>
+    {:else if contest !== undefined}
+        <header class="hero">
+            <div class="title-row">
+                <h1>{contest.name}</h1>
+            </div>
+            <a class="download-link" href="/api/contest/{ID}/data" target="_blank">↓ Download Student Data</a>
+        </header>
+
+        {#if contest.status === "upcoming"}
+            <div class="panel">
+                <p class="notice">This contest hasn't started yet — submissions open once it goes live.</p>
+            </div>
+        {:else}
+            {#if contest.status === "past"}
+                <div class="panel">
+                    <p class="notice">This contest has ended. You can still review submissions and the leaderboard.</p>
+                </div>
             {:else}
-                {#if contest.status === "past"}
-                    <p>The contest has ended. You can still view submissions and the leaderboard, but you cannot submit solutions.</p>
-                {:else}
-                    <h2>Submit Code</h2>
-                    <SubmitForm submissionType={"contest"} ID={ID!} problems={contest.problems!} allowedLanguages={contest.allowedLanguages!.split(" ")} reloadSubmissions={getData} {reloadLeaderboard} bind:submissionProblemID/>
-                {/if}
-
-                {#if contest!.showPdf && contest!.status === "ongoing" && submissionProblemID !== -1}
-                    <div id="pdf-viewer">
-                        <embed type="application/pdf" src={`/api/problem/${submissionProblemID}/pdf#toolbar=0&navpanes=0`} width="100%" height="100%">
-                    </div>
-                {/if}
-
-                {#if contest.showLeaderboard}
-                    <h2>Leaderboard</h2>
-                    <div class="lb" style="width: 100%; overflow-x: scroll;">
-                        <Leaderboard {ID} problems={contest.problems} bind:this={leaderboard}/>            
-                    </div>
-                    <br>
-                {/if}
-
-                {#if contest.status === "past"}
-                    <h2>All Submissions</h2>
-                    <SubmissionTable submissions={contest.submissions} showUsers={true}/>
-                {:else}
-                    <h2>Your Submissions</h2>
-                    <SubmissionTable submissions={contest.submissions} showUsers={false}/>
-                {/if}
+                <section class="panel spaced">
+                    <h2 class="section-header">Submit</h2>
+                    <SubmitForm
+                        submissionType={"contest"}
+                        ID={ID!}
+                        problems={contest.problems!}
+                        allowedLanguages={contest.allowedLanguages!.split(" ")}
+                        reloadSubmissions={getData}
+                        {reloadLeaderboard}
+                        bind:submissionProblemID
+                    />
+                </section>
             {/if}
+
+            {#if contest.showPdf && contest.status === "ongoing" && submissionProblemID !== -1}
+                <section class="panel spaced pdf-panel">
+                    <embed
+                        type="application/pdf"
+                        src={`/api/problem/${submissionProblemID}/pdf#toolbar=0&navpanes=0`}
+                        class="pdf-embed"
+                    >
+                </section>
+            {/if}
+
+            {#if contest.showLeaderboard}
+                <section class="panel spaced">
+                    <h2 class="section-header">Leaderboard</h2>
+                    <div class="scroll-x">
+                        <LeaderboardComponent {ID} problems={contest.problems} bind:this={leaderboard} />
+                    </div>
+                </section>
+            {/if}
+
+            <section class="panel spaced">
+                {#if contest.status === "past"}
+                    <h2 class="section-header">All Submissions</h2>
+                    <SubmissionTable submissions={contest.submissions} showUsers={true} />
+                {:else}
+                    <h2 class="section-header">Your Submissions</h2>
+                    <SubmissionTable submissions={contest.submissions} showUsers={false} />
+                {/if}
+            </section>
         {/if}
-    {/await}
+    {/if}
 </div>
 
 <style>
-    #pdf-viewer {
-        background-color: #101828;
-        height: 100vh;
+    .title-row {
         display: flex;
-        flex: 1;
-        justify-content: center;
         align-items: center;
-        text-align: center;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+    .title-row h1 {
+        font-size: 28px;
+        letter-spacing: -0.5px;
+    }
+    .download-link {
+        display: inline-block;
+        margin-top: 8px;
+        font-size: 13px;
     }
 
-    .lb::-webkit-scrollbar {
-        display: none;
+    .panel {
+        background-color: #0b1220;
+        border: 1px solid #1e293b;
+        border-radius: 8px;
+        padding: 18px;
     }
-    .lb {
+    .panel.spaced {
+        margin-top: 16px;
+    }
+    .skeleton {
+        min-height: 140px;
+        background: linear-gradient(90deg, #0b1220 0%, #131d2e 50%, #0b1220 100%);
+        background-size: 200% 100%;
+        animation: shimmer 1.4s ease-in-out infinite;
+    }
+    @media (prefers-reduced-motion: reduce) {
+        .skeleton { animation: none; }
+    }
+    @keyframes shimmer {
+        0% { background-position: 200% 0; }
+        100% { background-position: -200% 0; }
+    }
+
+    .notice {
+        color: #94a3b8;
+        margin: 0;
+        font-size: 14px;
+    }
+
+    .pdf-panel {
+        padding: 0;
+        overflow: hidden;
+        height: 80vh;
+    }
+    .pdf-embed {
+        width: 100%;
+        height: 100%;
+        display: block;
+        border: none;
+    }
+
+    .scroll-x {
+        width: 100%;
+        overflow-x: scroll;
         scrollbar-width: none;
         -ms-overflow-style: none;
+    }
+    .scroll-x::-webkit-scrollbar {
+        display: none;
     }
 </style>

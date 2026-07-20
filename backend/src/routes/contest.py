@@ -2,13 +2,12 @@ import flask
 import flask_login
 from sqlalchemy import desc
 
-import threading
 import datetime
 from datetime import timezone
 import os
 import shutil
 
-from src.app import app
+from src.app import app, runtime_dir
 from src.models.orm import *
 from src.judge import Status, enqueue_submission 
 from src.utils import admin_required, valid_name
@@ -164,6 +163,7 @@ def contest_data(id):
     try:
         dirname = f"contest{contest.id}-student-data"
         os.mkdir(dirname)
+        print(dirname)
 
         for problem in contest.problems():
             if len(problem.student_input) > 0:
@@ -171,7 +171,9 @@ def contest_data(id):
                     f.write(problem.student_input)
 
         shutil.make_archive(dirname, "zip", dirname)
-        return flask.send_file(f"{dirname}.zip")
+
+        response = flask.send_from_directory(runtime_dir, f"{dirname}.zip")
+        return response
     finally:
         try:
             shutil.rmtree(dirname)

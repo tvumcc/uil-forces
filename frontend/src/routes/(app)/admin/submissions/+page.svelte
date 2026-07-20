@@ -39,3 +39,10 @@
         <SubmissionTable {submissions} showUsers={true} showActions={true}/>
     {/await}
 </div>
+
+<style>
+    .main-container {
+        width: 95%;
+        max-width: 100%;
+    }
+</style>
