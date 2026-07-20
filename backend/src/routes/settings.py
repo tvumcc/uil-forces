@@ -5,6 +5,8 @@ from src.app import app
 from src.models.orm import *
 from src.utils import log, admin_required
 
+# Admin API
+
 @app.route("/api/admin/settings")
 @admin_required
 def admin_settings():
@@ -33,6 +35,6 @@ def admin_update_settings():
             db.session.add(setting)
     db.session.commit()
 
-    log.info(f"Site-wide settings updated by {flask_login.current_user.username}")
+    log.info(f"Site settings updated by {flask_login.current_user.username}")
 
     return "", 204

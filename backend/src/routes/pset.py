@@ -1,4 +1,5 @@
 import flask
+import flask_login
 
 import os
 
@@ -48,6 +49,8 @@ def admin_update_pset():
     db.session.add(pset)
     db.session.commit()
 
+    log.info(f"Problem set {pset.id} ({pset.name}) details updated by {flask_login.current_user.username}")
+
     return "", 204
 
 @app.route("/api/admin/pset/add", methods=["POST"])
@@ -67,6 +70,8 @@ def admin_add_pset():
     pset = ProblemSet(name=name)
     db.session.add(pset)
     db.session.commit()
+
+    log.info(f"Problem set {pset.id} ({pset.name}) created by {flask_login.current_user.username}")
 
     return "", 201
 
@@ -95,6 +100,8 @@ def admin_pset_add_problem():
     db.session.add(pset)
     db.session.commit()
 
+    log.info(f"Problem {problem.id} ({problem.name}) created by {flask_login.current_user.username}")
+
     return "", 201
 
 @app.route("/api/admin/pset/<id>/pdf")
@@ -120,6 +127,9 @@ def admin_pset_upload_pdf(id):
     if file:
         filepath = os.path.join(runtime_dir, "pdfs", pset.get_pdf_name())
         file.save(filepath)
+
+        log.info(f"PDF for problem set {pset.id} ({pset.name}) uploaded by {flask_login.current_user.username}")
+
         return "", 204
     else:
         return {"error": "invalid_file_type"}, 400

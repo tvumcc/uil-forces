@@ -10,7 +10,7 @@ import shutil
 from src.app import app, runtime_dir
 from src.models.orm import *
 from src.judge import Status, enqueue_submission 
-from src.utils import admin_required, valid_name
+from src.utils import log, admin_required, valid_name
 
 @app.route("/api/contests")
 @flask_login.login_required
@@ -120,6 +120,8 @@ def submit_contest_problem():
     db.session.commit()
 
     enqueue_submission(submission.id, contest_profile.id)
+
+    log.info(f"Submission {submission.id} created by {contest_profile.user.username}")
 
     return {"submission": submission.shallow_serialize()}
 
@@ -234,6 +236,8 @@ def admin_contest_add_problem(id):
     db.session.add(contest)
     db.session.commit()
 
+    log.info(f"Problem {problem.id} ({problem.name}) linked to contest {contest.id} ({contest.name}) by {flask_login.current_user.username}")
+
     return "", 204
 
 @app.route("/api/admin/contest/<id>/add/pset", methods=["POST"])
@@ -257,6 +261,8 @@ def admin_contest_add_pset(id):
 
     db.session.add(contest)
     db.session.commit()
+
+    log.info(f"Problems from problem set {pset.id} ({pset.name}) linked to contest {contest.id} ({contest.name}) by {flask_login.current_user.username}")
 
     return "", 204
 
@@ -289,6 +295,8 @@ def admin_contest_unlink_problem():
     db.session.delete(problem_link_to_remove)
     db.session.add(contest)
     db.session.commit()
+
+    log.info(f"Problem {problem.id} ({problem.name}) unlinked from contest {contest.id} ({contest.name}) by {flask_login.current_user.username}")
 
     return "", 204
 
@@ -323,6 +331,8 @@ def admin_update_contest():
     db.session.add(contest)
     db.session.commit()
 
+    log.info(f"Contest {contest.id} ({contest.name}) details updated by {flask_login.current_user.username}")
+
     return "", 204
 
 @app.route("/api/admin/contest/add", methods=["POST"])
@@ -348,6 +358,8 @@ def admin_add_contest():
     )
     db.session.add(contest)
     db.session.commit()
+
+    log.info(f"Contest {contest.id} ({contest.name}) created by {flask_login.current_user.username}")
 
     return "", 201
 
@@ -386,5 +398,7 @@ def admin_update_contest_problems():
         db.session.add(contest_profile)
 
     db.session.commit()
+
+    log.info(f"Contest {contest.id} ({contest.name}) scoring updated by {flask_login.current_user.username}")
 
     return "", 204

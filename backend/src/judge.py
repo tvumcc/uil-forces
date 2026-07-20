@@ -126,7 +126,7 @@ def assign_status(submission_id: int, regrade: bool, docker: bool):
                 db.session.commit()
                 mark_submission_complete(submission.id)
 
-                log.info(f"Finished grading submission {submission.id} for {contest_profile.user.username}")
+                log.info(f"Judge: finished grading submission {submission.id} for {contest_profile.user.username}")
         except Exception as e:
             log.error(e)
             db.session.rollback() 

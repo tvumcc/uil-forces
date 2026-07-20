@@ -110,4 +110,6 @@ def admin_submission_regrade(id):
 
     enqueue_submission(id, regrade=True)
 
+    log.info(f"Submission {id} regraded by {flask_login.current_user.username}")
+
     return "", 204

@@ -20,7 +20,8 @@ def login():
         return {"error": "invalid_credentials"}, 400
 
     flask_login.login_user(user)
-    log.info(f"User '{user.username}' logged in")
+
+    log.info(f"User {user.id} ({user.username}) logged in")
 
     return "", 204
 
@@ -54,6 +55,8 @@ def register():
     db.session.commit()
 
     flask_login.login_user(db.session.get(User, user.id))
+
+    log.info(f"User {user.id} ({user.username}) registered")
 
     return "", 201
 
@@ -113,5 +116,7 @@ def admin_add_user():
     )
     db.session.add(user)
     db.session.commit()
+
+    log.info(f"User {user.id} ({user.username}) created by {flask_login.current_user.username}")
 
     return "", 201

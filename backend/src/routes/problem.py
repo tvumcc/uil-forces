@@ -106,4 +106,6 @@ def admin_delete_problem(id):
     db.session.delete(problem)
     db.session.commit()
 
+    log.info(f"Problem {problem.id} ({problem.name}) deleted by {flask_login.current_user.username}")
+
     return "", 204
