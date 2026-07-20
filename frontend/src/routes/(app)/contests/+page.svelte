@@ -88,7 +88,7 @@
                             <div class="contest-row">
                                 <a href="/contest?id={contest.id}">{contest.name}</a>
                             </div>
-                            <p class="meta">ends in <span class="mono-time">{formatDuration(remaining)}</span></p>
+                            <p class="countdown">ends in <span class="mono-time">{formatDuration(remaining)}</span></p>
                         </li>
                     {/each}
                 </ul>
@@ -106,7 +106,7 @@
                             <div class="contest-row">
                                 <a href="/contest?id={contest.id}">{contest.name}</a>
                             </div>
-                            <p class="meta">starts in <span class="mono-time">{formatDuration(remaining)}</span></p>
+                            <p class="countdown">starts in <span class="mono-time">{formatDuration(remaining)}</span></p>
                         </li>
                     {/each}
                 </ul>
@@ -122,7 +122,7 @@
                             <div class="contest-row">
                                 <a href="/contest?id={contest.id}">{contest.name}</a>
                             </div>
-                            <p class="meta">{formatDate(contest.startTime)} – {formatDate(contest.endTime)}</p>
+                            <p class="countdown">{formatDate(contest.startTime)} – {formatDate(contest.endTime)}</p>
                         </li>
                     {/each}
                 </ul>
@@ -134,19 +134,5 @@
 <style>
     .contest-list li {
         display: block;
-    }
-    .contest-row {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-    }
-    .meta {
-        margin: 4px 0 0 0;
-        font-size: 12px;
-        color: #64748b;
-    }
-    .mono-time {
-        color: #cbd5e1;
-        font-variant-numeric: tabular-nums;
     }
 </style>

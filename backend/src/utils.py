@@ -32,7 +32,7 @@ def admin_required(f):
 username_pattern = re.compile("\\w{3,25}")
 
 def valid_username(username: str):
-    return username_pattern.match(username)
+    return username_pattern.fullmatch(username) is not None
 
 def valid_name(name: str):
     return len(name) >= 3 and len(name) <= 50

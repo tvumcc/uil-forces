@@ -94,7 +94,7 @@
                                 <div class="contest-row">
                                     <a href="/contest?id={contest.id}">{contest.name}</a>
                                 </div>
-                                <p class="countdown"><span class="mono-time">{formatDuration(remaining)}</span></p>
+                                <p class="countdown">ends in <span class="mono-time">{formatDuration(remaining)}</span></p>
                             </li>
                         {/each}
                     </ul>
@@ -113,7 +113,7 @@
                                 <div class="contest-row">
                                     <a href="/contest?id={contest.id}">{contest.name}</a>
                                 </div>
-                                <p class="countdown">starting in <span class="mono-time">{formatDuration(remaining)}</span></p>
+                                <p class="countdown">starts in <span class="mono-time">{formatDuration(remaining)}</span></p>
                             </li>
                         {/each}
                     </ul>

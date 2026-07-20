@@ -132,6 +132,11 @@ td {
 .contest-list li:last-child {
     border-bottom: none;
 }
+.contest-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
 
 .mono {
     font-variant-numeric: tabular-nums;
@@ -334,4 +339,37 @@ input[type="datetime-local"]:focus {
     letter-spacing: 0.5px;
     background-color: rgba(245, 196, 81, 0.15);
     color: #f5c451;
+}
+
+.main-container.narrow {
+    width: 90%;
+    max-width: 380px;
+}
+
+.hero.centered {
+    text-align: center;
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.full-width {
+    width: 100%;
+    align-self: stretch;
+    text-align: center;
+}
+
+.register-link {
+    text-align: center;
+    font-size: 13px;
+    margin: 4px 0 0 0;
+}
+
+.countdown {
+    margin: 4px 0 0 0;
+    font-size: 12px;
+    color: #64748b;
+}
+.mono-time {
+    color: #cbd5e1;
+    font-variant-numeric: tabular-nums;
 }
