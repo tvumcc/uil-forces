@@ -124,7 +124,7 @@
 
         <section class="panel spaced">
             <h2 class="section-header">Edit PDF</h2>
-            <a class="pdf-link" href="/api/admin/pset/{ID}/pdf" target="_blank">Download Current PDF</a>
+            <a class="pdf-link" href="/api/admin/pset/{ID}/pdf" target="_blank">View PDF</a>
             <form class="stacked-form spaced-form" onsubmit={uploadPDF}>
                 <div class="file-row">
                     <label class="file-button" for="pdf-upload">

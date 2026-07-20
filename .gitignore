@@ -28,7 +28,7 @@ main.db
 .venv
 run
 secret.txt
-pdfs/
+backend/pdfs/
 setup/
 pyinstaller-dist
 pyinstaller-build

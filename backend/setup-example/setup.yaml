@@ -1,0 +1,35 @@
+docker_grading: false 
+users:
+  - username: example_admin
+    password: example_admin_password
+    admin: true
+  - username: example_user
+    password: example_user_password
+psets:
+  - name: InvitationalA2023
+    pdf_path: InvitationalA2023.pdf
+    problems:
+      - name: Abhinav
+        pages: 2
+      - name: Alan
+        pages: 3
+      - name: Bianca
+        pages: 4
+      - name: Cho
+        pages: 5
+      - name: Damian
+        pages: 6
+      - name: Feng
+        pages: 7
+      - name: Gael
+        pages: 8
+      - name: Himanshu
+        pages: 9 10 11 12 13
+      - name: Justin
+        pages: 14
+      - name: Marek
+        pages: 15
+      - name: Priyanka
+        pages: 16
+      - name: Sunny
+        pages: 17
