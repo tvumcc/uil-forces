@@ -55,3 +55,14 @@ def admin_logged_in(client):
         sess["_fresh"] = True
 
     return admin 
+
+@pytest.fixture
+def psets():
+    psetA = ProblemSet(name="Problem Set A")
+    psetB = ProblemSet(name="Problem Set B")
+    psetC = ProblemSet(name="Problem Set C")
+
+    db.session.add(psetA)
+    db.session.add(psetB)
+    db.session.add(psetC)
+    db.session.commit()

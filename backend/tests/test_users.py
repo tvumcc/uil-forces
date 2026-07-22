@@ -63,7 +63,7 @@ def test_user_login_requires_csrf(app, client):
 # /api/logout
 # ========================================
 
-def test_user_logout(client, user_logged_in):
+def test_user_logout_success(client, user_logged_in):
     response2 = client.get("/api/user")
     assert response2.status_code == 200
     assert response2.get_json()["user"] == user_logged_in.shallow_serialize()
@@ -189,7 +189,7 @@ def test_users_leaderboard_requires_login(client):
     assert response.status_code == 401
     assert response.get_json()["error"] == "unauthorized"
 
-def test_users_leaderboard_empty(client, user_logged_in):
+def test_users_leaderboard_one_user(client, user_logged_in):
     response = client.get("/api/users/leaderboard")
 
     assert response.status_code == 200
@@ -200,3 +200,114 @@ def test_users_leaderboard_empty(client, user_logged_in):
     assert ranks[0]["problemsSolved"] == 0
 
 # TODO: Write a test for /api/users/leaderboard with users who have actually solved prolems
+
+# ========================================
+# /api/admin/users
+# ========================================
+
+def test_user_list_success(client, admin_logged_in):
+    user1 = User(
+        username="user1",
+        password_hash=generate_password_hash("password"),
+        is_admin=False
+    )
+    db.session.add(user1)
+    db.session.commit()
+
+    response = client.get("/api/admin/users")
+
+    users = response.get_json()["users"]
+
+    assert response.status_code == 200
+    assert users[0] == admin_logged_in.shallow_serialize()
+    assert users[1] == user1.shallow_serialize()
+
+def test_user_list_requires_admin(client, user_logged_in):
+    response = client.get("/api/admin/users")
+
+    assert response.status_code == 403
+    assert response.get_json()["error"] == "not_admin"
+
+# ========================================
+# /api/admin/user/add
+# ========================================
+
+def test_user_add_success(client, admin_logged_in):
+    response = client.post("/api/admin/user/add", json={
+        "username": "user",
+        "password": "password",
+        "isAdmin": False
+    })
+
+    user = db.session.query(User).filter_by(username="user").first()
+
+    assert user.username == "user"
+    assert user.is_admin == False
+    assert response.status_code == 201
+
+def test_user_register_invalid_username_symbols_and_whitespace(client, admin_logged_in):
+    response = client.post("/api/register", json={
+        "username": "test-use r?",
+        "password": "password",
+        "isAdmin": False
+    })
+
+    user = db.session.query(User).filter_by(username="test-user r?").first()
+
+    assert user == None
+    assert response.status_code == 400
+    assert response.get_json()["error"] == "invalid_username"
+
+def test_user_add_invalid_username_too_short(client, admin_logged_in):
+    response = client.post("/api/admin/user/add", json={
+        "username": "ab",
+        "password": "password",
+        "isAdmin": False
+    })
+
+    user = db.session.query(User).filter_by(username="ab").first()
+
+    assert user == None
+    assert response.status_code == 400
+    assert response.get_json()["error"] == "invalid_username"
+
+def test_user_add_invalid_username_too_long(client, admin_logged_in):
+    response = client.post("/api/admin/user/add", json={
+        "username": "abcdefghijklmnopqrstuvwxyz",
+        "password": "password",
+        "isAdmin": False
+    })
+
+    user = db.session.query(User).filter_by(username="abcdefghijklmnopqrstuvwxyz").first()
+
+    assert user == None
+    assert response.status_code == 400
+    assert response.get_json()["error"] == "invalid_username"
+
+def test_user_add_requires_admin(client, user_logged_in):
+    response = client.post("/api/admin/user/add", json={
+        "username": "user",
+        "password": "password",
+        "isAdmin": False
+    })
+
+    user = db.session.query(User).filter_by(username="user").first()
+
+    assert user == None
+    assert response.status_code == 403
+    assert response.get_json()["error"] == "not_admin"
+
+def test_user_add_requires_csrf(app, client, admin_logged_in):
+    app.config["WTF_CSRF_ENABLED"] = True
+
+    response = client.post("/api/admin/user/add", json={
+        "username": "user",
+        "password": "password",
+        "isAdmin": False
+    })
+
+    user = db.session.query(User).filter_by(username="user").first()
+
+    assert user == None
+    assert response.status_code == 400
+    assert response.get_json()["error"] == "csrf_invalid"

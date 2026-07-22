@@ -25,7 +25,7 @@ def admin_required(f):
     @flask_login.login_required
     def decorated_function(*args, **kwargs):
         if not flask_login.current_user.is_admin:
-            return {"error", "not_admin"}, 403
+            return {"error": "not_admin"}, 403
         return f(*args, **kwargs)
     return decorated_function
 
