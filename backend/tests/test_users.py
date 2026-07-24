@@ -99,7 +99,7 @@ def test_user_register_invalid_username_symbols_and_whitespace(client):
 
     user = db.session.query(User).filter_by(username="test-user r?").first()
 
-    assert user == None
+    assert user is None
     assert response.status_code == 400
     assert response.get_json()["error"] == "invalid_username"
 
@@ -111,7 +111,7 @@ def test_user_register_invalid_username_too_short(client):
 
     user = db.session.query(User).filter_by(username="ab").first()
 
-    assert user == None
+    assert user is None
     assert response.status_code == 400
     assert response.get_json()["error"] == "invalid_username"
 
@@ -123,7 +123,7 @@ def test_user_register_invalid_username_too_long(client):
 
     user = db.session.query(User).filter_by(username="abcdefghijklmnopqrstuvwxyz").first()
 
-    assert user == None
+    assert user is None
     assert response.status_code == 400
     assert response.get_json()["error"] == "invalid_username"
 
@@ -149,7 +149,7 @@ def test_user_register_requires_csrf(app, client):
 
     user = db.session.query(User).filter_by(username="test_user").first()
 
-    assert user == None
+    assert user is None
     assert response.status_code == 400
     assert response.get_json()["error"] == "csrf_invalid"
 
@@ -254,7 +254,7 @@ def test_user_register_invalid_username_symbols_and_whitespace(client, admin_log
 
     user = db.session.query(User).filter_by(username="test-user r?").first()
 
-    assert user == None
+    assert user is None
     assert response.status_code == 400
     assert response.get_json()["error"] == "invalid_username"
 
@@ -267,7 +267,7 @@ def test_user_add_invalid_username_too_short(client, admin_logged_in):
 
     user = db.session.query(User).filter_by(username="ab").first()
 
-    assert user == None
+    assert user is None
     assert response.status_code == 400
     assert response.get_json()["error"] == "invalid_username"
 
@@ -280,7 +280,7 @@ def test_user_add_invalid_username_too_long(client, admin_logged_in):
 
     user = db.session.query(User).filter_by(username="abcdefghijklmnopqrstuvwxyz").first()
 
-    assert user == None
+    assert user is None
     assert response.status_code == 400
     assert response.get_json()["error"] == "invalid_username"
 
@@ -293,7 +293,7 @@ def test_user_add_requires_admin(client, user_logged_in):
 
     user = db.session.query(User).filter_by(username="user").first()
 
-    assert user == None
+    assert user is None
     assert response.status_code == 403
     assert response.get_json()["error"] == "not_admin"
 
@@ -308,6 +308,6 @@ def test_user_add_requires_csrf(app, client, admin_logged_in):
 
     user = db.session.query(User).filter_by(username="user").first()
 
-    assert user == None
+    assert user is None
     assert response.status_code == 400
     assert response.get_json()["error"] == "csrf_invalid"
