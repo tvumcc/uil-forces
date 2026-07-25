@@ -66,3 +66,9 @@ def psets():
     db.session.add(psetB)
     db.session.add(psetC)
     db.session.commit()
+
+@pytest.fixture
+def settings():
+    db.session.add(Settings(key="docker_grading", value="false"))
+    db.session.commit()
+    db.session.close()
