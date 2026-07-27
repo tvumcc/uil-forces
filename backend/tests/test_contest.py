@@ -13,7 +13,7 @@ from src.models.orm import *
 
 
 # ========================================
-# /api/contest/submit
+# TODO: /api/contest/submit
 # ========================================
 
 
