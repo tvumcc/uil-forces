@@ -75,6 +75,8 @@ def admin_update_problem():
     problem = db.session.get(Problem, request["id"]) 
     if not problem:
         return {"error": "problem_not_found"}, 404
+    if not valid_name(request["name"]):
+        return {"error": "invalid_name"}, 400
 
     problem.name = request["name"]
     problem.pages = request["pages"]
@@ -83,9 +85,6 @@ def admin_update_problem():
     problem.student_input = request["studentInput"]
     problem.judge_input = request["judgeInput"]
     problem.judge_output = request["judgeOutput"]
-
-    if not valid_name(problem.name):
-        return {"error": "invalid_name"}, 400
 
     db.session.add(problem)
     db.session.commit()
@@ -101,7 +100,7 @@ def admin_delete_problem(id):
 
     problem = db.session.get(Problem, id) 
     if not problem:
-        return {"error": "problem_not_found"}
+        return {"error": "problem_not_found"}, 404
 
     db.session.delete(problem)
     db.session.commit()
