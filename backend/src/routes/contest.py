@@ -66,7 +66,7 @@ def contest(id):
 
 @app.route("/api/contest/submit", methods=["POST"])
 @flask_login.login_required
-def submit_contest_problem():
+def contest_submit_problem():
     """
     Processes a user's request to submit code to a problem in this contest.
     This will create a new submission on the database and spawn another thread to run and assign a status to it.
@@ -163,23 +163,24 @@ def contest_data(id):
         return {"error": "contest_not_found"}, 404
 
     try:
-        dirname = f"contest{contest.id}-student-data"
+        folder_name = f"contest{contest.id}-student-data"
+        dirname = os.path.join(runtime_dir, folder_name)
         os.mkdir(dirname)
         print(dirname)
 
         for problem in contest.problems():
-            if len(problem.student_input) > 0:
+            if len(problem.student_input) > 0 and problem.input_file_name is not None and len(problem.input_file_name) > 0:
                 with open(os.path.join(dirname, problem.input_file_name), "w") as f:
                     f.write(problem.student_input)
 
-        shutil.make_archive(dirname, "zip", dirname)
+        shutil.make_archive(folder_name, "zip", dirname)
 
-        response = flask.send_from_directory(runtime_dir, f"{dirname}.zip")
+        response = flask.send_from_directory(runtime_dir, f"{folder_name}.zip")
         return response
     finally:
         try:
             shutil.rmtree(dirname)
-            os.remove(f"{dirname}.zip")
+            os.remove(f"{folder_name}.zip")
         except: pass
 
 
@@ -250,6 +251,8 @@ def admin_contest_add_pset(id):
 
     contest = db.session.get(Contest, id)
     pset = db.session.query(ProblemSet).filter_by(name=pset_name).first()
+    if not contest:
+        return {"error": "contest_not_found"}, 404
     if not pset:
         return {"error": "pset_not_found"}, 404
 

@@ -75,7 +75,7 @@ def setup_submission_for_grading(submission: Submission) -> str:
         f.write(submission.code)
 
     # Write the problem's judge input data to a file
-    if submission.problem.input_file_name:
+    if len(submission.problem.judge_input) > 0 and len(submission.problem.input_file_name) > 0:
         with open(os.path.join(submission_folder_name, f"{submission.problem.input_file_name}"), "w") as f:
             f.write(submission.problem.judge_input.replace("\r\n", "\n"))
 
