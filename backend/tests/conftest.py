@@ -1,19 +1,19 @@
 import pytest
 from werkzeug.security import generate_password_hash
 
-from src.app import app as flask_app
+from src.app import create_app
 from src.models.orm import *
 
 @pytest.fixture
 def app():
-    flask_app.config.update({
+    app = create_app({
         "TESTING": True,
         "WTF_CSRF_ENABLED": False,
         "SQLALCHEMY_DATABASE_URI": "sqlite:///:memory:",
     })
-    with flask_app.app_context():
+    with app.app_context():
         db.create_all()
-        yield flask_app
+        yield app 
         db.drop_all()
 
 @pytest.fixture

@@ -3,21 +3,23 @@ import flask_login
 
 import os
 
-from src.app import app, runtime_dir
+from src.app import runtime_dir
 from src.models.orm import *
 from src.setup import *
 from src.utils import admin_required, valid_name
 
+bp = flask.Blueprint("pset", __name__)
+
 # Admin API
 
-@app.route("/api/admin/psets")
+@bp.route("/api/admin/psets")
 @admin_required
 def admin_psets():
     """Returns a list of all the problem sets currently contained within the database"""
 
     return {"psets": [pset.shallow_serialize() for pset in db.session.query(ProblemSet).all()]}
 
-@app.route("/api/admin/pset/<id>")
+@bp.route("/api/admin/pset/<id>")
 @admin_required
 def admin_pset(id):
     """Returns the JSON data for the queried problem set"""
@@ -28,7 +30,7 @@ def admin_pset(id):
 
     return {"pset": pset.serialize()}
 
-@app.route("/api/admin/pset/update", methods=["POST"])
+@bp.route("/api/admin/pset/update", methods=["POST"])
 @admin_required
 def admin_update_pset():
     """Updates the specified problem set with the provided new values"""
@@ -53,7 +55,7 @@ def admin_update_pset():
 
     return "", 204
 
-@app.route("/api/admin/pset/add", methods=["POST"])
+@bp.route("/api/admin/pset/add", methods=["POST"])
 @admin_required
 def admin_add_pset():
     """Creates an empty problem set with just a name and adds it to the database"""
@@ -75,7 +77,7 @@ def admin_add_pset():
 
     return "", 201
 
-@app.route("/api/admin/pset/add/problem", methods=["POST"])
+@bp.route("/api/admin/pset/add/problem", methods=["POST"])
 @admin_required
 def admin_pset_add_problem():
     """Creates an empty problem with just a name and adds it to the specified problem set"""
@@ -104,7 +106,7 @@ def admin_pset_add_problem():
 
     return "", 201
 
-@app.route("/api/admin/pset/<id>/pdf")
+@bp.route("/api/admin/pset/<id>/pdf")
 @admin_required
 def admin_pset_pdf(id):
     """Returns the entire PDF attached to this problem set"""
@@ -114,7 +116,7 @@ def admin_pset_pdf(id):
         return {"error": "pset_not_found"}, 404
     return flask.send_from_directory(runtime_dir, os.path.join("pdfs", pset.get_pdf_name()))
 
-@app.route("/api/admin/pset/<id>/uploadpdf", methods=["POST"])
+@bp.route("/api/admin/pset/<id>/uploadpdf", methods=["POST"])
 @admin_required
 def admin_pset_upload_pdf(id):
     """Uploads a new PDF to replace the one currently attached to the specified problem set"""

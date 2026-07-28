@@ -7,12 +7,14 @@ from datetime import timezone
 import os
 import shutil
 
-from src.app import app, runtime_dir
+from src.app import runtime_dir
 from src.models.orm import *
 from src.judge import Status, enqueue_submission 
 from src.utils import log, admin_required, valid_name
 
-@app.route("/api/contests")
+bp = flask.Blueprint("contest", __name__)
+
+@bp.route("/api/contests")
 @flask_login.login_required
 def contests():
     """Returns JSON of 3 lists of contests: upcoming, ongoing, and past, all based on their start and end times"""
@@ -32,7 +34,7 @@ def contests():
 
     return out
 
-@app.route("/api/contest/<id>")
+@bp.route("/api/contest/<id>")
 @flask_login.login_required
 def contest(id):
     """
@@ -64,7 +66,7 @@ def contest(id):
         }
     }
 
-@app.route("/api/contest/submit", methods=["POST"])
+@bp.route("/api/contest/submit", methods=["POST"])
 @flask_login.login_required
 def contest_submit_problem():
     """
@@ -125,7 +127,7 @@ def contest_submit_problem():
 
     return {"submission": submission.shallow_serialize()}
 
-@app.route("/api/contest/<id>/leaderboard")
+@bp.route("/api/contest/<id>/leaderboard")
 @flask_login.login_required
 def contest_leaderboard(id):
     """Returns the current leaderboard for this contest as long as the setting is enabled to show leaderboard and the contest is ongoing or past"""
@@ -155,7 +157,7 @@ def contest_leaderboard(id):
         return {"leaderboard": leaderboard}
     else: return {}
 
-@app.route("/api/contest/<id>/data")
+@bp.route("/api/contest/<id>/data")
 @flask_login.login_required
 def contest_data(id):
     contest = db.session.get(Contest, id)
@@ -189,14 +191,14 @@ def contest_data(id):
 
 
 
-@app.route("/api/admin/contests")
+@bp.route("/api/admin/contests")
 @admin_required
 def admin_contests():
     """Returns a list of all contests (upcoming, ongoing, past) contained within the database"""
 
     return {"contests": [contest.shallow_serialize() for contest in db.session.query(Contest).all()]}
 
-@app.route("/api/admin/contest/<id>")
+@bp.route("/api/admin/contest/<id>")
 @admin_required
 def admin_contest(id):
     """Returns JSON data for the queried contest"""
@@ -207,7 +209,7 @@ def admin_contest(id):
 
     return {"contest": contest.serialize()}
 
-@app.route("/api/admin/contest/<id>/add/problem", methods=["POST"])
+@bp.route("/api/admin/contest/<id>/add/problem", methods=["POST"])
 @admin_required
 def admin_contest_add_problem(id):
     """Creates a link between and an existing problem and the specified contest"""
@@ -241,7 +243,7 @@ def admin_contest_add_problem(id):
 
     return "", 204
 
-@app.route("/api/admin/contest/<id>/add/pset", methods=["POST"])
+@bp.route("/api/admin/contest/<id>/add/pset", methods=["POST"])
 @admin_required
 def admin_contest_add_pset(id):
     """Creates a link between all of the problems in a problem set and the specified contest"""
@@ -269,7 +271,7 @@ def admin_contest_add_pset(id):
 
     return "", 204
 
-@app.route("/api/admin/contest/unlinkproblem", methods=["POST"])
+@bp.route("/api/admin/contest/unlinkproblem", methods=["POST"])
 @admin_required
 def admin_contest_unlink_problem():
     """Removes the link between the specified contest and problem"""
@@ -303,7 +305,7 @@ def admin_contest_unlink_problem():
 
     return "", 204
 
-@app.route("/api/admin/contest/update", methods=["POST"])
+@bp.route("/api/admin/contest/update", methods=["POST"])
 @admin_required
 def admin_update_contest():
     """Updates the specified contest with the provided new values"""
@@ -338,7 +340,7 @@ def admin_update_contest():
 
     return "", 204
 
-@app.route("/api/admin/contest/add", methods=["POST"])
+@bp.route("/api/admin/contest/add", methods=["POST"])
 @admin_required
 def admin_add_contest():
     """Creates a new contest with a name, start time, and end time"""
@@ -366,7 +368,7 @@ def admin_add_contest():
 
     return "", 201
 
-@app.route("/api/admin/contest/updateproblems", methods=["POST"])
+@bp.route("/api/admin/contest/updateproblems", methods=["POST"])
 @admin_required
 def admin_update_contest_problems():
     """Updates the scoring of the specified contest's problems and refreshes all contest profiles' scores accordingly"""

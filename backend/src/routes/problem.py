@@ -4,11 +4,13 @@ import pypdf
 
 import os
 
-from src.app import app, runtime_dir
+from src.app import runtime_dir
 from src.models.orm import *
 from src.utils import log, admin_required, valid_name
 
-@app.route("/api/problem/<id>/pdf")
+bp = flask.Blueprint("problem", __name__)
+
+@bp.route("/api/problem/<id>/pdf")
 @flask_login.login_required
 def problem_pdf(id):
     """Returns a section of the problem set PDF for the specified problem"""
@@ -55,7 +57,7 @@ def problem_pdf(id):
 
 
 
-@app.route("/api/admin/problem/<id>")
+@bp.route("/api/admin/problem/<id>")
 @admin_required
 def admin_problem(id):
     """Return JSON data for the queried problem"""
@@ -66,7 +68,7 @@ def admin_problem(id):
 
     return {"problem": problem.serialize(), "pset": problem.pset.shallow_serialize()}
 
-@app.route("/api/admin/problem/update", methods=["POST"])
+@bp.route("/api/admin/problem/update", methods=["POST"])
 @admin_required
 def admin_update_problem():
     """Updates the specified problem with the provided new values"""
@@ -93,7 +95,7 @@ def admin_update_problem():
 
     return "", 204
 
-@app.route("/api/admin/problem/<id>/delete", methods=["DELETE"])
+@bp.route("/api/admin/problem/<id>/delete", methods=["DELETE"])
 @admin_required
 def admin_delete_problem(id):
     """Deletes the specified problem and its submissions"""

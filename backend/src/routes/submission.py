@@ -3,12 +3,13 @@ import flask_login
 
 import json
 
-from src.app import app
 from src.models.orm import *
 from src.utils import log, admin_required
 from src.judge import get_submission_event, delete_submission_event, enqueue_submission
 
-@app.route("/api/submission/<id>")
+bp = flask.Blueprint("submission", __name__)
+
+@bp.route("/api/submission/<id>")
 @flask_login.login_required
 def submission(id):
     """
@@ -39,28 +40,28 @@ def submission(id):
         "submission": submission.serialize(user=user, admin_view=flask_login.current_user.is_admin)
     }
 
-@app.route("/api/submission/<int:id>/stream")
+@bp.route("/api/submission/<int:id>/stream")
 @flask_login.login_required
 def submission_stream(id):
+    @flask.stream_with_context
     def event_stream():
-        with app.app_context():
-            submission = db.session.get(Submission, id)
-            if submission is None:
-                yield f"event: error\ndata: {json.dumps({"error": "submission_not_found"})}\n\n"
-                return
-            db.session.expire(submission)
+        submission = db.session.get(Submission, id)
+        if submission is None:
+            yield f"event: error\ndata: {json.dumps({"error": "submission_not_found"})}\n\n"
+            return
+        db.session.expire(submission)
 
-            event = get_submission_event(id)
-            event.wait(timeout=30)
+        event = get_submission_event(id)
+        event.wait(timeout=30)
 
-            submission = db.session.get(Submission, id)
-            if submission is None:
-                yield f"event: error\ndata: {json.dumps({"error": "judge_error"})}\n\n"
-                return
+        submission = db.session.get(Submission, id)
+        if submission is None:
+            yield f"event: error\ndata: {json.dumps({"error": "judge_error"})}\n\n"
+            return
 
-            yield f"event: done\ndata: {json.dumps({"problemName": submission.problem.name, "status": submission.status})}\n\n"
+        yield f"event: done\ndata: {json.dumps({"problemName": submission.problem.name, "status": submission.status})}\n\n"
 
-            delete_submission_event(id)
+        delete_submission_event(id)
 
     return flask.Response(event_stream(), mimetype="text/event-stream")
 
@@ -70,7 +71,7 @@ def submission_stream(id):
 
 
 
-@app.route("/api/admin/submissions/<page>")
+@bp.route("/api/admin/submissions/<page>")
 @admin_required
 def admin_submissions_paged(page):
     """Returns a 1-indexed page out of all of the submissions in the database"""
@@ -87,7 +88,7 @@ def admin_submissions_paged(page):
         "submissions": submissions_json
     }
 
-@app.route("/api/admin/submission/<id>/delete", methods=["DELETE"])
+@bp.route("/api/admin/submission/<id>/delete", methods=["DELETE"])
 @admin_required
 def admin_submission_delete(id):
     """Removes the specified submission from the database"""
@@ -103,7 +104,7 @@ def admin_submission_delete(id):
 
     return "", 204
 
-@app.route("/api/admin/submission/<id>/regrade", methods=["POST"])
+@bp.route("/api/admin/submission/<id>/regrade", methods=["POST"])
 @admin_required
 def admin_submission_regrade(id):
     """Reruns the grader on the specified submission"""

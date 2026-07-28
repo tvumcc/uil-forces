@@ -5,6 +5,8 @@ from sqlalchemy.orm import Session
 
 import os
 import shutil
+import logging
+from logging.handlers import TimedRotatingFileHandler
 
 from src.models.orm import *
 from src.utils import log
@@ -198,3 +200,30 @@ def export_psets(export_dir):
         yaml.dump(setup_config, f)
 
     shutil.make_archive(export_dir, "zip", export_dir)
+
+def setup_logging(runtime_dir):
+    logs_dir = os.path.join(runtime_dir, "logs")
+    os.makedirs(logs_dir, exist_ok=True)
+    log_path = os.path.join(logs_dir, "app.log")
+
+    formatter = logging.Formatter(
+        "%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+        datefmt="%Y/%m/%d %H:%M:%S",
+    )
+
+    file_handler = TimedRotatingFileHandler(
+        log_path,
+        when="midnight",
+        interval=1,
+        backupCount=50, # keep 50 days of contest history
+        encoding="utf-8",
+    )
+    file_handler.setFormatter(formatter)
+
+    console_handler = logging.StreamHandler()
+    console_handler.setFormatter(formatter)
+
+    logging.basicConfig(
+        level=logging.INFO,
+        handlers=[console_handler, file_handler],
+    )

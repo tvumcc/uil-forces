@@ -2,11 +2,12 @@ import flask
 import flask_login
 from werkzeug.security import generate_password_hash, check_password_hash
 
-from src.app import app
 from src.models.orm import *
 from src.utils import log, admin_required, valid_username
 
-@app.route("/api/login", methods=["POST"])
+bp = flask.Blueprint("user", __name__)
+
+@bp.route("/api/login", methods=["POST"])
 def login():
     """Logs in the client as an existing user"""
 
@@ -25,7 +26,7 @@ def login():
 
     return "", 204
 
-@app.route("/api/logout")
+@bp.route("/api/logout")
 def logout():
     """Logs the client out"""
 
@@ -33,7 +34,7 @@ def logout():
 
     return "", 204
 
-@app.route("/api/register", methods=["POST"])
+@bp.route("/api/register", methods=["POST"])
 def register():
     """Creates a new user account and logs the client in as that user"""
 
@@ -60,14 +61,14 @@ def register():
 
     return "", 201
 
-@app.route("/api/user")
+@bp.route("/api/user")
 @flask_login.login_required
 def user():
     """Returns JSON data for the currently logged in user"""
 
     return {"user": flask_login.current_user.shallow_serialize()}
 
-@app.route("/api/users/leaderboard")
+@bp.route("/api/users/leaderboard")
 @flask_login.login_required
 def users_leaderboard():
     """Returns the top 10 users ranked by number of unique problems solved"""
@@ -86,14 +87,14 @@ def users_leaderboard():
 
 
 
-@app.route("/api/admin/users")
+@bp.route("/api/admin/users")
 @admin_required
 def admin_users():
     """Returns a list of all users"""
 
     return {"users": [user.shallow_serialize() for user in db.session.query(User).all()]}
 
-@app.route("/api/admin/user/add", methods=["POST"])
+@bp.route("/api/admin/user/add", methods=["POST"])
 @admin_required
 def admin_add_user():
     """Adds a new user to the database given its username, password, and admin status"""

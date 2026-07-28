@@ -1,13 +1,14 @@
 import flask
 import flask_login
 
-from src.app import app
 from src.models.orm import *
 from src.utils import log, admin_required
 
+bp = flask.Blueprint("settings", __name__)
+
 # Admin API
 
-@app.route("/api/admin/settings")
+@bp.route("/api/admin/settings")
 @admin_required
 def admin_settings():
     """Returns JSON data for the current configuration of the site-wide settings"""
@@ -20,7 +21,7 @@ def admin_settings():
 
     return {"settings": out}
 
-@app.route("/api/admin/settings/update", methods=["POST"])
+@bp.route("/api/admin/settings/update", methods=["POST"])
 @admin_required
 def admin_update_settings():
     """Updates the site-wide settings with new values"""
