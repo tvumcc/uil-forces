@@ -25,19 +25,18 @@ def submission(id):
 
     submission = db.session.get(Submission, id)
     if submission is None or not submission.valid():
-        return {"error": "pset_not_found"}, 404
+        return {"error": "submission_not_found"}, 404
 
-    user = submission.user
     contest_profile = submission.contest_profile
     past_contest = contest_profile and contest_profile.contest.is_past()
 
     if not past_contest \
         and not flask_login.current_user.is_admin \
-        and flask_login.current_user != user:
+        and flask_login.current_user != submission.user:
         return {"error": "submission_view_restricted"}, 403
 
     return {
-        "submission": submission.serialize(user=user, admin_view=flask_login.current_user.is_admin)
+        "submission": submission.serialize(admin_view=flask_login.current_user.is_admin)
     }
 
 @bp.route("/api/submission/<int:id>/stream")
@@ -71,9 +70,9 @@ def submission_stream(id):
 
 
 
-@bp.route("/api/admin/submissions/<page>")
+@bp.route("/api/admin/submissions/<int:page>")
 @admin_required
-def admin_submissions_paged(page):
+def admin_submissions_paged(page: int):
     """Returns a 1-indexed page out of all of the submissions in the database"""
 
     per_page = 50
@@ -88,9 +87,9 @@ def admin_submissions_paged(page):
         "submissions": submissions_json
     }
 
-@bp.route("/api/admin/submission/<id>/delete", methods=["DELETE"])
+@bp.route("/api/admin/submission/<int:id>/delete", methods=["DELETE"])
 @admin_required
-def admin_submission_delete(id):
+def admin_submission_delete(id: int):
     """Removes the specified submission from the database"""
 
     submission = db.session.get(Submission, id)
@@ -104,10 +103,14 @@ def admin_submission_delete(id):
 
     return "", 204
 
-@bp.route("/api/admin/submission/<id>/regrade", methods=["POST"])
+@bp.route("/api/admin/submission/<int:id>/regrade", methods=["POST"])
 @admin_required
-def admin_submission_regrade(id):
+def admin_submission_regrade(id: int):
     """Reruns the grader on the specified submission"""
+
+    submission = db.session.get(Submission, id)
+    if not submission:
+        return {"error": "submission_not_found"}, 404
 
     enqueue_submission(id, regrade=True)
 

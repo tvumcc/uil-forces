@@ -107,6 +107,14 @@ def past_contest():
     return make_contest("Past Contest", start_offset=-7200, end_offset=-3600)
 
 @pytest.fixture
+def upcoming_contest_with_problem(upcoming_contest, problems):
+    link = ContestProblemAssociation(contest=upcoming_contest, problem=problems)
+    db.session.add(link)
+    upcoming_contest.problem_links.append(link)
+    db.session.commit()
+    return upcoming_contest
+
+@pytest.fixture
 def ongoing_contest_with_problem(ongoing_contest, problems):
     link = ContestProblemAssociation(contest=ongoing_contest, problem=problems)
     db.session.add(link)

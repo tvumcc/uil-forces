@@ -37,7 +37,7 @@ def problem_pdf(id):
             writer = pypdf.PdfWriter()
 
             for page in pages:
-                if page >= 0 and page <= len(reader.pages):
+                if page >= 0 and page < len(reader.pages):
                     writer.add_page(reader.pages[page])
 
             temp_pdf = os.path.join(runtime_dir, "pdfs", f"problem{id}.pdf")

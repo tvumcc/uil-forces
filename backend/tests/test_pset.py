@@ -1,5 +1,17 @@
-from src.models.orm import *
 import pytest
+import io
+import os
+import pypdf
+
+from src.models.orm import *
+
+def write_minimal_pdf(path, num_pages=1):
+    writer = pypdf.PdfWriter()
+    for _ in range(num_pages):
+        writer.add_blank_page(width=200, height=200)
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, "wb") as f:
+        writer.write(f)
 
 # ========================================
 # /api/admin/psets
@@ -236,6 +248,73 @@ def test_pset_add_problem_problem_exists_in_pset(client, admin_logged_in, psets)
 # TODO: /api/admin/pset/<id>/pdf
 # ========================================
 
+def test_admin_pset_pdf_not_found(client, admin_logged_in):
+    response = client.get("/api/admin/pset/999/pdf")
+    assert response.status_code == 404
+    assert response.get_json()["error"] == "pset_not_found"
+
+def test_admin_pset_pdf_success(client, admin_logged_in, psets, monkeypatch, tmp_path):
+    monkeypatch.setattr("src.routes.pset.runtime_dir", str(tmp_path))
+
+    pset = db.session.get(ProblemSet, 1)
+    pdf_path = os.path.join(tmp_path, "pdfs", pset.get_pdf_name())
+    write_minimal_pdf(pdf_path)
+
+    response = client.get(f"/api/admin/pset/{pset.id}/pdf")
+
+    assert response.status_code == 200
+    assert response.mimetype == "application/pdf"
+
+def test_admin_pset_pdf_file_missing_on_disk(client, admin_logged_in, psets, monkeypatch, tmp_path):
+    monkeypatch.setattr("src.routes.pset.runtime_dir", str(tmp_path))
+    pset = db.session.get(ProblemSet, 1)
+
+    response = client.get(f"/api/admin/pset/{pset.id}/pdf")
+    assert response.status_code == 404
+
 # ========================================
-# TODO: /api/admin/pset/<id>/uploadpdf
+# /api/admin/pset/<id>/uploadpdf
 # ========================================
+
+def test_admin_pset_upload_pdf_success(client, admin_logged_in, psets, monkeypatch, tmp_path):
+    monkeypatch.setattr("src.routes.pset.runtime_dir", str(tmp_path))
+    os.mkdir(os.path.join(tmp_path, "pdfs"))
+    pset = db.session.get(ProblemSet, 1)
+
+    fake_pdf_bytes = b"%PDF-1.4 fake content for test"
+    response = client.post(
+        f"/api/admin/pset/{pset.id}/uploadpdf",
+        data={"pdf": (io.BytesIO(fake_pdf_bytes), "upload.pdf")},
+        content_type="multipart/form-data",
+    )
+
+    assert response.status_code == 204
+    saved_path = os.path.join(tmp_path, "pdfs", pset.get_pdf_name())
+    assert os.path.exists(saved_path)
+    with open(saved_path, "rb") as f:
+        assert f.read() == fake_pdf_bytes
+
+def test_admin_pset_upload_pdf_not_found(client, admin_logged_in, monkeypatch, tmp_path):
+    monkeypatch.setattr("src.routes.pset.runtime_dir", str(tmp_path))
+
+    response = client.post(
+        "/api/admin/pset/999/uploadpdf",
+        data={"pdf": (io.BytesIO(b"x"), "upload.pdf")},
+        content_type="multipart/form-data",
+    )
+
+    assert response.status_code == 404
+    assert response.get_json()["error"] == "pset_not_found"
+
+def test_admin_pset_upload_pdf_empty_filename_rejected(client, admin_logged_in, psets, monkeypatch, tmp_path):
+    monkeypatch.setattr("src.routes.pset.runtime_dir", str(tmp_path))
+    pset = db.session.get(ProblemSet, 1)
+
+    response = client.post(
+        f"/api/admin/pset/{pset.id}/uploadpdf",
+        data={"pdf": (io.BytesIO(b""), "")},
+        content_type="multipart/form-data",
+    )
+
+    assert response.status_code == 400
+    assert response.get_json()["error"] == "invalid_file_type"

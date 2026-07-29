@@ -1,11 +1,78 @@
+import os
+import pypdf
+
 from src.models.orm import *
 import pytest
 
+def write_minimal_pdf(path, num_pages=1):
+    writer = pypdf.PdfWriter()
+    for _ in range(num_pages):
+        writer.add_blank_page(width=200, height=200)
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, "wb") as f:
+        writer.write(f)
+
 # ========================================
-# TODO: /api/problem/<id>/pdf
+# /api/problem/<id>/pdf
 # ========================================
 
+def test_problem_pdf_not_found(client, user_logged_in):
+    response = client.get("/api/problem/999/pdf")
+    assert response.status_code == 404
+    assert response.get_json()["error"] == "problem_not_found"
 
+def test_problem_pdf_restricted_no_ongoing_contest(client, user_logged_in, problems):
+    response = client.get(f"/api/problem/{problems.id}/pdf")
+    assert response.status_code == 403
+    assert response.get_json()["error"] == "pdf_restricted"
+
+def test_problem_pdf_restricted_show_pdf_disabled(client, user_logged_in, ongoing_contest_with_problem, problems):
+    ongoing_contest_with_problem.show_pdf = False
+    db.session.commit()
+
+    response = client.get(f"/api/problem/{problems.id}/pdf")
+    assert response.status_code == 403
+    assert response.get_json()["error"] == "pdf_restricted"
+
+def test_problem_pdf_success(client, user_logged_in, ongoing_contest_with_problem, problems, monkeypatch, tmp_path):
+    monkeypatch.setattr("src.routes.problem.runtime_dir", str(tmp_path))
+    ongoing_contest_with_problem.show_pdf = True
+    db.session.commit()
+
+    problems.pages = "1"
+    pdf_path = os.path.join(tmp_path, "pdfs", problems.pset.get_pdf_name())
+    write_minimal_pdf(pdf_path, num_pages=3)
+    db.session.commit()
+
+    response = client.get(f"/api/problem/{problems.id}/pdf")
+
+    assert response.status_code == 200
+    assert response.mimetype == "application/pdf"
+
+    temp_path = os.path.join(tmp_path, "pdfs", f"problem{problems.id}.pdf")
+    assert not os.path.exists(temp_path)
+
+def test_problem_pdf_not_found_when_source_missing(client, user_logged_in, ongoing_contest_with_problem, problems, monkeypatch, tmp_path):
+    monkeypatch.setattr("src.routes.problem.runtime_dir", str(tmp_path))
+    ongoing_contest_with_problem.show_pdf = True
+    problems.pages = "1"
+    db.session.commit()
+
+    response = client.get(f"/api/problem/{problems.id}/pdf")
+    assert response.status_code == 404
+    assert response.get_json()["error"] == "pdf_not_found"
+
+def test_problem_pdf_off_by_one_page_bug(client, user_logged_in, ongoing_contest_with_problem, problems, monkeypatch, tmp_path):
+    monkeypatch.setattr("src.routes.problem.runtime_dir", str(tmp_path))
+    ongoing_contest_with_problem.show_pdf = True
+    problems.pages = "2"  # -> index 1, out of range for a 1-page pdf
+    pdf_path = os.path.join(tmp_path, "pdfs", problems.pset.get_pdf_name())
+    write_minimal_pdf(pdf_path, num_pages=1)
+    db.session.commit()
+
+    response = client.get(f"/api/problem/{problems.id}/pdf")
+
+    assert response.status_code != 500
 
 # ========================================
 # /api/admin/problem/<id>
