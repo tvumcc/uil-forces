@@ -2,6 +2,7 @@ from waitress import serve
 
 import os
 
+from tests.utils import print_binary_check, run_judge_self_test
 from src.models.orm import *
 from src.setup import *
 from src.utils import log, get_all_local_ips
@@ -22,12 +23,15 @@ def setup(setup_path = "setup"):
             elif merge.lower() == "n":
                 break 
 
+
 if __name__ == "__main__":
-    print("UIL Forces")
+    print("UIL Forces Host")
     print("Possible actions:")
     print("1. Run server")
     print("2. Start server setup")
-    print("3. Quit")
+    print("3. Check required tools (Python interpreter and JDK on PATH)")
+    print("4. Judge self-test")
+    print("5. Quit")
 
     terminating_action = False
     while not terminating_action:
@@ -52,6 +56,10 @@ if __name__ == "__main__":
             setup()
             print("Successfully completed setup.")
         elif action == "3":
+            print_binary_check()
+        elif action == "4":
+            run_judge_self_test()
+        elif action == "5":
             terminating_action = True
         else:
             print("Invalid action.")
