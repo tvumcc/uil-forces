@@ -29,7 +29,12 @@ def get_submission_folder_name(id):
 
 def normalize_output(text: str) -> str:
     text = text.replace("\r\n", "\n").replace("\r", "\n")
-    return "\n".join(line.rstrip() for line in text.strip().splitlines())
+    return "\n".join(line.rstrip() for line in text.rstrip().splitlines())
+
+def output_equal(text_a: str, text_b: str) -> bool:
+    a = normalize_output(text_a)
+    b = normalize_output(text_b)
+    return a == b
 
 def get_submission_file_name(submission: Submission):
     """
@@ -82,15 +87,15 @@ def setup_submission_for_grading(submission: Submission) -> str:
     return submission_dir
 
 def enqueue_submission(submission_id: int, regrade: bool = False):
-    grading_pool.submit(assign_status, submission_id, regrade, Settings.docker_grading_enabled())
+    app = flask.current_app._get_current_object()
+    grading_pool.submit(assign_status, app, submission_id, regrade, Settings.docker_grading_enabled())
 
-def assign_status(submission_id: int, regrade: bool, docker: bool):
+def assign_status(app, submission_id: int, regrade: bool, docker: bool, stdin: bool = False):
     """
     Calls the appropriate function to grade the given submission using Docker or a compiler/interpreter on PATH
     After the submission has been graded, if a contest profile was supplied, its score will be recalculated
     """
 
-    from src.app import app
     with app.app_context():
         try:
             submission = db.session.get(Submission, submission_id)
@@ -109,9 +114,9 @@ def assign_status(submission_id: int, regrade: bool, docker: bool):
             if submission.status == Status.Pending.value or regrade:
                 try:
                     if docker:
-                        status, submission.output = grade_submission_docker(submission, contest_problem_link.grading_timeout)
+                        status, submission.output = grade_submission_docker(submission, contest_problem_link.grading_timeout, stdin)
                     else:
-                        status, submission.output = grade_submission(submission, contest_problem_link.grading_timeout)
+                        status, submission.output = grade_submission(submission, contest_problem_link.grading_timeout, stdin)
                 except Exception as e:
                     log.error(f"Unhandled exception grading submission {submission_id}: {e}")
                     status = Status.ErrorServer
@@ -207,7 +212,7 @@ def run_and_capture(cmd, timeout, cwd, stdin_file=None):
         watcher.join(timeout=1) 
         kill_process_tree(proc.pid, known_descendants)
 
-def grade_submission(submission: Submission, timeout: float = 5.0):
+def grade_submission(submission: Submission, timeout: float = 5.0, stdin: bool = False):
     """
     Compiles (if necessary) and runs the code for the given submission using a local compiler/interpreter on PATH.
     If the amount of time it takes for the code to run exceeds the specified timeout, the status will be TimeLimitExceeded.
@@ -217,7 +222,7 @@ def grade_submission(submission: Submission, timeout: float = 5.0):
 
     filename = get_submission_file_name(submission)
     submission_dir = setup_submission_for_grading(submission)
-    use_stdin = submission.problem.use_stdin
+    use_stdin = submission.problem.use_stdin or stdin
 
     try:
         # Compilation
@@ -263,9 +268,11 @@ def grade_submission(submission: Submission, timeout: float = 5.0):
                 return (Status.ErrorRuntime, stderr.decode("utf-8", errors="replace")) 
 
             # Check Output
-            submission_output = normalize_output(stdout.decode("utf-8", errors="replace"))
-            judge_output = normalize_output(submission.problem.judge_output)
-            return (Status.Accepted if submission_output == judge_output else Status.WrongAnswer, submission_output)
+
+            submission_output = stdout.decode("utf-8", errors="replace")
+            equal = output_equal(submission_output, submission.problem.judge_output)
+
+            return (Status.Accepted if equal else Status.WrongAnswer, submission_output)
         except subprocess.TimeoutExpired as e:
             return (Status.TimeLimitExceeded, "")
         except Exception as e:
@@ -277,7 +284,7 @@ def grade_submission(submission: Submission, timeout: float = 5.0):
         except: 
             pass
 
-def grade_submission_docker(submission: Submission, timeout: float = 5.0):
+def grade_submission_docker(submission: Submission, timeout: float = 5.0, stdin: bool = False):
     """
     Compiles (if necessary) and runs the code for the given submission using Docker containers.
     If the amount of time it takes for the code to run exceeds the specified timeout, the status will be TimeLimitExceeded.
@@ -289,7 +296,7 @@ def grade_submission_docker(submission: Submission, timeout: float = 5.0):
     container_name = f"{get_submission_folder_name(submission.id)}-{uuid.uuid4().hex[:8]}"
     submission_dir = setup_submission_for_grading(submission)
     container_id = ""
-    use_stdin = submission.problem.use_stdin
+    use_stdin = submission.problem.use_stdin or stdin
 
     language_image = {
         "Java":   "eclipse-temurin:21-jdk",
@@ -356,9 +363,10 @@ def grade_submission_docker(submission: Submission, timeout: float = 5.0):
             if run_status.returncode != 0:
                 return (Status.ErrorRuntime, run_status.stderr.decode("utf-8", errors="replace"))
 
-            submission_output = normalize_output(run_status.stdout.decode("utf-8", errors="replace"))
-            judge_output = normalize_output(submission.problem.judge_output)
-            return (Status.Accepted if submission_output == judge_output else Status.WrongAnswer, submission_output)
+            submission_output = run_status.stdout.decode("utf-8", errors="replace")
+            equal = output_equal(submission_output, submission.problem.judge_output)
+
+            return (Status.Accepted if equal else Status.WrongAnswer, submission_output)
         except subprocess.TimeoutExpired as e:
             return (Status.TimeLimitExceeded, "")
         except Exception as e:

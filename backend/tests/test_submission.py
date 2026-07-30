@@ -1,23 +1,8 @@
-import datetime
 import threading
-from datetime import timezone
 
+from tests.utils import *
 from src.models.orm import *
 from src.judge import Status
-
-def make_submission(user, problem, contest_profile=None, status=Status.Accepted.value, code="print(1)"):
-    submission = Submission(
-        problem=problem,
-        user=user,
-        contest_profile=contest_profile,
-        status=status,
-        code=code,
-        language="Java",
-        submit_time=datetime.datetime.now(timezone.utc),
-    )
-    db.session.add(submission)
-    db.session.commit()
-    return submission
 
 # ========================================
 # /api/submission/<id>

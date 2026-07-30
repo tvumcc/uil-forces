@@ -1,6 +1,8 @@
-from src.models.orm import *
-from werkzeug.security import generate_password_hash
 import pytest
+from werkzeug.security import generate_password_hash
+
+from tests.utils import *
+from src.models.orm import *
 
 def setup_test_user():
     user = User(
@@ -140,7 +142,93 @@ def test_users_leaderboard_one_user(client, user_logged_in):
     assert ranks[0]["user"] == user_logged_in.shallow_serialize()
     assert ranks[0]["problemsSolved"] == 0
 
-# TODO: Write a test for /api/users/leaderboard with users who have actually solved prolems
+def test_users_leaderboard_ranks_by_problems_solved_descending(client, user_logged_in, problems):
+    other_user = User(username="other", password_hash="x", is_admin=False)
+    db.session.add(other_user)
+    db.session.commit()
+
+    make_submission(other_user, problems, status=Status.Accepted.value)
+
+    response = client.get("/api/users/leaderboard")
+    ranks = response.get_json()
+
+    assert response.status_code == 200
+    assert len(ranks) == 2
+    assert ranks[0]["user"]["username"] == "other"
+    assert ranks[0]["problemsSolved"] == 1
+    assert ranks[1]["user"]["username"] == user_logged_in.username
+    assert ranks[1]["problemsSolved"] == 0
+
+def test_users_leaderboard_counts_unique_problems_only(client, user_logged_in, problems):
+    make_submission(user_logged_in, problems, status=Status.Accepted.value)
+    make_submission(user_logged_in, problems, status=Status.Accepted.value)
+
+    response = client.get("/api/users/leaderboard")
+    ranks = response.get_json()
+
+    assert ranks[0]["problemsSolved"] == 1
+
+def test_users_leaderboard_ignores_non_accepted_submissions(client, user_logged_in, problems):
+    make_submission(user_logged_in, problems, status=Status.WrongAnswer.value)
+    make_submission(user_logged_in, problems, status=Status.Pending.value)
+    make_submission(user_logged_in, problems, status=Status.ErrorCompile.value)
+
+    response = client.get("/api/users/leaderboard")
+    ranks = response.get_json()
+
+    assert ranks[0]["problemsSolved"] == 0
+
+def test_users_leaderboard_counts_distinct_problems_correctly(client, user_logged_in, psets):
+    pset = db.session.get(ProblemSet, 1)
+    problem_a = Problem(name="Problem A", pset=pset, judge_output="", judge_input="")
+    problem_b = Problem(name="Problem B", pset=pset, judge_output="", judge_input="")
+    db.session.add_all([problem_a, problem_b])
+    db.session.commit()
+
+    make_submission(user_logged_in, problem_a, status=Status.Accepted.value)
+    make_submission(user_logged_in, problem_b, status=Status.Accepted.value)
+
+    response = client.get("/api/users/leaderboard")
+    ranks = response.get_json()
+
+    assert ranks[0]["problemsSolved"] == 2
+
+def test_users_leaderboard_caps_at_10_and_keeps_highest_scorers(client, psets):
+    pset = db.session.get(ProblemSet, 1)
+
+    problems_list = []
+    for i in range(11):
+        p = Problem(name=f"Problem {i}", pset=pset, judge_output="", judge_input="")
+        db.session.add(p)
+        problems_list.append(p)
+    db.session.commit()
+
+    users = []
+    for i in range(11):
+        user = User(username=f"user{i}", password_hash="x", is_admin=False)
+        db.session.add(user)
+        users.append(user)
+    db.session.commit()
+
+    with client.session_transaction() as sess:
+        sess["_user_id"] = str(users[0].id)
+        sess["_fresh"] = True
+
+    for i, user in enumerate(users):
+        for j in range(i):
+            make_submission(user, problems_list[j], status=Status.Accepted.value)
+
+    response = client.get("/api/users/leaderboard")
+    ranks = response.get_json()
+
+    assert len(ranks) == 10
+
+    returned_usernames = {r["user"]["username"] for r in ranks}
+    assert "user0" not in returned_usernames
+    assert "user10" in returned_usernames
+
+    scores = [r["problemsSolved"] for r in ranks]
+    assert scores == sorted(scores, reverse=True)
 
 # ========================================
 # /api/admin/users

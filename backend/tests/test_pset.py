@@ -1,17 +1,9 @@
 import pytest
 import io
 import os
-import pypdf
 
+from tests.utils import *
 from src.models.orm import *
-
-def write_minimal_pdf(path, num_pages=1):
-    writer = pypdf.PdfWriter()
-    for _ in range(num_pages):
-        writer.add_blank_page(width=200, height=200)
-    os.makedirs(os.path.dirname(path), exist_ok=True)
-    with open(path, "wb") as f:
-        writer.write(f)
 
 # ========================================
 # /api/admin/psets

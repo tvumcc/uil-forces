@@ -1,5 +1,6 @@
-from src.models.orm import *
 import pytest
+
+from src.models.orm import *
 
 # ========================================
 # /api/admin/settings
