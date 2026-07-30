@@ -11,7 +11,7 @@ from src.app import app
 def setup(setup_path = "setup"):
     if init_new_db():
         if not os.path.exists(setup_path):
-            print(f"Setup directory './{setup_path}' does not exist! Aborting...")
+            print(f"Setup directory './{setup_path}' does not exist!")
         else:
             import_from_directory(setup_path)
     else:
@@ -54,7 +54,6 @@ if __name__ == "__main__":
                 terminating_action = True
         elif action == "2":
             setup()
-            print("Successfully completed setup.")
         elif action == "3":
             print_binary_check()
         elif action == "4":
