@@ -1,8 +1,29 @@
+import shutil
 import pytest
 from werkzeug.security import generate_password_hash
 
 from src.app import create_app
 from src.models.orm import *
+
+def pytest_addoption(parser):
+    parser.addoption(
+        "--run-docker", action="store_true", default=False,
+        help="run tests marked @pytest.mark.docker (requires Docker to be installed and running)"
+    )
+
+def pytest_configure(config):
+    config.addinivalue_line("markers", "docker: mark test as requiring Docker (skipped unless --run-docker is passed)")
+
+def pytest_collection_modifyitems(config, items):
+    run_docker = config.getoption("--run-docker")
+    docker_available = shutil.which("docker") is not None
+
+    for item in items:
+        if "docker" in item.keywords:
+            if not run_docker:
+                item.add_marker(pytest.mark.skip(reason="requires --run-docker to run"))
+            elif not docker_available:
+                item.add_marker(pytest.mark.skip(reason="docker executable not found on this machine"))
 
 @pytest.fixture
 def app():

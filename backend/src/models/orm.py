@@ -33,7 +33,7 @@ class Settings(db.Model):
 
     def docker_grading_enabled():
         docker_grading = db.session.query(Settings).filter_by(key="docker_grading").first()
-        return docker_grading and docker_grading.value.lower() == "true"
+        return docker_grading is not None and docker_grading.value.lower() == "true"
 
 class User(UserMixin, db.Model):
     __tablename__ = "user"
@@ -133,8 +133,7 @@ class Submission(db.Model):
     # 3 = Compilation Error
     # 4 = Runtime Error
     # 5 = Time Limit Exceeded
-    # 6 = Memory Limit Exceeded
-    # 7 = Server Error
+    # 6 = Server Error
 
     id: Mapped[int] = mapped_column(primary_key=True)
 

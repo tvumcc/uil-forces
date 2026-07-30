@@ -24,6 +24,11 @@ def test_contests_empty(client, user_logged_in):
     assert response.status_code == 200
     assert data == {"upcoming": [], "ongoing": [], "past": []}
 
+def test_contest_is_ongoing_at_exact_start_boundary(client):
+    now = datetime.datetime.now(timezone.utc)
+    contest = Contest(name="X", start_time=now.replace(tzinfo=None), end_time=(now + datetime.timedelta(hours=1)).replace(tzinfo=None))
+    assert contest.is_ongoing()
+
 # ========================================
 # /api/contest/<id>
 # ========================================

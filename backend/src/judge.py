@@ -6,6 +6,7 @@ import re
 import threading
 import psutil
 import uuid
+import signal
 from concurrent.futures import ThreadPoolExecutor
 
 from src.models.orm import *
@@ -170,23 +171,24 @@ def run_and_capture(cmd, timeout, cwd, stdin_file=None):
     Raises subprocess.TimeoutExpired if the timeout is hit.
     """
 
+    popen_kwargs = {}
+    use_process_group = hasattr(os, "setsid")  # POSIX only, no-op path for Windows
+    if use_process_group:
+        popen_kwargs["start_new_session"] = True
+
     proc = subprocess.Popen(
         cmd,
         cwd=cwd,
         stdin=stdin_file if stdin_file is not None else subprocess.DEVNULL,
         stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE
+        stderr=subprocess.PIPE,
+        **popen_kwargs,
     )
 
     known_descendants: set[int] = set()
     stop_watching = threading.Event()
 
     def watch_descendants():
-        """
-        Continuously snapshot the process tree while the parent is alive, so we
-        still know about children even after they get reparented away on exit.
-        """
-
         try:
             parent = psutil.Process(proc.pid)
         except psutil.NoSuchProcess:
@@ -197,11 +199,11 @@ def run_and_capture(cmd, timeout, cwd, stdin_file=None):
                     known_descendants.add(child.pid)
             except psutil.NoSuchProcess:
                 pass
-            stop_watching.wait(0.1)
+            stop_watching.wait(0.01)
 
     watcher = threading.Thread(target=watch_descendants, daemon=True)
     watcher.start()
- 
+
     try:
         stdout, stderr = proc.communicate(timeout=timeout)
         return proc.returncode, stdout, stderr
@@ -209,7 +211,14 @@ def run_and_capture(cmd, timeout, cwd, stdin_file=None):
         raise
     finally:
         stop_watching.set()
-        watcher.join(timeout=1) 
+        watcher.join(timeout=1)
+
+        if use_process_group:
+            try:
+                os.killpg(proc.pid, signal.SIGKILL)
+            except ProcessLookupError:
+                pass
+
         kill_process_tree(proc.pid, known_descendants)
 
 def grade_submission(submission: Submission, timeout: float = 5.0, stdin: bool = False):
@@ -220,11 +229,13 @@ def grade_submission(submission: Submission, timeout: float = 5.0, stdin: bool =
     Returns a tuple of the form (status, output)
     """
 
-    filename = get_submission_file_name(submission)
-    submission_dir = setup_submission_for_grading(submission)
-    use_stdin = submission.problem.use_stdin or stdin
-
     try:
+        filename = get_submission_file_name(submission)
+        if filename is None: raise Exception("Invalid language")
+
+        submission_dir = setup_submission_for_grading(submission)
+        use_stdin = submission.problem.use_stdin or stdin
+
         # Compilation
         language_compile_command = {
             "Java":   f"javac {filename}".split(),
@@ -278,6 +289,8 @@ def grade_submission(submission: Submission, timeout: float = 5.0, stdin: bool =
         except Exception as e:
             log.error(f"Unexpected error grading submission {submission.id}: {e}")
             return (Status.ErrorServer, "")
+    except Exception as e:
+        return (Status.ErrorServer, "")
     finally:
         try: 
             shutil.rmtree(submission_dir)
@@ -292,18 +305,20 @@ def grade_submission_docker(submission: Submission, timeout: float = 5.0, stdin:
     Returns a tuple of the form (status, output)
     """
 
-    filename = get_submission_file_name(submission)
-    container_name = f"{get_submission_folder_name(submission.id)}-{uuid.uuid4().hex[:8]}"
-    submission_dir = setup_submission_for_grading(submission)
-    container_id = ""
-    use_stdin = submission.problem.use_stdin or stdin
-
-    language_image = {
-        "Java":   "eclipse-temurin:21-jdk",
-        "Python": "python:3.14-alpine",
-    }
-
     try:
+        filename = get_submission_file_name(submission)
+        if filename is None: raise Exception("Invalid language")
+
+        container_name = f"{get_submission_folder_name(submission.id)}-{uuid.uuid4().hex[:8]}"
+        submission_dir = setup_submission_for_grading(submission)
+        container_id = ""
+        use_stdin = submission.problem.use_stdin or stdin
+
+        language_image = {
+            "Java":   "eclipse-temurin:21-jdk",
+            "Python": "python:3.14-alpine",
+        }
+
         # Container creation
         try:
             container_id = subprocess.check_output(
@@ -372,6 +387,8 @@ def grade_submission_docker(submission: Submission, timeout: float = 5.0, stdin:
         except Exception as e:
             log.error(f"Unexpected error grading submission {submission.id}: {e}")
             return (Status.ErrorServer, "")
+    except Exception as e:
+        return (Status.ErrorServer, "")
     finally:
         if container_id:
             try:

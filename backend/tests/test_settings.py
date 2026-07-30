@@ -12,6 +12,9 @@ def test_settings_success(client, admin_logged_in, settings):
     assert response.status_code == 200
     assert response.get_json()["settings"]["docker_grading"] == Settings.docker_grading_enabled()
 
+def test_settings_empty_docker_grading_returns_false(client):
+    assert Settings.docker_grading_enabled() == False
+
 # ========================================
 # /api/admin/settings/update
 # ========================================
