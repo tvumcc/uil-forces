@@ -3,6 +3,7 @@ import flask_login
 import pypdf
 
 import os
+import io
 
 from src.app import runtime_dir
 from src.models.orm import *
@@ -25,8 +26,9 @@ def problem_pdf(id):
         if contest.is_ongoing() and contest.show_pdf and problem in contest.problems():
             problem_ongoing = True
             break
-    try:
-        if problem_ongoing:
+
+    if problem_ongoing:
+        try:
             pdf_path = os.path.join(runtime_dir, "pdfs", problem.pset.get_pdf_name())
             pages = [int(x)-1 for x in problem.pages.split()]
 
@@ -43,13 +45,26 @@ def problem_pdf(id):
             temp_pdf = os.path.join(runtime_dir, "pdfs", f"problem{id}.pdf")
             with open(temp_pdf, "wb") as output_pdf:
                 writer.write(output_pdf)
-            response = flask.send_from_directory(os.path.join(runtime_dir, "pdfs"), f"problem{id}.pdf")
-            return response
-        else:
-            return {"error": "pdf_restricted"}, 403
-    finally:
-        try: os.remove(temp_pdf)
-        except: pass
+
+            with open(temp_pdf, "rb") as f:
+                pdf_bytes = f.read()
+        except Exception as e:
+            log.error(f"Failed to get PDF for problem {id}: {e}")
+            return {"error": "pdf_not_found"}, 400
+        finally:
+            try:
+                os.remove(temp_pdf)
+            except Exception:
+                pass
+
+        return flask.send_file(
+            io.BytesIO(pdf_bytes),
+            mimetype="application/pdf",
+            as_attachment=True,
+            download_name=f"problem{id}"
+        )
+    else:
+        return {"error": "pdf_restricted"}, 403
 
 
 

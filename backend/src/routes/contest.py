@@ -6,6 +6,7 @@ import datetime
 from datetime import timezone
 import os
 import shutil
+import io
 
 from src.app import runtime_dir
 from src.models.orm import *
@@ -164,26 +165,37 @@ def contest_data(id):
     if not contest:
         return {"error": "contest_not_found"}, 404
 
-    try:
-        folder_name = f"contest{contest.id}-student-data"
-        dirname = os.path.join(runtime_dir, folder_name)
-        os.mkdir(dirname)
-        print(dirname)
+    folder_name = f"contest{contest.id}-student-data"
+    dirname = os.path.join(runtime_dir, folder_name)
+    zip_path = os.path.join(runtime_dir, f"{folder_name}.zip")
 
+    try:
+        os.mkdir(dirname)
         for problem in contest.problems():
-            if len(problem.student_input) > 0 and problem.input_file_name is not None and len(problem.input_file_name) > 0:
+            if len(problem.student_input) > 0 and problem.input_file_name:
                 with open(os.path.join(dirname, problem.input_file_name), "w") as f:
                     f.write(problem.student_input)
 
         shutil.make_archive(folder_name, "zip", dirname)
 
-        response = flask.send_from_directory(runtime_dir, f"{folder_name}.zip")
-        return response
+        with open(zip_path, "rb") as f:
+            zip_bytes = f.read()
+    except Exception as e:
+        log.error(f"Failed to build contest data archive for contest {id}: {e}")
+        return {"error": "failed_to_build_archive"}, 500
     finally:
+        shutil.rmtree(dirname, ignore_errors=True)
         try:
-            shutil.rmtree(dirname)
-            os.remove(f"{folder_name}.zip")
-        except: pass
+            os.remove(zip_path)
+        except Exception:
+            pass
+
+    return flask.send_file(
+        io.BytesIO(zip_bytes),
+        mimetype="application/zip",
+        as_attachment=True,
+        download_name=f"{folder_name}.zip",
+    )
 
 
 

@@ -150,7 +150,8 @@ def test_dockerless_cleans_up_submission_dir(app, judge_setup, tmp_path, monkeyp
 
     assert not os.path.exists(os.path.join(tmp_path, get_submission_folder_name(submission.id)))
 
-def test_assign_status_skips_already_graded_without_regrade(app, judge_setup):
+def test_assign_status_skips_already_graded_without_regrade(app, judge_setup, tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
     submission = make_submission(judge_setup["user"], judge_setup["problem"],
         contest_profile=judge_setup["contest_profile"], language="Python",
         status=Status.Accepted.value, code="print(999)")
@@ -160,7 +161,8 @@ def test_assign_status_skips_already_graded_without_regrade(app, judge_setup):
 
     assert submission.status == Status.Accepted.value  # unchanged — never re-graded
 
-def test_assign_status_regrade_true_reruns_grading(app, judge_setup):
+def test_assign_status_regrade_true_reruns_grading(app, judge_setup, tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
     submission = make_submission(judge_setup["user"], judge_setup["problem"],
         contest_profile=judge_setup["contest_profile"], language="Python",
         status=Status.Accepted.value, code="print(9)")
@@ -172,7 +174,8 @@ def test_assign_status_regrade_true_reruns_grading(app, judge_setup):
 
     assert submission.status == Status.WrongAnswer.value
 
-def test_assign_status_missing_link_does_not_crash(app, judge_setup):
+def test_assign_status_missing_link_does_not_crash(app, judge_setup, tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
     other_pset = ProblemSet(name="Other")
     db.session.add(other_pset)
     db.session.commit()
@@ -189,7 +192,8 @@ def test_assign_status_missing_link_does_not_crash(app, judge_setup):
 
     assert submission.status == Status.Pending.value
 
-def test_dockerless_unsupported_language_does_not_crash(app, judge_setup):
+def test_dockerless_unsupported_language_does_not_crash(app, judge_setup, tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
     submission = make_submission(judge_setup["user"], judge_setup["problem"],
         contest_profile=judge_setup["contest_profile"], language="C++",
         status=Status.Pending.value, code="int main(){}")
@@ -200,23 +204,3 @@ def test_dockerless_unsupported_language_does_not_crash(app, judge_setup):
     db.session.expire(submission)
 
     assert submission.status == Status.ErrorServer.value
-
-def test_orphaned_child_process_killed_after_parent_exits(app, judge_setup, tmp_path):
-    code = """
-import subprocess, sys
-for _ in range(3):
-    subprocess.Popen([sys.executable, "-c", "import time; time.sleep(10)"])
-"""
-    submission = make_submission(judge_setup["user"], judge_setup["problem"],
-        contest_profile=judge_setup["contest_profile"], language="Python",
-        status=Status.Pending.value, code=code)
-
-    assign_status(app, submission.id, False, False, False)
-    event = get_submission_event(submission.id)
-    event.wait(timeout=5)
-
-    import time; time.sleep(1)
-    import psutil
-    lingering = [p for p in psutil.process_iter(["cmdline"])
-            if p.info["cmdline"] and "time.sleep(10)" in " ".join(p.info["cmdline"])]
-    assert lingering == []

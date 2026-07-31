@@ -191,7 +191,7 @@ def test_admin_submissions_paged_basic(client, user_logged_in, admin_logged_in, 
     assert len(response.get_json()["submissions"]) == 3
 
 def test_admin_submissions_paged_respects_page_size_and_order(client, user_logged_in, admin_logged_in, problems):
-    submissions = [make_submission(user_logged_in, problems) for _ in range(55)]
+    submissions = [make_submission(user_logged_in, problems, minutes_ago=-i) for i in range(55)]
 
     response1 = client.get("/api/admin/submissions/1")
     page1 = response1.get_json()["submissions"]

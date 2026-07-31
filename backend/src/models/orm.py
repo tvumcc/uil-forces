@@ -206,7 +206,7 @@ class Contest(db.Model):
         start = self.start_time.replace(tzinfo=zoneinfo.ZoneInfo("UTC"))
         end = self.end_time.replace(tzinfo=zoneinfo.ZoneInfo("UTC"))
 
-        return start < now and now < end
+        return start <= now and now < end
 
     def is_upcoming(self):
         now = datetime.datetime.now().astimezone(tz=timezone.utc)

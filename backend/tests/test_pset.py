@@ -237,7 +237,7 @@ def test_pset_add_problem_problem_exists_in_pset(client, admin_logged_in, psets)
     assert response.get_json()["error"] == "problem_exists_in_pset"
 
 # ========================================
-# TODO: /api/admin/pset/<id>/pdf
+# /api/admin/pset/<id>/pdf
 # ========================================
 
 def test_admin_pset_pdf_not_found(client, admin_logged_in):
@@ -263,6 +263,7 @@ def test_admin_pset_pdf_file_missing_on_disk(client, admin_logged_in, psets, mon
 
     response = client.get(f"/api/admin/pset/{pset.id}/pdf")
     assert response.status_code == 404
+    assert response.get_json()["error"] == "pdf_not_found"
 
 # ========================================
 # /api/admin/pset/<id>/uploadpdf

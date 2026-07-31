@@ -112,9 +112,16 @@ def admin_pset_pdf(id):
     """Returns the entire PDF attached to this problem set"""
 
     pset = db.session.get(ProblemSet, id)
+
     if not pset:
         return {"error": "pset_not_found"}, 404
-    return flask.send_from_directory(runtime_dir, os.path.join("pdfs", pset.get_pdf_name()))
+
+    pdf_path = os.path.join(runtime_dir, "pdfs", pset.get_pdf_name())
+
+    if not os.path.exists(pdf_path):
+        return {"error": "pdf_not_found"}, 404
+
+    return flask.send_file(pdf_path, mimetype="application/pdf")
 
 @bp.route("/api/admin/pset/<id>/uploadpdf", methods=["POST"])
 @admin_required

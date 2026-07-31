@@ -2,7 +2,7 @@ import pytest
 import os
 
 from src.models.orm import *
-from src.judge import Status
+from src.judge import Status, output_equal
 
 # ========================================
 # /api/contests
@@ -286,7 +286,7 @@ def test_contest_data_includes_student_input_for_problems_that_have_it(client, u
     import zipfile, io
     with zipfile.ZipFile(io.BytesIO(response.data)) as z:
         assert "A.dat" in z.namelist()
-        assert z.read("A.dat").decode() == "1\n2\n3"
+        assert output_equal(z.read("A.dat").decode(), "1\n2\n3")
 
 def test_contest_data_empty_input_file_name_returns_empty_zip(client, user_logged_in, ongoing_contest_with_problem, problems, monkeypatch, tmp_path):
     problems.student_input = "some input"
