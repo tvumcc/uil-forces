@@ -74,6 +74,10 @@ def setup_submission_for_grading(submission: Submission) -> str:
     filename = get_submission_file_name(submission)
     submission_folder_name = get_submission_folder_name(id)
 
+    if os.path.exists(submission_folder_name):
+        try: shutil.rmtree(submission_folder_name)
+        except: pass
+
     # Create a source file for the submitted code in its own submission directory
     os.mkdir(submission_folder_name)
     submission_dir = os.path.abspath(submission_folder_name)
@@ -290,6 +294,7 @@ def grade_submission(submission: Submission, timeout: float = 5.0, stdin: bool =
             log.error(f"Unexpected error grading submission {submission.id}: {e}")
             return (Status.ErrorServer, "")
     except Exception as e:
+        log.error(f"Unexpected error grading submission {submission.id}: {e}")
         return (Status.ErrorServer, "")
     finally:
         try: 

@@ -80,21 +80,21 @@ def run_judge_self_test():
         judge_output = "10"
 
     class FakeSubmission:
-        id = 99999
         problem = FakeProblem()
-        def __init__(self, language, expected_status, code, stdin=False):
+        def __init__(self, id, language, expected_status, code, stdin=False):
             self.language = language
             self.expected_status = expected_status
             self.code = code
             self.stdin = stdin
+            self.id = id
 
     java_submissions = [
-        FakeSubmission("Java", Status.Accepted, "public class A {public static void main(String[] args) {System.out.println(10);}}"),
-        FakeSubmission("Java", Status.WrongAnswer, "public class A {public static void main(String[] args) {System.out.println(9);}}"),
-        FakeSubmission("Java", Status.TimeLimitExceeded, "public class A {public static void main(String[] args) {while (true) {}}}"),
-        FakeSubmission("Java", Status.ErrorRuntime, "public class A {public static void main(String[] args) throws Exception {throw new Exception();}}"),
-        FakeSubmission("Java", Status.ErrorCompile, "public class A {public static void main(String[] args) {System.out.println(10)}}"),
-        FakeSubmission("Java", Status.Accepted, """
+        FakeSubmission(1, "Java", Status.Accepted, "public class A {public static void main(String[] args) {System.out.println(10);}}"),
+        FakeSubmission(2, "Java", Status.WrongAnswer, "public class A {public static void main(String[] args) {System.out.println(9);}}"),
+        FakeSubmission(3, "Java", Status.TimeLimitExceeded, "public class A {public static void main(String[] args) {while (true) {}}}"),
+        FakeSubmission(4, "Java", Status.ErrorRuntime, "public class A {public static void main(String[] args) throws Exception {throw new Exception();}}"),
+        FakeSubmission(5, "Java", Status.ErrorCompile, "public class A {public static void main(String[] args) {System.out.println(10)}}"),
+        FakeSubmission(6, "Java", Status.Accepted, """
             import java.util.*;
             import java.io.*;
             public class A {
@@ -106,7 +106,7 @@ def run_judge_self_test():
                 }
             }
         """),
-        FakeSubmission("Java", Status.Accepted, """
+        FakeSubmission(7, "Java", Status.Accepted, """
             import java.util.*;
             public class A {
                 public static void main(String[] args) throws Exception {
@@ -120,19 +120,22 @@ def run_judge_self_test():
     ]
 
     python_submissions = [
-        FakeSubmission("Python", Status.Accepted, "print(10)"),
-        FakeSubmission("Python", Status.WrongAnswer, "print(9)"),
-        FakeSubmission("Python", Status.TimeLimitExceeded, "while True: print(10)"),
-        FakeSubmission("Python", Status.ErrorRuntime, "pint(10)"),
-        FakeSubmission("Python", Status.Accepted, """with open("A.dat") as f: print(sum([int(line) for line in f.readlines()]))"""),
-        FakeSubmission("Python", Status.ErrorRuntime, """with open("B.dat") as f: pass"""),
-        FakeSubmission("Python", Status.Accepted, """import sys; print(sum([int(line) for line in sys.stdin.readlines()]))""", stdin=True),
+        FakeSubmission(8, "Python", Status.Accepted, "print(10)"),
+        FakeSubmission(9, "Python", Status.WrongAnswer, "print(9)"),
+        FakeSubmission(10, "Python", Status.TimeLimitExceeded, "while True: pass"),
+        FakeSubmission(11, "Python", Status.ErrorRuntime, "pint(10)"),
+        FakeSubmission(12, "Python", Status.Accepted, """with open("A.dat") as f: print(sum([int(line) for line in f.readlines()]))"""),
+        FakeSubmission(13, "Python", Status.ErrorRuntime, """with open("B.dat") as f: pass"""),
+        FakeSubmission(14, "Python", Status.Accepted, """import sys; print(sum([int(line) for line in sys.stdin.readlines()]))""", stdin=True),
     ]
 
     java_allgood = True
     python_allgood = True
     java_test_idx = 1
     python_test_idx = 1
+
+    from src.app import runtime_dir
+    from src.judge import get_submission_folder_name
 
     for submission in java_submissions:
         status, output = grade_submission(submission, timeout=1.5, stdin=submission.stdin)
