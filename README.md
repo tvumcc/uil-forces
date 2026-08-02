@@ -1,6 +1,6 @@
 # UIL Forces
 
-![Tests](https://github.com/tvumcc/uil-forces/actions/workflows/backend_test.yml/badge.svg)
+[![Tests](https://github.com/tvumcc/uil-forces/actions/workflows/backend_test.yml/badge.svg)](https://github.com/tvumcc/uil-forces/actions/workflows/backend_test.yml)
 
 UIL Forces is a platform for running [UIL Computer Science](https://www.uiltexas.org/academics/stem/computer-science) programming contests. It consists of a server and a web client.
 
