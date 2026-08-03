@@ -1,0 +1,149 @@
+name: Build and Release (Windows)
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+env:
+  PYTHON_VERSION: "3.14"
+  BUNDLED_PYTHON_VERSION: "3.14.6"
+  BUNDLED_JAVA_VERSION: "21"
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: "pip"
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: ${{ env.BUNDLED_JAVA_VERSION }}
+
+      - name: Install backend dependencies
+        working-directory: backend
+        run: pip install -r requirements.txt
+
+      - name: Create and populate a secret.txt for testing
+        working-directory: backend
+        run: touch secret.txt && echo "TESTING" > secret.txt
+
+      - name: Run backend tests
+        working-directory: backend
+        run: python -m pytest -v
+
+  build-windows:
+    needs: test
+    runs-on: windows-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Build frontend
+        working-directory: frontend
+        run: |
+          npm ci
+          npm run build
+
+      - name: Set up backend virtual environment
+        working-directory: backend
+        run: |
+          python -m venv .venv
+          .venv\Scripts\activate.bat
+          pip install -r requirements.txt
+          pip install pyinstaller
+
+      - name: Build executable with PyInstaller
+        working-directory: backend
+        run: |
+          .venv\Scripts\activate.bat
+          pyinstaller main.spec --distpath pyinstaller-dist --workpath pyinstaller-build
+
+      - name: Download bundled Python (embeddable, Windows x64)
+        run: |
+          Invoke-WebRequest `
+            -Uri "https://www.python.org/ftp/python/${{ env.BUNDLED_PYTHON_VERSION }}/python-${{ env.BUNDLED_PYTHON_VERSION }}-embed-amd64.zip" `
+            -OutFile python-embed.zip
+          Expand-Archive python-embed.zip -DestinationPath backend/pyinstaller-dist/main/tools/python
+
+      - name: Download bundled Temurin JDK (compressed archive) via Adoptium API
+        id: temurin
+        run: |
+          $metadataUri = "https://api.adoptium.net/v3/assets/latest/${{ env.BUNDLED_JAVA_VERSION }}/hotspot?architecture=x64&image_type=jdk&os=windows&vendor=eclipse"
+          $assets = Invoke-RestMethod -Uri $metadataUri
+
+          if ($assets.Count -eq 0) {
+            Write-Error "No Temurin release found for feature version ${{ env.BUNDLED_JAVA_VERSION }}"
+            exit 1
+          }
+
+          $asset = $assets[0]
+          $downloadUrl = $asset.binary.package.link
+          $resolvedVersion = $asset.version.semver
+
+          Write-Host "Resolved Temurin version: $resolvedVersion"
+          Write-Host "Download URL: $downloadUrl"
+          echo "resolved_version=$resolvedVersion" >> $env:GITHUB_OUTPUT
+
+          Invoke-WebRequest -Uri $downloadUrl -OutFile temurin.zip
+          Expand-Archive temurin.zip -DestinationPath backend/pyinstaller-dist/main/tools/java-temp
+
+          $jdkFolder = Get-ChildItem backend/pyinstaller-dist/main/tools/java-temp | Select-Object -First 1
+          Move-Item $jdkFolder.FullName backend/pyinstaller-dist/main/tools/java
+          Remove-Item backend/pyinstaller-dist/main/tools/java-temp -Recurse
+
+
+      - name: Verify bundled tools are positioned correctly
+        run: |
+          if (-not (Test-Path "backend/pyinstaller-dist/main/tools/python/python.exe")) {
+            Write-Error "Bundled Python executable not found where expected"
+            exit 1
+          }
+          if (-not (Test-Path "backend/pyinstaller-dist/main/tools/java/bin/java.exe")) {
+            Write-Error "Bundled Java executable not found where expected"
+            exit 1
+          }
+          Write-Host "Bundled tools verified."
+
+      - name: Package release zip
+        run: |
+          Compress-Archive -Path backend/pyinstaller-dist/main/* -DestinationPath uil-forces-${{ github.ref_name }}-windows.zip
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: uil-forces-${{ github.ref_name }}-windows.zip
+          generate_release_notes: true
+          draft: true
+          body: |
+            **Bundled tool versions:**
+            - Python ${{ env.BUNDLED_PYTHON_VERSION }}
+            - Eclipse Temurin ${{ steps.temurin.outputs.resolved_version }}
