@@ -40,3 +40,4 @@ backend/dist
 .svelte-kit
 *.log
 logs
+tools/
