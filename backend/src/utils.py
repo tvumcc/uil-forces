@@ -83,7 +83,7 @@ def check_required_binary_on_path(tool: str):
         return (True, "version check failed", "PATH")
 
 def print_binary_check():
-    print("Checking for required tools... (first in ./tools directory then on PATH)")
+    print("Checking for required tools... (first in the 'tools' directory then on PATH)")
     results = check_required_binaries()
     all_ok = True
     for tool, (found, version, path) in results.items():
@@ -93,7 +93,7 @@ def print_binary_check():
             all_ok = False
     if not all_ok:
         print("\nWarning: some required tools are missing. Grading for the affected")
-        print("language(s) will fail until these are installed and added to PATH.")
+        print("language(s) will fail until these are installed into the 'tools' directory or added to PATH.")
     return all_ok
 
 def run_judge_self_test():

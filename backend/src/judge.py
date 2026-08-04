@@ -232,6 +232,11 @@ def grade_submission(submission: Submission, timeout: float = 5.0, stdin: bool =
 
     Returns a tuple of the form (status, output)
     """
+    required_tools = check_required_binaries()
+
+    def get_tool(tool: str):
+        tool_path = required_tools[tool][2]
+        return tool if tool_path == "PATH" else tool_path
 
     try:
         filename = get_submission_file_name(submission)
@@ -242,7 +247,7 @@ def grade_submission(submission: Submission, timeout: float = 5.0, stdin: bool =
 
         # Compilation
         language_compile_command = {
-            "Java":   f"javac {filename}".split(),
+            "Java":   f"{get_tool("javac")} {filename}".split(),
         }
 
         if submission.language in language_compile_command.keys():
@@ -257,8 +262,8 @@ def grade_submission(submission: Submission, timeout: float = 5.0, stdin: bool =
         
         # Running
         language_run_command = {
-            "Java":   f"java {os.path.splitext(filename)[0]}".split(),
-            "Python": f"python {filename}".split(),
+            "Java":   f"{get_tool("java")} {os.path.splitext(filename)[0]}".split(),
+            "Python": f"{get_tool("python")} {filename}".split(),
         }
 
         try:
