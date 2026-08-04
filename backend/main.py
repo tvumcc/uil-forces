@@ -2,7 +2,6 @@ from waitress import serve
 
 import os
 
-from tests.utils import print_binary_check, run_judge_self_test
 from src.models.orm import *
 from src.setup import *
 from src.utils import *
@@ -25,16 +24,6 @@ def setup(setup_path = "setup"):
 
 
 if __name__ == "__main__":
-    # Automatically add Python and Java toolchains to PATH on Windows systems
-    if IS_WINDOWS:
-        python_toolchain_path = os.path.join(runtime_dir, "tools", "python")
-        java_toolchain_path = os.path.join(runtime_dir, "tools", "java", "bin")
-
-        if os.path.exists(python_toolchain_path):
-            add_to_user_path(os.path.abspath(python_toolchain_path))
-        if os.path.exists(java_toolchain_path):
-            add_to_user_path(os.path.abspath(java_toolchain_path))
-
     print("UIL Forces Host")
     print("Possible actions:")
     print("1. Run server")
