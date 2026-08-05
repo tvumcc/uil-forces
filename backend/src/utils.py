@@ -161,33 +161,30 @@ def run_judge_self_test():
     java_test_idx = 1
     python_test_idx = 1
 
-    from src.app import runtime_dir
-    from src.judge import get_submission_folder_name
-
     for submission in java_submissions:
         status, output = grade_submission(submission, timeout=1.5, stdin=submission.stdin)
         if status != submission.expected_status:
             java_allgood = False
-            print(f"\t[FAILED] Java grading: expected status {submission.expected_status.name}, got status {status.name}")
+            print(f"  [FAILED] Java Grading Test {java_test_idx}: expected status {submission.expected_status.name}, got status {status.name}")
         else:
-            print(f"\t[OK] Java Grading Test {java_test_idx} Passed")
+            print(f"  [OK] Java Grading Test {java_test_idx} Passed")
         java_test_idx += 1
 
     for submission in python_submissions:
         status, output = grade_submission(submission, timeout=1.5, stdin=submission.stdin)
         if status != submission.expected_status:
             python_allgood = False
-            print(f"\t[FAILED] Python grading: expected status {submission.expected_status.name}, got status {status.name}")
+            print(f"  [FAILED] Python Grading Test {python_test_idx}: expected status {submission.expected_status.name}, got status {status.name}")
         else:
-            print(f"\t[OK] Python Grading Test {python_test_idx} Passed")
+            print(f"  [OK] Python Grading Test {python_test_idx} Passed")
         python_test_idx += 1
 
     if java_allgood:
-        print("\t[SUCCESS] Java grading environment setup is correct.")
+        print("  [SUCCESS] Java grading environment setup is correct.")
     else:
-        print("\t[FAILURE] Java grading environment setup is incorrect.")
+        print("  [FAILURE] Java grading environment setup is incorrect.")
 
     if python_allgood:
-        print("\t[SUCCESS] Python grading environment setup is correct.")
+        print("  [SUCCESS] Python grading environment setup is correct.")
     else:
-        print("\t[FAILURE] Python grading environment setup is incorrect.")
+        print("  [FAILURE] Python grading environment setup is incorrect.")

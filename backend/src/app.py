@@ -42,7 +42,7 @@ def create_app(test_config=None):
     try:
         app.secret_key = open(secret_path, "r").read().strip()
     except:
-        print("No secret key found. In the root directory, create a file named 'secret.txt' containing a secret key and try again.")
+        print("No secret key found. In the root directory, create a file named 'secret.txt' containing a secret key (any string of text) and try again.")
         input("Press Enter to close")
         sys.exit()
 
