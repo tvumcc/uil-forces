@@ -60,7 +60,7 @@ def problem_pdf(id):
         return flask.send_file(
             io.BytesIO(pdf_bytes),
             mimetype="application/pdf",
-            as_attachment=True,
+            as_attachment=False,
             download_name=f"problem{id}"
         )
     else:
