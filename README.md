@@ -12,17 +12,27 @@ Some other features include:
 - Persistent contest history: all users, submissions, and scores are stored in a single database that persists across contests, so past results and submission history remain available long after a contest ends.
 - Live contest leaderboard breaking down problems solved by each user
 - PDF viewer that allows users to access problem statements. This can be disabled for individual contests.
-- Adding problem sets en masse with a YAML file, data files, and PDFs
+- Adding problem sets in bulk with a YAML file, data files, and PDFs
 
-![An example of a UIL Forces contest page](screenshots/contest_page.png)
+## Installation & Usage
 
-## Usage
+UIL Forces for Windows can be downloaded on this repository's [Releases](https://github.com/tvumcc/uil-forces/releases) page. To build UIL Forces, see [Building](#building).
 
-See [OPERATIONS.md](OPERATIONS.md)
+For a guide on usage, see [OPERATIONS.md](OPERATIONS.md).
+
+## Screenshots
+
+### Home Page
+![The UIL Forces Home Page](screenshots/home_page.png)
+### Contest Page (Leaderboard, Submissions Table, PDF Viewer)
+![An example of a UIL Forces contest page with the Submissions Table and Leaderboard](screenshots/contest_page_2.png)
+![An example of a UIL Forces contest page with the PDF Viewer](screenshots/contest_page_1.png)
+### Admin-only Submissions Panel
+![Admin submissions panel](screenshots/submissions_page.png)
 
 ## Building
 
-To build this project, you must have Python and npm installed.
+To build this project, you must have Python, Node.js/npm, and a JDK (Java 21+) installed. 
 
 First, build the frontend by running the following commands:
 

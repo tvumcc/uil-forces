@@ -28,8 +28,8 @@ if __name__ == "__main__":
     print("Possible actions:")
     print("1. Run server")
     print("2. Start server setup")
-    print("3. Check required tools (Python interpreter and JDK on PATH)")
-    print("4. Judge self-test")
+    print("3. Judge: Check required tools")
+    print("4. Judge: Test grading system")
     print("5. Quit")
 
     terminating_action = False

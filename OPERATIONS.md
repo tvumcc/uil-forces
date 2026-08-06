@@ -1,6 +1,18 @@
 ## Running the Server
 
-To start the UIL Forces server, run the executable file provided, either by simply double-clicking it or running it through a console window.
+To start the UIL Forces server, run the executable file provided, either by simply double-clicking it or running it through a console window. Then, follow the instructions under [Judge System Setup](#judge-system-setup) and [Database Setup](#database-setup).
+
+## Judge System Setup
+
+If you install UIL Forces from the provided [Windows release](https://github.com/tvumcc/uil-forces/releases), the tools need to grade Java and Python submissions will be packaged in the `tools` directory. If these need to be changed, you can replace them with different versions. The judge scans `tools` for `python.exe` (for Python) and `javac.exe` and `java.exe` (for Java). (Windows Only)
+
+If the judge cannot find a specific program in the `tools` directory, it falls back to using the programs `python`, `javac`, or `java` respectively, if they are on the PATH environment variable.
+
+### Judge System Testing
+
+Run action 3: "Judge: Check required tools", to make sure that the judge system can access the necessary Java and Python toolchains for grading user submissions.
+
+If those succeed, then run action 4: "Judge: Test grading system". This will try submitting code to the judge system to make sure that setup is complete.
 
 ## Database Setup
 
@@ -8,52 +20,23 @@ Setup only needs to be done once for each instance of UIL Forces. It is done to 
 
 Before setup, make sure to add a secret key (any form of text) in a file called `secret.txt` located in the root directory. This directory will also contain the database file which will be created after going through the following steps.
 
-After running the UIL Forces server, select action 2: "Start server setup". This will scan the working directory for a folder named `setup` with a file structure as specified in [Setup Folder Structure](#setup-folder-structure)
+After running UIL Forces, select action 2: "Start server setup". This will scan the working directory for a folder named `setup` with a file structure as specified in [Setup Folder Structure](#setup-folder-structure)
 
-Once setup is complete, you will not have to mess with problem sets unless new problems need to be added. This can be done either through the admin panel, or by editing the setup folder and config file to add the new problem set. If new problem sets are added to the setup folder, rerun the "Start server setup" action and the interface will allow the new problem sets to merge into the current database.
-
-## Judge System Setup
-
-Use action 3: "Check required tools" to make sure that the proper toolchains are installed for the languages you wish to support. These tools must be added to the PATH environment variable in order to work. Here is how to do that:
-
-### Downloading the Toolchains
-
-First, download the toolchains if you do not have them already. If running UIL Forces on a school computer with heavy restrictions, you may need to download these on a non-school computer and bring them over via an external drive:
-
-- Python: https://www.python.org/ftp/python/3.14.6/python-3.14.6-embed-amd64.zip 
-  - If downloading a different version, make sure it is the **Windows embeddable package (64-bit)**
-- Java: https://download.oracle.com/java/21/latest/jdk-21_windows-x64_bin.zip 
-  - If downloading a different version, make sure it is the **x64 Compressed Archive**
-
-Place the extracted zip archives in a memorable location, or in the same directory where UIL Forces lives.
-
-### Adding toolchains to the PATH environment variable (Windows)
-
-Type "Edit environment variables for your account" into the Windows search bar:
-
-<p align="center"><img src="screenshots/edit_env_vars.png"></p>
-
-Open the control panel menu labeled "Edit environment variables for your account". Then double-click on the variable named "Path"
-
-<p align="center"><img src="screenshots/user_env_vars.png"></p>
-
-Click the new button and add the paths to your toolchains.
-- Python Path: `<absolute path to python toolchain>`
-- Java Path: `<absolute path to jdk>/bin` (don't forget the /bin at the end)
-
-Once you are done, click "Ok"
-
-<p align="center"><img src="screenshots/user_env_vars_step_by_step.png"></p>
-
-### Judge System Testing
-
-After setting up the toolchains, run action 3: "Check required tools", to make sure that the judge system can access the Java and Python toolchains.
-
-If those succeed, then run action 4: "Judge self-test". This will try submitting code to the judge system to make sure that setup is complete.
+Once setup is complete, you will not have to mess with problem sets unless new problems need to be added. This can be done either through the admin panel, or by editing the setup folder and config file to add the new problem set. If new problem sets are added to the setup folder, rerun the "Start server setup" action and the interface will allow the new problem sets to merge into the current database, without ever removing any existing problem sets.
 
 ## Usage
 
 After a database has been initialized with problem sets and an admin user, most usage will involve creating contests through the admin panel and adding problem sets (which can be from different problem sets).
+
+## Logs
+
+Logs throughout the lifetime of a UIL Forces instance are stored in the `logs` folder of the root directory.
+
+## Backups
+
+Before and after each contest, it would be wise to copy `main.db` to a separate location (USB drive, cloud
+folder). This file contains all users, submissions, and scores, so losing it means losing
+contest history permanently.
 
 ## Setup Folder Structure
 
