@@ -88,19 +88,25 @@ def import_from_directory(import_dir):
                     judge_output = ""
 
                     try:
-                        student_input = open(os.path.join(student_input_path, student_data_file), "r").read()
+                        student_input = open(os.path.join(student_input_path, student_data_file), "r", encoding="UTF-8", errors="replace").read()
                     except FileNotFoundError:
                         log.warning(f"Problem {problem_name} student input file '{student_data_file}' does not exist in {student_input_path}; Student input data will be blank")
+                    except:
+                        log.error(f"Unable to process problem {problem_name} student input file '{student_data_file}'")
 
                     try:
-                        judge_input = open(os.path.join(judge_io_path, input_data_file), "r").read()
+                        judge_input = open(os.path.join(judge_io_path, input_data_file), "r", encoding="UTF-8", errors="replace").read()
                     except FileNotFoundError:
                         log.warning(f"Problem {problem_name} input file '{input_data_file}' does not exist in {judge_io_path}; Input data will be blank")
+                    except:
+                        log.error(f"Unable to process problem {problem_name} input file '{input_data_file}'")
 
                     try:
-                        judge_output = open(os.path.join(judge_io_path, output_data_file), "r").read()
+                        judge_output = open(os.path.join(judge_io_path, output_data_file), "r", encoding="UTF-8", errors="replace").read()
                     except FileNotFoundError:
                         log.error(f"Problem {problem_name} output file '{output_data_file}' does not exist in {judge_io_path}; Aborting")
+                    except:
+                        log.error(f"Unable to process problem {problem_name} output file '{output_data_file}'")
 
                     existing_problem = db.session.query(Problem).filter_by(name=problem_name).first() if existing_pset else None
 
